@@ -1,0 +1,65 @@
+export const theme = {
+  colors: {
+    ink: '#0f172a',
+    inkLight: '#374151',
+    inkMuted: '#6b7280',
+    parchment: '#f3f4f6',
+    cream: '#f8fafc',
+    warmWhite: '#ffffff',
+    border: '#e5e7eb',
+    amber: '#fbbf24',
+    amberDark: '#d97706',
+    amberPale: '#fef3c7',
+    rose: '#ef4444',
+    rosePale: '#fee2e2',
+  },
+  radius: {
+    sm: '8px',
+    md: '10px',
+    lg: '16px',
+    xl: '20px',
+    full: '9999px',
+  },
+  fonts: {
+    body: 'system-ui, Avenir, Helvetica, Arial, sans-serif',
+    display: 'Inter, system-ui, Avenir, Helvetica, Arial, sans-serif',
+    mono: '"Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace',
+  },
+  transition: 'all .2s ease',
+  shadows: {
+    sm: '0 1px 2px rgba(0,0,0,0.06)',
+    card: '0 8px 24px rgba(0,0,0,0.06)',
+  },
+}
+
+export const sx = {
+  label: {
+    display: 'block',
+    fontSize: '12px',
+    marginBottom: '6px',
+    color: '#6b7280',
+    fontFamily: 'system-ui, Avenir, Helvetica, Arial, sans-serif',
+  },
+  input: {
+    width: '100%',
+    padding: '12px 14px',
+    border: '1.5px solid #e5e7eb',
+    borderRadius: '10px',
+    fontSize: '14px',
+    outline: 'none',
+    fontFamily: 'system-ui, Avenir, Helvetica, Arial, sans-serif',
+    background: '#fff',
+    color: '#111827',
+  },
+  btnPrimary: {
+    padding: '12px 18px',
+    background: '#fbbf24',
+    border: 'none',
+    borderRadius: '10px',
+    color: '#111827',
+    fontSize: '14px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    fontFamily: 'system-ui, Avenir, Helvetica, Arial, sans-serif',
+  },
+}
