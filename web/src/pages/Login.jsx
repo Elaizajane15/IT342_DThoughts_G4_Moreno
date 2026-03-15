@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { authApi, quotesApi, oauthApi } from '../utils/api';
+import Toast from '../components/Toast';
 import { theme, sx } from '../theme';
 
 export default function LoginPage() {
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [error, setError]   = useState('');
   const [loading, setLoading] = useState(false);
   const [quote, setQuote]   = useState(null);
+  const [toast, setToast]   = useState(null);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -63,6 +65,18 @@ export default function LoginPage() {
       .catch(() => setQuote({ quoteText: 'Every day is a new page in your story.', author: 'DailyThoughts' }));
   }, []);
 
+  useEffect(() => {
+    const raw = sessionStorage.getItem('dt_toast');
+    if (!raw) return;
+    sessionStorage.removeItem('dt_toast');
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed?.message) setToast({ message: String(parsed.message), type: parsed.type === 'error' ? 'error' : 'success' });
+    } catch {
+      setToast({ message: String(raw), type: 'success' });
+    }
+  }, []);
+
   const handleChange = (e) =>
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
@@ -90,6 +104,7 @@ export default function LoginPage() {
 
   return (
     <div style={styles.page}>
+      <Toast message={toast?.message} type={toast?.type || 'success'} onClose={() => setToast(null)} />
       {/* Background effects */}
       <div style={styles.bgGlow1} />
       <div style={styles.bgGlow2} />

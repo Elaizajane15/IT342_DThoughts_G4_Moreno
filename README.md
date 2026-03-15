@@ -8,7 +8,7 @@
 - Synced tab state with the URL so navigation/back/refresh keeps the correct active tab.
 
 Files updated:
-- [Feed.jsx](file:///c:/Users/rose/Downloads/IT342_DThoughts_G4_Moreno/web/src/pages/Feed.jsx)
+- Feed.jsx
 
 ### Forgot Password (End-to-End)
 - Implemented the full **Forgot Password** flow (request reset code + reset password).
@@ -20,18 +20,17 @@ Backend endpoints:
 - `POST /api/auth/reset-password`
 
 Files updated:
-- [AuthController.java](file:///c:/Users/rose/Downloads/IT342_DThoughts_G4_Moreno/backend/src/main/java/com/dthoughts/g4/moreno/controller/AuthController.java)
-- [AuthService.java](file:///c:/Users/rose/Downloads/IT342_DThoughts_G4_Moreno/backend/src/main/java/com/dthoughts/g4/moreno/service/AuthService.java)
-- [api.js](file:///c:/Users/rose/Downloads/IT342_DThoughts_G4_Moreno/web/src/utils/api.js)
-- [ForgotPassword.jsx](file:///c:/Users/rose/Downloads/IT342_DThoughts_G4_Moreno/web/src/pages/ForgotPassword.jsx)
-
+- AuthController.java
+- AuthService.java
+- api.js
+- ForgotPassword.jsx
 ### Edit Post Page (Match Create Post)
 - Updated **Edit Thought** page to match the **Create Post** experience.
 - Added **image attach** UI (dropzone + preview + remove/replace) and uploads the image on save (after updating the text).
 - Kept the same **500 character limit** and validation behavior.
 
 Files updated:
-- [EditPost.jsx](file:///c:/Users/rose/Downloads/IT342_DThoughts_G4_Moreno/web/src/pages/EditPost.jsx)
+- EditPost.jsx
 
 ## Project Progress (Daily Log)
 
@@ -58,5 +57,7 @@ Files updated:
 
 ### Day 6
 - Implemented the account sidebar.
-- Added "Add an existing account".
-- Added logout and showed the handle format like `@"user"`.
+- Added "Add an existing account" with a sign-in modal (email/password and Google).
+- Saved added accounts locally (recent accounts list for quick switching on the same device).
+- Added logout with a confirmation modal ("Are you sure you want to log out?").
+- Added logout toast notification and kept the handle format like `@"user"`.
