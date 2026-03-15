@@ -1,26 +1,34 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import ThoughtCard from '../components/ThoughtCard';
 import Avatar from '../components/Avatar';
+import Toast from '../components/Toast';
 import { useAuth } from '../hooks/useAuth';
-import { postsApi, quotesApi } from '../utils/api';
+import { postsApi, quotesApi, filesApi, userApi } from '../utils/api';
 import { theme } from '../theme';
 
-const TABS = ['For You', 'Following', 'Trending'];
+const TABS = ['For You', 'Following'];
 
 export default function FeedPage() {
   const navigate         = useNavigate();
+  const location         = useLocation();
   const { user } = useAuth();
   const isGuest = !user;
 
   const [posts,     setPosts]     = useState([]);
   const [quote,     setQuote]     = useState(null);
-  const [tab,       setTab]       = useState(0);
+  const [tab,       setTab]       = useState(() => {
+    const t = Number(new URLSearchParams(location.search).get('tab'));
+    return Number.isFinite(t) && t >= 0 && t <= 1 ? t : 0;
+  });
   const [page,      setPage]      = useState(0);
   const [hasMore,   setHasMore]   = useState(true);
   const [loading,   setLoading]   = useState(true);
+  const [error,     setError]     = useState('');
   const [compose,   setCompose]   = useState('');
+  const [toast,     setToast]     = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   // Fetch daily quote
   useEffect(() => {
@@ -29,28 +37,61 @@ export default function FeedPage() {
       .catch(() => setQuote({ quoteText: 'Every day is a new page in your story.', author: 'DailyThoughts' }));
   }, []);
 
+  useEffect(() => {
+    const raw = sessionStorage.getItem('dt_toast');
+    if (!raw) return;
+    sessionStorage.removeItem('dt_toast');
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed?.message) setToast({ message: String(parsed.message), type: parsed.type === 'error' ? 'error' : 'success' });
+    } catch {
+      setToast({ message: String(raw), type: 'success' });
+    }
+  }, []);
+
   // Fetch posts
   const loadPosts = useCallback(async (reset = false) => {
     const p = reset ? 0 : page;
     setLoading(true);
+    setError('');
     try {
-      const res = await postsApi.getAll(p, 10);
+      const res = tab === 1
+        ? (isGuest || user?.id == null ? { content: [], totalPages: 0 } : await postsApi.getFollowing(user.id, p, 10))
+        : await postsApi.getAll(p, 10);
       setPosts(prev => reset ? res.content : [...prev, ...res.content]);
       setPage(p + 1);
       setHasMore(p + 1 < res.totalPages);
     } catch (e) {
-      console.error(e);
+      setError(e?.message || 'Failed to load posts.');
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [isGuest, page, tab, user?.id]);
+
+  useEffect(() => {
+    const t = Number(new URLSearchParams(location.search).get('tab'));
+    const next = Number.isFinite(t) && t >= 0 && t <= 1 ? t : 0;
+    setTab((prev) => (prev === next ? prev : next));
+  }, [location.search]);
 
   useEffect(() => { loadPosts(true); }, [tab, loadPosts]);
 
-  const handleDelete = async (postId) => {
-    if (!window.confirm('Delete this thought?')) return;
-    await postsApi.delete(postId);
-    setPosts(prev => prev.filter(p => p.id !== postId));
+  const handleDelete = (postId) => {
+    setConfirmDeleteId(postId);
+  };
+
+  const confirmDelete = async () => {
+    const postId = confirmDeleteId;
+    if (postId == null) return;
+    try {
+      await postsApi.delete(postId);
+      setPosts(prev => prev.filter(p => p.id !== postId));
+      setToast({ message: 'Post deleted.', type: 'success' });
+    } catch (e) {
+      setToast({ message: e?.message || 'Failed to delete post.', type: 'error' });
+    } finally {
+      setConfirmDeleteId(null);
+    }
   };
 
   const handleComposeSubmit = () => {
@@ -61,165 +102,272 @@ export default function FeedPage() {
 
   return (
     <div style={styles.shell}>
-      <Sidebar dailyQuote={quote} notifCount={3} />
-
-      {/* Main Feed */}
-      <main style={styles.main}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>
-            Your <span style={{ color: theme.colors.amber }}>Feed</span>
-          </h1>
-        </div>
-
-        {/* Tab bar */}
-        <div style={styles.tabs}>
-          {TABS.map((t, i) => (
-            <button
-              key={t}
-              onClick={() => setTab(i)}
-              style={{ ...styles.tab, ...(tab === i ? styles.tabActive : {}) }}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-
-        {/* Guest banner */}
-        {isGuest && (
-          <div style={styles.guestBanner}>
-            <span style={{ fontSize: '28px' }}>🔒</span>
-            <div style={{ flex: 1 }}>
-              <h4 style={styles.guestTitle}>You're viewing as a Guest</h4>
-              <p style={styles.guestSub}>Login to like posts, comment, and share your own daily thoughts.</p>
+      <Toast message={toast?.message} type={toast?.type || 'success'} onClose={() => setToast(null)} />
+      {confirmDeleteId != null && (
+        <div style={styles.modalOverlay} role="dialog" aria-modal="true">
+          <div style={styles.modalCard}>
+            <div style={styles.modalTitle}>Delete Post</div>
+            <div style={styles.modalBody}>Are you sure you want to delete this post?</div>
+            <div style={styles.modalActions}>
+              <button type="button" onClick={() => setConfirmDeleteId(null)} style={styles.modalCancel}>
+                Cancel
+              </button>
+              <button type="button" onClick={confirmDelete} style={styles.modalDanger}>
+                Delete
+              </button>
             </div>
-            <button onClick={() => navigate('/login')} style={styles.guestCta}>
-              Login
-            </button>
           </div>
-        )}
+        </div>
+      )}
+      <div style={styles.layout}>
+        <Sidebar dailyQuote={quote} />
 
-        {/* Compose box — only for logged-in users */}
-        {!isGuest && (
-          <div style={styles.compose}>
-            <Avatar name={`${user?.firstName} ${user?.lastName}`} size="sm" src={user?.avatarUrl} />
-            <div style={{ flex: 1 }}>
-              <textarea
-                value={compose}
-                onChange={e => setCompose(e.target.value)}
-                placeholder="What's on your mind today?"
-                rows={compose.split('\n').length > 1 ? 3 : 1}
-                style={styles.composeInput}
-                onKeyDown={e => { if (e.key === 'Enter' && e.metaKey) handleComposeSubmit(); }}
-              />
-              {compose && (
-                <div style={styles.composeActions}>
-                  <button onClick={() => navigate('/create', { state: { prefill: compose } })} style={styles.composeFull}>
-                    📷 Add Image / Mood
-                  </button>
-                  <button onClick={handleComposeSubmit} style={styles.composePost}>
-                    Post Thought
-                  </button>
+        <main style={styles.main}>
+          <div style={styles.header}>
+            <h1 style={styles.title}>
+              Your <span style={{ color: theme.colors.amber }}>Feed</span>
+            </h1>
+          </div>
+
+          <div style={styles.tabs}>
+            {TABS.map((t, i) => (
+              <button
+                key={t}
+                onClick={() => navigate(i === 0 ? '/feed' : `/feed?tab=${i}`)}
+                style={{ ...styles.tab, ...(tab === i ? styles.tabActive : {}) }}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          {error && (
+            <div style={styles.errorBanner}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                <div style={{ fontFamily: theme.fonts.body, color: theme.colors.ink }}>
+                  {error}
                 </div>
+                <button onClick={() => loadPosts(true)} style={styles.retryBtn}>Retry</button>
+              </div>
+            </div>
+          )}
+
+          {isGuest && (
+            <div style={styles.guestBanner}>
+              <span style={{ fontSize: '28px' }}>🔒</span>
+              <div style={{ flex: 1 }}>
+                <h4 style={styles.guestTitle}>You're viewing as a Guest</h4>
+                <p style={styles.guestSub}>Login to like posts, comment, and share your own daily thoughts.</p>
+              </div>
+              <button onClick={() => navigate('/login')} style={styles.guestCta}>
+                Login
+              </button>
+            </div>
+          )}
+
+          {!isGuest && (
+            <div style={styles.compose}>
+              <Avatar name={`${user?.firstName} ${user?.lastName}`} size="sm" src={filesApi.getUrl(user?.avatarUrl)} onClick={() => navigate('/profile')} />
+              <div style={{ flex: 1 }}>
+                <textarea
+                  value={compose}
+                  onChange={e => setCompose(e.target.value)}
+                  placeholder="What's on your mind today?"
+                  rows={compose.split('\n').length > 1 ? 3 : 1}
+                  style={styles.composeInput}
+                  onKeyDown={e => { if (e.key === 'Enter' && e.metaKey) handleComposeSubmit(); }}
+                />
+                {compose && (
+                  <div style={styles.composeActions}>
+                    <button onClick={() => navigate('/create', { state: { prefill: compose } })} style={styles.composeFull}>
+                      📷 Add Image / Mood
+                    </button>
+                    <button onClick={handleComposeSubmit} style={styles.composePost}>
+                      Post Thought
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {loading && posts.length === 0 ? (
+            <div style={styles.loadingState}>
+              {[1,2,3].map(n => <SkeletonCard key={n} />)}
+            </div>
+          ) : posts.length === 0 ? (
+            <div style={styles.emptyState}>
+              {tab === 1 ? (
+                <>
+                  <span style={{ fontSize: '48px' }}>👥</span>
+                  <p style={{ color: theme.colors.inkMuted, fontFamily: theme.fonts.body }}>
+                    {isGuest
+                      ? 'Login to see posts from people you follow.'
+                      : 'No posts here yet. Follow someone to see their posts in Following.'}
+                  </p>
+                  {isGuest ? (
+                    <button onClick={() => navigate('/login')} style={styles.emptyBtn}>
+                      Login
+                    </button>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <span style={{ fontSize: '48px' }}>📓</span>
+                  <p style={{ color: theme.colors.inkMuted, fontFamily: theme.fonts.body }}>
+                    No thoughts yet. Be the first to share!
+                  </p>
+                  {!isGuest && (
+                    <button onClick={() => navigate('/create')} style={styles.emptyBtn}>
+                      Share a Thought
+                    </button>
+                  )}
+                </>
               )}
             </div>
-          </div>
-        )}
+          ) : (
+            <>
+              {posts.map(post => (
+                <ThoughtCard
+                  key={post.id}
+                  post={post}
+                  viewer={user}
+                  onDelete={user?.id === post.userId ? handleDelete : undefined}
+                />
+              ))}
+              {hasMore && !loading && (
+                <button onClick={() => loadPosts()} style={styles.loadMore}>
+                  Load more thoughts
+                </button>
+              )}
+              {loading && <div style={{ textAlign: 'center', color: theme.colors.inkMuted, padding: '16px' }}>Loading…</div>}
+            </>
+          )}
+        </main>
 
-        {/* Posts */}
-        {loading && posts.length === 0 ? (
-          <div style={styles.loadingState}>
-            {[1,2,3].map(n => <SkeletonCard key={n} />)}
-          </div>
-        ) : posts.length === 0 ? (
-          <div style={styles.emptyState}>
-            <span style={{ fontSize: '48px' }}>📓</span>
-            <p style={{ color: theme.colors.inkMuted, fontFamily: theme.fonts.body }}>
-              No thoughts yet. Be the first to share!
-            </p>
-            {!isGuest && (
-              <button onClick={() => navigate('/create')} style={styles.emptyBtn}>
-                Share a Thought
-              </button>
-            )}
-          </div>
-        ) : (
-          <>
-            {posts.map(post => (
-              <ThoughtCard
-                key={post.id}
-                post={post}
-                onDelete={user?.id === post.userId ? handleDelete : undefined}
-              />
-            ))}
-            {hasMore && !loading && (
-              <button onClick={() => loadPosts()} style={styles.loadMore}>
-                Load more thoughts
-              </button>
-            )}
-            {loading && <div style={{ textAlign: 'center', color: theme.colors.inkMuted, padding: '16px' }}>Loading…</div>}
-          </>
-        )}
-      </main>
-
-      {/* Right Sidebar */}
-      <RightSidebar />
+        <RightSidebar />
+      </div>
     </div>
   );
 }
 
 // ─── Right Sidebar ────────────────────────────────────────────────────────────
 function RightSidebar() {
-  const trending = [
-    { name: 'Morning Routine', count: '142 thoughts today' },
-    { name: 'Gratitude Journal', count: '98 thoughts today' },
-    { name: 'Mindfulness', count: '76 thoughts today' },
-    { name: 'Self Reflection', count: '61 thoughts today' },
-  ];
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const isGuest = !user
   const suggested = [
     { name: 'Karla Manalo', sub: '34 thoughts this week', initial: 'K' },
     { name: 'Ben Cruz', sub: 'Philosophy · Stoicism', initial: 'B' },
     { name: 'Lena Park', sub: 'Mindfulness · Wellness', initial: 'L' },
   ];
   const [followed, setFollowed] = useState({});
+  const [query, setQuery] = useState('')
+  const [userResults, setUserResults] = useState([])
+  const [userLoading, setUserLoading] = useState(false)
+  const [userError, setUserError] = useState('')
+
+  const q = query.trim().toLowerCase()
+
+  useEffect(() => {
+    const text = query.trim()
+    let ignore = false
+    const t = setTimeout(() => {
+      if (!text) return
+      setUserLoading(true)
+      setUserError('')
+      userApi.search(text, { limit: 25 })
+        .then((list) => {
+          if (ignore) return
+          setUserResults(list)
+        })
+        .catch((e) => {
+          if (ignore) return
+          setUserError(e?.message || 'Failed to search users.')
+          setUserResults([])
+        })
+        .finally(() => {
+          if (ignore) return
+          setUserLoading(false)
+        })
+    }, 250)
+
+    return () => {
+      ignore = true
+      clearTimeout(t)
+    }
+  }, [query])
+
+  const listUsers = q ? userResults : suggested
 
   return (
     <aside style={styles.rightBar}>
-      {/* Trending */}
-      <div style={styles.widget}>
-        <div style={styles.widgetTitle}>📈 Trending Topics</div>
-        {trending.map((t, i) => (
-          <div key={t.name} style={styles.trendRow}>
-            <span style={styles.trendNum}>{i + 1}</span>
-            <div>
-              <div style={styles.trendName}>{t.name}</div>
-              <div style={styles.trendCount}>{t.count}</div>
-            </div>
-          </div>
-        ))}
+      <div style={styles.searchBox}>
+        <span style={styles.searchIcon}>🔎</span>
+        <input
+          value={query}
+          onChange={(e) => {
+            const next = e.target.value
+            setQuery(next)
+            if (!next.trim()) {
+              setUserResults([])
+              setUserLoading(false)
+              setUserError('')
+            }
+          }}
+          placeholder="Search users"
+          style={styles.searchInput}
+        />
       </div>
 
       {/* Who to follow */}
       <div style={styles.widget}>
         <div style={styles.widgetTitle}>👥 People to Follow</div>
-        {suggested.map((s) => (
-          <div key={s.name} style={styles.suggestRow}>
-            <Avatar name={s.name} size="sm" />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={styles.suggestName}>{s.name}</div>
-              <div style={styles.suggestSub}>{s.sub}</div>
+        {userLoading ? (
+          <div style={styles.searchEmpty}>Searching…</div>
+        ) : userError ? (
+          <div style={styles.searchEmpty}>{userError}</div>
+        ) : listUsers.length === 0 ? (
+          <div style={styles.searchEmpty}>No user results.</div>
+        ) : listUsers.map((u) => {
+          const id = u?.id
+          const name = u?.firstName || u?.lastName
+            ? `${u?.firstName || ''} ${u?.lastName || ''}`.trim()
+            : (u?.name || u?.email || 'Unknown')
+          const sub = u?.sub || u?.email || ''
+          const key = id != null ? `u:${id}` : `s:${name}`
+          const followKey = id != null ? String(id) : name
+          return (
+            <div key={key} style={styles.suggestRow}>
+              <div onClick={() => { if (id != null) navigate(`/profile/${id}`) }} style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0, cursor: id != null ? 'pointer' : 'default' }}>
+                <Avatar name={name} src={u?.avatarUrl} size="sm" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={styles.suggestName}>{name}</div>
+                  <div style={styles.suggestSub}>{sub}</div>
+                </div>
+              </div>
+              <button
+                onClick={async () => {
+                  if (id == null) return
+                  if (isGuest) { navigate('/login'); return }
+                  try {
+                    const res = await userApi.toggleFollow(id, user?.id ?? null)
+                    setFollowed(f => ({ ...f, [followKey]: !!res.following }))
+                  } catch (e) {
+                    alert(e?.message || 'Failed to follow user.')
+                  }
+                }}
+                style={{
+                  ...styles.followBtn,
+                  background: followed[followKey] ? theme.colors.amberPale : 'transparent',
+                  color: followed[followKey] ? theme.colors.amberDark : theme.colors.amber,
+                }}
+              >
+                {followed[followKey] ? '✓ Following' : 'Follow'}
+              </button>
             </div>
-            <button
-              onClick={() => setFollowed(f => ({ ...f, [s.name]: !f[s.name] }))}
-              style={{
-                ...styles.followBtn,
-                background: followed[s.name] ? theme.colors.amberPale : 'transparent',
-                color: followed[s.name] ? theme.colors.amberDark : theme.colors.amber,
-              }}
-            >
-              {followed[s.name] ? '✓ Following' : 'Follow'}
-            </button>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </aside>
   );
@@ -245,8 +393,18 @@ function SkeletonCard() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = {
-  shell: { display: 'flex', minHeight: '100vh', background: theme.colors.cream },
-  main: { flex: 1, padding: '24px', maxWidth: '640px', minWidth: 0 },
+  shell: { minHeight: '100vh', background: theme.colors.cream },
+  layout: {
+    width: '100%',
+    maxWidth: '1240px',
+    margin: '0 auto',
+    padding: '24px 16px',
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    gap: '18px',
+  },
+  main: { flex: '0 1 640px', minWidth: 0 },
   header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' },
   title: { fontFamily: theme.fonts.display, fontSize: '26px', fontWeight: '700', color: theme.colors.ink },
   tabs: {
@@ -275,6 +433,23 @@ const styles = {
     color: theme.colors.ink,
     fontWeight: '600',
     boxShadow: theme.shadows.sm,
+  },
+  errorBanner: {
+    background: theme.colors.warmWhite,
+    border: `1px solid ${theme.colors.rose}40`,
+    borderRadius: theme.radius.lg,
+    padding: '12px 14px',
+    marginBottom: '16px',
+  },
+  retryBtn: {
+    border: `1px solid ${theme.colors.border}`,
+    background: 'transparent',
+    borderRadius: theme.radius.sm,
+    padding: '6px 10px',
+    fontFamily: theme.fonts.body,
+    fontSize: '12px',
+    cursor: 'pointer',
+    color: theme.colors.inkMuted,
   },
   guestBanner: {
     background: `linear-gradient(135deg, ${theme.colors.ink}, #2a1a08)`,
@@ -387,13 +562,33 @@ const styles = {
   rightBar: {
     width: '280px',
     flexShrink: 0,
-    padding: '24px 16px',
     position: 'sticky',
-    top: 0,
-    height: '100vh',
+    top: '24px',
+    maxHeight: 'calc(100vh - 48px)',
     overflowY: 'auto',
     '@media(max-width:900px)': { display: 'none' },
   },
+  searchBox: {
+    background: theme.colors.warmWhite,
+    borderRadius: theme.radius.full,
+    border: `1px solid ${theme.colors.border}`,
+    padding: '10px 12px',
+    marginBottom: '14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  },
+  searchIcon: { color: theme.colors.inkMuted, fontSize: '14px' },
+  searchInput: {
+    width: '100%',
+    border: 'none',
+    outline: 'none',
+    fontFamily: theme.fonts.body,
+    fontSize: '13px',
+    color: theme.colors.ink,
+    background: 'transparent',
+  },
+  searchEmpty: { color: theme.colors.inkMuted, fontFamily: theme.fonts.body, fontSize: '12px' },
   widget: {
     background: theme.colors.warmWhite,
     borderRadius: theme.radius.xl,
@@ -434,5 +629,50 @@ const styles = {
     transition: theme.transition,
     fontFamily: theme.fonts.body,
     whiteSpace: 'nowrap',
+  },
+  modalOverlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(15, 23, 42, 0.55)',
+    zIndex: 20000,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '18px',
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: '560px',
+    background: theme.colors.warmWhite,
+    borderRadius: theme.radius.xl,
+    border: `1px solid ${theme.colors.border}`,
+    boxShadow: '0 24px 80px rgba(0,0,0,0.30)',
+    padding: '22px 22px 18px',
+    fontFamily: theme.fonts.body,
+  },
+  modalTitle: { fontFamily: theme.fonts.display, fontSize: '22px', fontWeight: 800, color: theme.colors.ink, marginBottom: '8px' },
+  modalBody: { color: theme.colors.inkMuted, fontSize: '14px', lineHeight: 1.5, marginBottom: '18px' },
+  modalActions: { display: 'flex', justifyContent: 'space-between', gap: '12px' },
+  modalCancel: {
+    padding: '10px 18px',
+    border: `1.5px solid ${theme.colors.border}`,
+    borderRadius: theme.radius.md,
+    background: 'transparent',
+    color: theme.colors.inkMuted,
+    fontWeight: 700,
+    cursor: 'pointer',
+    fontFamily: theme.fonts.body,
+    minWidth: '120px',
+  },
+  modalDanger: {
+    padding: '10px 22px',
+    border: 'none',
+    borderRadius: theme.radius.md,
+    background: theme.colors.amberDark,
+    color: theme.colors.warmWhite,
+    fontWeight: 800,
+    cursor: 'pointer',
+    fontFamily: theme.fonts.body,
+    minWidth: '120px',
   },
 };

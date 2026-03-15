@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { AuthContext } from './auth-context'
+import { authApi } from '../utils/api'
 
 export default function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('token'))
@@ -19,7 +20,8 @@ export default function AuthProvider({ children }) {
     localStorage.setItem('user', JSON.stringify(u))
   }
 
-  const logout = () => {
+  const logout = async () => {
+    await authApi.logout()
     setToken(null)
     setUser(null)
     localStorage.removeItem('token')

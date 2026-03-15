@@ -59,6 +59,7 @@ export default function RegisterPage() {
         lastName: form.lastName,
       });
       login(res.token, res.user);
+      sessionStorage.setItem('dt_toast', JSON.stringify({ message: 'Registration successful.', type: 'success' }));
       navigate('/feed');
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');

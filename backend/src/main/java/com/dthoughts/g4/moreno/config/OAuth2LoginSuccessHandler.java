@@ -40,7 +40,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 					+ "&id=" + urlEncode(String.valueOf(user.getId()))
 					+ "&email=" + urlEncode(user.getEmail())
 					+ "&firstName=" + urlEncode(user.getFirstName())
-					+ "&lastName=" + urlEncode(user.getLastName());
+					+ "&lastName=" + urlEncode(user.getLastName())
+					+ "&avatarUrl=" + urlEncode(user.getAvatarUrl())
+					+ "&coverImageUrl=" + urlEncode(user.getCoverImageUrl());
 
 			response.sendRedirect(redirect);
 		} catch (RuntimeException e) {

@@ -38,8 +38,11 @@ export default function LoginPage() {
       email: url.searchParams.get('email') || '',
       firstName: url.searchParams.get('firstName') || '',
       lastName: url.searchParams.get('lastName') || '',
+      avatarUrl: url.searchParams.get('avatarUrl') || '',
+      coverImageUrl: url.searchParams.get('coverImageUrl') || '',
     };
 
+    sessionStorage.setItem('dt_toast', JSON.stringify({ message: 'Login successful.', type: 'success' }));
     login(token, u);
     url.searchParams.delete('token');
     url.searchParams.delete('accessToken');
@@ -47,6 +50,8 @@ export default function LoginPage() {
     url.searchParams.delete('email');
     url.searchParams.delete('firstName');
     url.searchParams.delete('lastName');
+    url.searchParams.delete('avatarUrl');
+    url.searchParams.delete('coverImageUrl');
     window.history.replaceState({}, '', url.toString());
     navigate('/feed', { replace: true });
   }, [login, navigate]);
@@ -68,6 +73,7 @@ export default function LoginPage() {
     try {
       const res = await authApi.login(form);
       login(res.token, res.user);
+      sessionStorage.setItem('dt_toast', JSON.stringify({ message: 'Login successful.', type: 'success' }));
       navigate('/feed');
     } catch (err) {
       setError(err.message || 'Invalid email or password.');
@@ -160,7 +166,7 @@ export default function LoginPage() {
                 onBlur={e  => e.target.style.borderColor = theme.colors.border}
               />
               <div style={{ textAlign: 'right', marginTop: '6px' }}>
-                <span style={styles.forgotLink}>Forgot password?</span>
+                <Link to="/forgot-password" style={styles.forgotLink}>Forgot password?</Link>
               </div>
             </div>
 
@@ -353,6 +359,7 @@ const styles = {
     cursor: 'pointer',
     fontWeight: '600',
     fontFamily: theme.fonts.body,
+    textDecoration: 'none',
   },
   googleBtn: {
     width: '100%',

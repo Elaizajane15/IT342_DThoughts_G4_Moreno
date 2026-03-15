@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { theme } from '../theme'
 
 function initialsFromName(name) {
@@ -12,11 +13,14 @@ const SIZES = {
   sm: 32,
   md: 40,
   lg: 56,
+  xl: 96,
 }
 
-export default function Avatar({ name, size = 'md', src }) {
+export default function Avatar({ name, size = 'md', src, style, onClick }) {
   const px = SIZES[size] ?? SIZES.md
   const initials = initialsFromName(name)
+  const [failedSrc, setFailedSrc] = useState(null)
+  const failed = !!src && failedSrc === src
 
   const baseStyle = {
     width: px,
@@ -32,17 +36,20 @@ export default function Avatar({ name, size = 'md', src }) {
     fontWeight: 700,
     color: theme.colors.ink,
     fontSize: px <= 32 ? '12px' : px <= 40 ? '13px' : '16px',
+    cursor: onClick ? 'pointer' : 'default',
   }
 
-  if (src) {
+  if (src && !failed) {
     return (
       <img
         src={src}
         alt={name ? `${name} avatar` : 'avatar'}
-        style={{ ...baseStyle, objectFit: 'cover', display: 'block' }}
+        style={{ ...baseStyle, objectFit: 'cover', display: 'block', ...(style || {}) }}
+        onClick={onClick}
+        onError={() => setFailedSrc(src)}
       />
     )
   }
 
-  return <div style={baseStyle}>{initials}</div>
+  return <div style={{ ...baseStyle, ...(style || {}) }} onClick={onClick}>{initials}</div>
 }
