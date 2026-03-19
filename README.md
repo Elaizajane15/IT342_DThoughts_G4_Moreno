@@ -3,8 +3,8 @@
 ## What Was Implemented / Updated
 
 ### Feed (For You / Following)
-- Fixed the **Following** tab so it properly loads content instead of showing a blank page.
-- Fixed the **active tab highlight** behavior so the white underline switches correctly between **For You** and **Following**.
+- Fixed the 'Following' tab so it properly loads content instead of showing a blank page.
+- Fixed the 'active tab highlight' behavior so the white underline switches correctly between **For You** and 'Following'.
 - Synced tab state with the URL so navigation/back/refresh keeps the correct active tab.
 
 Files updated:
@@ -61,3 +61,5 @@ Files updated:
 - Saved added accounts locally (recent accounts list for quick switching on the same device).
 - Added logout with a confirmation modal ("Are you sure you want to log out?").
 - Added logout toast notification and kept the handle format like `@"user"`.
+### Day 7 
+- Added edit comment feature (only the comment owner can edit).

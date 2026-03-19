@@ -145,6 +145,30 @@ public class PostInteractionService {
 		return postCommentRepository.findAllByPostIdOrderByCreatedAtDesc(postId).stream().map(this::toDto).toList();
 	}
 
+	@Transactional
+	public CommentDto editComment(Long postId, Long commentId, Long userId, String content) {
+		if (postId == null) throw new RuntimeException("postId is required.");
+		if (commentId == null) throw new RuntimeException("commentId is required.");
+		if (userId == null) throw new RuntimeException("userId is required.");
+		String text = content == null ? "" : content.trim();
+		if (text.isEmpty()) throw new RuntimeException("content is required.");
+		if (text.length() > 500) throw new RuntimeException("content must be 500 characters or less.");
+
+		Optional<PostComment> commentOpt = postCommentRepository.findById(commentId);
+		if (commentOpt.isEmpty()) throw new RuntimeException("Comment not found.");
+
+		PostComment comment = commentOpt.get();
+		Long commentPostId = comment.getPost() == null ? null : comment.getPost().getId();
+		if (commentPostId == null || !commentPostId.equals(postId)) throw new RuntimeException("Comment not found.");
+
+		Long commentUserId = comment.getUser() == null ? null : comment.getUser().getId();
+		if (commentUserId == null || !commentUserId.equals(userId)) throw new RuntimeException("Not allowed.");
+
+		comment.setContent(text);
+		PostComment saved = postCommentRepository.save(comment);
+		return toDto(saved);
+	}
+
 	private CommentDto toDto(PostComment c) {
 		Long userId = c.getUser() == null ? null : c.getUser().getId();
 		String userName = null;

@@ -325,6 +325,24 @@ export const postsApi = {
       createdAt: data.createdAt ?? null,
     }
   },
+  async updateComment(postId, commentId, { userId, content }) {
+    const res = await fetch(`${BASE_URL}/api/posts/${postId}/comments/${commentId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ userId, content }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.message || 'Failed to update comment.')
+    return {
+      id: data.id,
+      userId: data.userId ?? null,
+      userName: data.userName ?? null,
+      userAvatarUrl: data.userAvatarUrl ?? null,
+      content: data.content ?? '',
+      createdAt: data.createdAt ?? null,
+    }
+  },
   async delete(id) {
     const res = await fetch(`${BASE_URL}/api/posts/${id}`, {
       method: 'DELETE',

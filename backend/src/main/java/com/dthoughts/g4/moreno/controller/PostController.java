@@ -221,6 +221,27 @@ public class PostController {
 		}
 	}
 
+	@PutMapping("/{postId}/comments/{commentId}")
+	public ResponseEntity<?> editComment(
+			@PathVariable Long postId,
+			@PathVariable Long commentId,
+			@RequestBody CreateCommentRequest request
+	) {
+		try {
+			CommentDto dto = postInteractionService.editComment(
+					postId,
+					commentId,
+					request == null ? null : request.getUserId(),
+					request == null ? null : request.getContent()
+			);
+			return ResponseEntity.ok(dto);
+		} catch (RuntimeException e) {
+			Map<String, String> error = new HashMap<>();
+			error.put("message", e.getMessage());
+			return ResponseEntity.badRequest().body(error);
+		}
+	}
+
 	@PostMapping("/{postId}/upload")
 	public ResponseEntity<?> uploadImage(@PathVariable Long postId, @RequestParam("file") MultipartFile file) {
 		try {

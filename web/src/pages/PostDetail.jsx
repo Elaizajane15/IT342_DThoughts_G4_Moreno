@@ -26,6 +26,9 @@ export default function PostDetailPage() {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingCommentText, setEditingCommentText] = useState('');
+  const [editingSaving, setEditingSaving] = useState(false);
   const commentRef = useRef(null);
 
   const postId = useMemo(() => {
@@ -388,8 +391,68 @@ export default function PostDetailPage() {
                           {c.userName || 'User'}
                           <span style={styles.commentTime}> · {formatDate(c.createdAt)}</span>
                         </div>
+                        {!isGuest && c.userId != null && user?.id != null && Number(c.userId) === Number(user.id) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCommentId(c.id);
+                              setEditingCommentText(c.content || '');
+                            }}
+                            style={styles.commentActionBtn}
+                          >
+                            Edit
+                          </button>
+                        )}
                       </div>
-                      <div style={styles.commentText}>{c.content}</div>
+                      {editingCommentId === c.id ? (
+                        <div>
+                          <textarea
+                            value={editingCommentText}
+                            onChange={(e) => setEditingCommentText(e.target.value)}
+                            rows={2}
+                            style={styles.commentEditInput}
+                          />
+                          <div style={styles.commentEditActions}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingCommentId(null);
+                                setEditingCommentText('');
+                              }}
+                              style={styles.commentEditCancel}
+                              disabled={editingSaving}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (editingSaving) return;
+                                if (isGuest || postId == null || user?.id == null) return;
+                                const nextText = editingCommentText.trim();
+                                if (!nextText) return;
+                                setEditingSaving(true);
+                                try {
+                                  const updated = await postsApi.updateComment(postId, c.id, { userId: user.id, content: nextText });
+                                  setComments((prev) => prev.map((x) => (x.id === c.id ? { ...x, content: updated.content } : x)));
+                                  setEditingCommentId(null);
+                                  setEditingCommentText('');
+                                } catch (e) {
+                                  setToast({ message: e?.message || 'Failed to update comment.', type: 'error' });
+                                } finally {
+                                  setEditingSaving(false);
+                                }
+                              }}
+                              style={{ ...styles.commentEditSave, opacity: editingSaving ? 0.7 : 1 }}
+                              disabled={!editingCommentText.trim() || editingSaving}
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={styles.commentText}>{c.content}</div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -574,6 +637,52 @@ const styles = {
   commentName: { fontFamily: theme.fonts.body, fontSize: '13px', fontWeight: 800, color: theme.colors.ink },
   commentTime: { fontFamily: theme.fonts.body, fontSize: '12px', color: theme.colors.inkMuted, fontWeight: 400 },
   commentText: { marginTop: '2px', fontFamily: theme.fonts.body, fontSize: '13px', color: theme.colors.ink, lineHeight: 1.55 },
+  commentActionBtn: {
+    border: 'none',
+    background: 'transparent',
+    color: theme.colors.inkMuted,
+    cursor: 'pointer',
+    fontFamily: theme.fonts.body,
+    fontSize: '12px',
+    fontWeight: 700,
+    padding: 0,
+  },
+  commentEditInput: {
+    width: '100%',
+    marginTop: '8px',
+    borderRadius: theme.radius.lg,
+    border: `1px solid ${theme.colors.border}`,
+    background: theme.colors.cream,
+    padding: '10px 10px',
+    fontFamily: theme.fonts.body,
+    fontSize: '13px',
+    color: theme.colors.ink,
+    outline: 'none',
+    resize: 'vertical',
+  },
+  commentEditActions: { display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '8px' },
+  commentEditCancel: {
+    padding: '8px 12px',
+    borderRadius: theme.radius.lg,
+    border: `1px solid ${theme.colors.border}`,
+    background: theme.colors.warmWhite,
+    cursor: 'pointer',
+    fontFamily: theme.fonts.body,
+    fontSize: '12px',
+    fontWeight: 700,
+    color: theme.colors.ink,
+  },
+  commentEditSave: {
+    padding: '8px 12px',
+    borderRadius: theme.radius.lg,
+    border: 'none',
+    background: theme.colors.ink,
+    cursor: 'pointer',
+    fontFamily: theme.fonts.body,
+    fontSize: '12px',
+    fontWeight: 800,
+    color: theme.colors.cream,
+  },
   loginCta: {
     marginTop: '14px',
     padding: '9px 14px',
