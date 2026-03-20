@@ -1,210 +1,153 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Avatar from './Avatar'
 import { useNavigate } from 'react-router-dom'
-import { theme } from '../theme'
 import { filesApi, postsApi } from '../utils/api'
 
-function formatTimestamp(value) {
-  if (!value) return ''
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return String(value)
-  return d.toLocaleString()
-}
+/* ── Warm Parchment ─────────────────────────────── */
+const P = {
+  bg: '#FFF8EE', card: '#ffffff', surface: '#F5ECD4', surfaceHi: '#EDE0C4',
+  border: 'rgba(197,162,100,0.28)', borderHov: 'rgba(197,162,100,0.55)',
+  amber: '#E8C97A', amberDark: '#C9A84C', amberPale: 'rgba(232,201,122,0.18)',
+  ink: '#3D2600', muted: '#7A6040', mutedSoft: 'rgba(122,96,64,0.6)',
+  rose: '#c0392b', rosePale: 'rgba(192,57,43,0.07)',
+  fHead: "'Playfair Display','Georgia',serif",
+  fBody: "'Lora','Georgia',serif",
+  fMono: "'DM Mono',monospace",
+};
 
 function formatRelativeTime(value) {
   if (!value) return ''
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return String(value)
-
-  const diffMs = Date.now() - d.getTime()
-  const diffSec = Math.floor(diffMs / 1000)
-  if (diffSec < 10) return 'just now'
-  if (diffSec < 60) return `${diffSec}s ago`
-  const diffMin = Math.floor(diffSec / 60)
-  if (diffMin < 60) return `${diffMin}m ago`
-  const diffHr = Math.floor(diffMin / 60)
-  if (diffHr < 24) return `${diffHr}h ago`
-  const diffDay = Math.floor(diffHr / 24)
-  if (diffDay < 7) return `${diffDay}d ago`
+  const s = Math.floor((Date.now() - d.getTime()) / 1000)
+  if (s < 10) return 'just now'
+  if (s < 60) return `${s}s ago`
+  const m = Math.floor(s / 60)
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  const dy = Math.floor(h / 24)
+  if (dy < 7) return `${dy}d ago`
   return d.toLocaleDateString()
 }
 
 export default function ThoughtCard({ post, onDelete, viewer = null, initialSaved = false, initialLiked = false }) {
-  const name = post?.userName ?? 'Daily User'
-  const createdAt = formatRelativeTime(post?.createdAt || post?.updatedAt) || formatTimestamp(post?.createdAt)
-  const navigate = useNavigate()
-  const postId = post?.id
-  const isGuest = !viewer
-  const [menuOpen, setMenuOpen] = useState(false)
+  const name      = post?.userName ?? 'Daily User'
+  const createdAt = formatRelativeTime(post?.createdAt || post?.updatedAt)
+  const navigate  = useNavigate()
+  const postId    = post?.id
+  const isGuest   = !viewer
+
+  const [menuOpen,      setMenuOpen]      = useState(false)
+  const [cardHov,       setCardHov]       = useState(false)
   const menuRef = useRef(null)
-  const [saved, setSaved] = useState(!!initialSaved)
-  const [liked, setLiked] = useState(!!initialLiked)
-  const [likeCount, setLikeCount] = useState(Number(post?.likeCount) || 0)
-  const [commentCount, setCommentCount] = useState(Number(post?.commentCount) || 0)
-  const [replyOpen, setReplyOpen] = useState(false)
-  const [replyText, setReplyText] = useState('')
-  const [replyLoading, setReplyLoading] = useState(false)
+  const [saved,         setSaved]         = useState(!!initialSaved)
+  const [liked,         setLiked]         = useState(!!initialLiked)
+  const [likeCount,     setLikeCount]     = useState(Number(post?.likeCount) || 0)
+  const [commentCount,  setCommentCount]  = useState(Number(post?.commentCount) || 0)
+  const [replyOpen,     setReplyOpen]     = useState(false)
+  const [replyText,     setReplyText]     = useState('')
+  const [replyLoading,  setReplyLoading]  = useState(false)
 
   const moodLabel = post?.mood ?? null
-  const handle = String(name).trim().toLowerCase().replace(/\s+/g, '')
+  const handle    = String(name).trim().toLowerCase().replace(/\s+/g, '')
   const moodEmoji = useMemo(() => {
     const m = String(moodLabel || '').toLowerCase()
     if (!m) return null
-    if (m.includes('happy')) return '😊'
+    if (m.includes('happy'))   return '😊'
     if (m.includes('reflect')) return '🤔'
-    if (m.includes('sad')) return '😢'
-    if (m.includes('motiv')) return '💪'
-    if (m.includes('peace')) return '😌'
-    if (m.includes('frust')) return '😤'
-    if (m.includes('excit')) return '🎉'
-    if (m.includes('tired')) return '😴'
+    if (m.includes('sad'))     return '😢'
+    if (m.includes('motiv'))   return '💪'
+    if (m.includes('peace'))   return '😌'
+    if (m.includes('frust'))   return '😤'
+    if (m.includes('excit'))   return '🎉'
+    if (m.includes('tired'))   return '😴'
     return '🙂'
   }, [moodLabel])
 
-  useEffect(() => {
-    setLikeCount(Number(post?.likeCount) || 0)
-    setCommentCount(Number(post?.commentCount) || 0)
-  }, [post?.commentCount, post?.likeCount])
-
-  useEffect(() => {
-    setSaved(!!initialSaved)
-  }, [initialSaved, postId])
-
-  useEffect(() => {
-    setLiked(!!initialLiked)
-  }, [initialLiked, postId])
+  useEffect(() => { setLikeCount(Number(post?.likeCount) || 0); setCommentCount(Number(post?.commentCount) || 0) }, [post?.likeCount, post?.commentCount])
+  useEffect(() => { setSaved(!!initialSaved) }, [initialSaved, postId])
+  useEffect(() => { setLiked(!!initialLiked) }, [initialLiked, postId])
 
   useEffect(() => {
     if (!menuOpen) return
-    const onMouseDown = (e) => {
-      if (!menuRef.current) return
-      if (menuRef.current.contains(e.target)) return
-      setMenuOpen(false)
-    }
-    const onKeyDown = (e) => {
-      if (e.key === 'Escape') setMenuOpen(false)
-    }
-    document.addEventListener('mousedown', onMouseDown)
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('mousedown', onMouseDown)
-      document.removeEventListener('keydown', onKeyDown)
-    }
+    const onMD = e => { if (!menuRef.current?.contains(e.target)) setMenuOpen(false) }
+    const onKD = e => { if (e.key === 'Escape') setMenuOpen(false) }
+    document.addEventListener('mousedown', onMD)
+    document.addEventListener('keydown', onKD)
+    return () => { document.removeEventListener('mousedown', onMD); document.removeEventListener('keydown', onKD) }
   }, [menuOpen])
 
-  const toggleLike = async (e) => {
+  const toggleLike = async e => {
     e.stopPropagation()
     if (!postId) return
     if (isGuest) { navigate('/login'); return }
-    try {
-      const res = await postsApi.toggleLike(postId, viewer?.id ?? null)
-      setLiked(!!res.liked)
-      setLikeCount(Number(res.likeCount) || 0)
-    } catch {
-      alert('Failed to like post.')
-    }
+    try { const r = await postsApi.toggleLike(postId, viewer?.id ?? null); setLiked(!!r.liked); setLikeCount(Number(r.likeCount) || 0) }
+    catch { alert('Failed to like post.') }
   }
 
-  const toggleSave = async (e) => {
+  const toggleSave = async e => {
     e.stopPropagation()
     if (!postId) return
     if (isGuest) { navigate('/login'); return }
-    try {
-      const res = await postsApi.toggleSave(postId, viewer?.id ?? null)
-      setSaved(!!res.saved)
-    } catch {
-      alert('Failed to save post.')
-    }
+    try { const r = await postsApi.toggleSave(postId, viewer?.id ?? null); setSaved(!!r.saved) }
+    catch { alert('Failed to save post.') }
   }
 
-  const openReply = (e) => {
+  const openReply = e => {
     e.stopPropagation()
     if (!postId) return
     if (isGuest) { navigate('/login'); return }
     setReplyOpen(true)
   }
 
-  const closeReply = () => {
-    setReplyOpen(false)
-    setReplyText('')
-  }
+  const closeReply = () => { setReplyOpen(false); setReplyText('') }
 
   const submitReply = async () => {
-    if (!postId) return
-    if (isGuest) { navigate('/login'); return }
+    if (!postId || isGuest) return
     const text = String(replyText || '').trim()
     if (!text) return
     setReplyLoading(true)
     try {
       await postsApi.addComment(postId, { userId: viewer?.id ?? null, content: text })
-      setCommentCount((n) => n + 1)
+      setCommentCount(n => n + 1)
       closeReply()
-    } catch {
-      alert('Failed to add comment.')
-    } finally {
-      setReplyLoading(false)
-    }
+    } catch { alert('Failed to add comment.') }
+    finally { setReplyLoading(false) }
   }
 
   const postUrl = postId ? `${window.location.origin}/post/${postId}` : window.location.href
 
   const replyModal = replyOpen && (
-    <div
-      style={styles.replyOverlay}
-      role="dialog"
-      aria-modal="true"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) closeReply()
-      }}
-    >
-      <div style={styles.replyCard} onMouseDown={(e) => e.stopPropagation()}>
-        <div style={styles.replyTop}>
-          <button type="button" onClick={closeReply} style={styles.replyClose} aria-label="Close">
-            ✕
-          </button>
+    <div style={S.replyOverlay} role="dialog" aria-modal="true"
+      onMouseDown={e => { if (e.target === e.currentTarget) closeReply() }}>
+      <div style={S.replyCard} onMouseDown={e => e.stopPropagation()}>
+        {/* Top bar */}
+        <div style={{ display:'flex', justifyContent:'flex-start', marginBottom:12 }}>
+          <button type="button" onClick={closeReply} style={S.replyClose} aria-label="Close">✕</button>
         </div>
-
-        <div style={styles.replyContext}>
+        {/* Original post context */}
+        <div style={S.replyContext}>
           <Avatar name={name} size="sm" src={filesApi.getUrl(post?.userAvatarUrl)} />
-          <div style={{ minWidth: 0 }}>
-            <div style={styles.replyAuthor}>
-              {name} <span style={styles.replyHandle}>@{handle}</span>
-            </div>
-            <div style={styles.replyingTo}>Replying to @{handle}</div>
+          <div style={{ minWidth:0 }}>
+            <p style={S.replyAuthor}>{name} <span style={S.replyHandle}>@{handle}</span></p>
+            <p style={S.replyingTo}>Replying to @{handle}</p>
           </div>
         </div>
-
-        <div style={styles.replyCompose}>
-          <Avatar
-            name={`${viewer?.firstName || ''} ${viewer?.lastName || ''}`.trim() || viewer?.email || 'User'}
-            size="sm"
-            src={filesApi.getUrl(viewer?.avatarUrl)}
-          />
-          <textarea
-            value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
-            placeholder="Post your reply"
-            rows={3}
-            style={styles.replyInput}
-          />
+        {/* Compose */}
+        <div style={S.replyCompose}>
+          <Avatar name={`${viewer?.firstName||''} ${viewer?.lastName||''}`.trim() || viewer?.email || 'User'} size="sm" src={filesApi.getUrl(viewer?.avatarUrl)} />
+          <textarea value={replyText} onChange={e => setReplyText(e.target.value)}
+            placeholder="Post your reply…" rows={3} style={S.replyInput} />
         </div>
-
-        <div style={styles.replyBottom}>
-          <div style={styles.replyActions}>
-            <button type="button" style={styles.replyIconBtn} aria-label="Media" disabled>
-              🖼️
-            </button>
-            <button type="button" style={styles.replyIconBtn} aria-label="Emoji" disabled>
-              🙂
-            </button>
+        {/* Bottom */}
+        <div style={S.replyBottom}>
+          <div style={{ display:'flex', gap:8 }}>
+            {['🖼️','🙂'].map(ic => <button key={ic} type="button" style={S.replyIconBtn} disabled>{ic}</button>)}
           </div>
-          <button
-            type="button"
-            onClick={submitReply}
-            disabled={replyLoading || !replyText.trim()}
-            style={{ ...styles.replyBtn, opacity: (replyLoading || !replyText.trim()) ? 0.6 : 1 }}
-          >
-            Reply
+          <button type="button" onClick={submitReply} disabled={replyLoading || !replyText.trim()}
+            style={{ ...S.replyBtn, opacity: (replyLoading || !replyText.trim()) ? 0.6 : 1 }}>
+            {replyLoading ? 'Posting…' : 'Reply'}
           </button>
         </div>
       </div>
@@ -215,333 +158,112 @@ export default function ThoughtCard({ post, onDelete, viewer = null, initialSave
     <>
       {replyModal}
       <article
-        style={{ ...styles.card, cursor: postId ? 'pointer' : 'default' }}
+        style={{ ...S.card, cursor: postId ? 'pointer' : 'default', boxShadow: cardHov ? '0 6px 28px rgba(61,38,0,0.1)' : '0 2px 12px rgba(61,38,0,0.05)', transform: cardHov ? 'translateY(-1px)' : 'none' }}
         onClick={() => { if (postId) navigate(`/post/${postId}`) }}
-        onKeyDown={(e) => {
-          if (!postId) return
-          if (e.key === 'Enter' || e.key === ' ') navigate(`/post/${postId}`)
-        }}
+        onMouseEnter={() => setCardHov(true)}
+        onMouseLeave={() => setCardHov(false)}
         tabIndex={postId ? 0 : -1}
         role={postId ? 'button' : undefined}
       >
-        <div style={styles.header}>
-          <div
-            style={styles.headerLeft}
-            role="button"
-            tabIndex={0}
-            onClick={(e) => {
-              e.stopPropagation()
-              if (post?.userId != null) navigate(`/profile/${post.userId}`)
-              else navigate('/profile')
-            }}
-            onKeyDown={(e) => {
-              if (e.key !== 'Enter' && e.key !== ' ') return
-              e.stopPropagation()
-              if (post?.userId != null) navigate(`/profile/${post.userId}`)
-              else navigate('/profile')
-            }}
-          >
+        {/* Header */}
+        <div style={S.header}>
+          <div style={S.headerLeft}
+            role="button" tabIndex={0}
+            onClick={e => { e.stopPropagation(); navigate(post?.userId != null ? `/profile/${post.userId}` : '/profile') }}
+            onKeyDown={e => { if (e.key !== 'Enter' && e.key !== ' ') return; e.stopPropagation(); navigate(post?.userId != null ? `/profile/${post.userId}` : '/profile') }}>
             <Avatar name={name} size="md" src={filesApi.getUrl(post?.userAvatarUrl)} />
-            <div style={{ minWidth: 0 }}>
-              <div style={styles.topRow}>
-                <div style={styles.userName}>{name}</div>
-                <div style={styles.metaRow}>
-                  <span style={styles.metaText}>{createdAt}</span>
-                  {moodLabel && (
-                    <span style={styles.moodChip}>
-                      {moodEmoji ? `${moodEmoji} ` : ''}{moodLabel}
-                    </span>
-                  )}
-                </div>
+            <div style={{ minWidth:0 }}>
+              <p style={S.userName}>{name}</p>
+              <div style={S.metaRow}>
+                <span style={S.metaText}>{createdAt}</span>
+                {moodLabel && (
+                  <span style={S.moodChip}>{moodEmoji ? `${moodEmoji} ` : ''}{moodLabel}</span>
+                )}
               </div>
             </div>
           </div>
 
-          <div ref={menuRef} style={styles.menuWrap}>
-            <button
-              type="button"
-              aria-label="Post menu"
-              onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v) }}
-              style={styles.menuBtn}
-            >
-              ⋯
-            </button>
+          <div ref={menuRef} style={{ position:'relative', flexShrink:0 }}>
+            <button type="button" aria-label="Post menu"
+              onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
+              style={{ ...S.menuBtn, background: menuOpen ? P.surface : 'transparent' }}>⋯</button>
             {menuOpen && (
-              <div style={styles.menu}>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setMenuOpen(false)
-                    if (post?.userId != null) navigate(`/profile/${post.userId}`)
-                    else navigate('/profile')
-                  }}
-                  style={styles.menuItem}
-                >
-                  View profile
-                </button>
+              <div style={S.menu}>
+                <button type="button" onClick={e => { e.stopPropagation(); setMenuOpen(false); navigate(post?.userId != null ? `/profile/${post.userId}` : '/profile') }}
+                  style={S.menuItem} className="dt-mi">View profile</button>
                 {onDelete && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setMenuOpen(false)
-                      onDelete(postId)
-                    }}
-                    style={{ ...styles.menuItem, color: theme.colors.rose }}
-                  >
-                    Delete
-                  </button>
+                  <button type="button" onClick={e => { e.stopPropagation(); setMenuOpen(false); onDelete(postId) }}
+                    style={{ ...S.menuItem, color: P.rose }} className="dt-mi">Delete</button>
                 )}
               </div>
             )}
           </div>
         </div>
 
-        <div style={styles.body}>
-          <p style={styles.text}>{post?.text ?? ''}</p>
+        {/* Body */}
+        <div style={S.body}>
+          <p style={S.text}>{post?.text ?? ''}</p>
           {post?.imagePath && (
-            <div style={styles.imageWrap}>
-              <img
-                src={filesApi.getUrl(post.imagePath)}
-                alt=""
-                style={styles.image}
-                onClick={(e) => e.stopPropagation()}
-              />
+            <div style={S.imageWrap}>
+              <img src={filesApi.getUrl(post.imagePath)} alt="" style={S.image} onClick={e => e.stopPropagation()} />
             </div>
           )}
         </div>
 
-        <div style={styles.footer}>
-          <div style={styles.footerLeft}>
-            <button type="button" onClick={toggleLike} style={styles.iconBtn} aria-label="Like">
-              <span style={{ color: liked ? theme.colors.rose : theme.colors.inkMuted }}>
-                {liked ? '♥' : '♡'}
-              </span>
-              <span style={styles.iconLabel}>{likeCount}</span>
+        {/* Footer */}
+        <div style={S.footer}>
+          <div style={S.footerLeft}>
+            <button type="button" onClick={toggleLike} style={S.iconBtn} aria-label="Like">
+              <span style={{ color: liked ? P.rose : P.muted, fontSize:16 }}>{liked ? '♥' : '♡'}</span>
+              <span style={S.iconLabel}>{likeCount}</span>
             </button>
-            <button type="button" onClick={openReply} style={styles.iconBtn} aria-label="Comment">
-              <span style={{ color: theme.colors.inkMuted }}>💬</span>
-              <span style={styles.iconLabel}>{commentCount}</span>
+            <button type="button" onClick={openReply} style={S.iconBtn} aria-label="Comment">
+              <span style={{ fontSize:14 }}>💬</span>
+              <span style={S.iconLabel}>{commentCount}</span>
             </button>
-            <button type="button" onClick={toggleSave} style={styles.iconBtn} aria-label="Save">
-              <span style={{ color: theme.colors.inkMuted }}>🔖</span>
-              <span style={styles.iconLabel}>{saved ? 'Saved' : 'Save'}</span>
+            <button type="button" onClick={toggleSave} style={S.iconBtn} aria-label="Save">
+              <span style={{ fontSize:14, color: saved ? P.amberDark : P.muted }}>{saved ? '🔖' : '🔖'}</span>
+              <span style={{ ...S.iconLabel, color: saved ? P.amberDark : P.muted }}>{saved ? 'Saved' : 'Save'}</span>
             </button>
           </div>
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              navigator.clipboard.writeText(postUrl)
-            }}
-            style={styles.shareBtn}
-            aria-label="Share"
-          >
-            ↗ Share
-          </button>
+          <button type="button" onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(postUrl) }}
+            style={S.shareBtn} aria-label="Share">↗ Share</button>
         </div>
       </article>
     </>
   )
 }
 
-const styles = {
-  card: {
-    background: theme.colors.warmWhite,
-    borderRadius: theme.radius.xl,
-    border: `1px solid ${theme.colors.border}`,
-    boxShadow: theme.shadows.card,
-    padding: '18px',
-    marginBottom: '12px',
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '12px',
-    marginBottom: '10px',
-  },
-  headerLeft: { display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0, flex: 1 },
-  topRow: { minWidth: 0 },
-  userName: {
-    fontFamily: theme.fonts.display,
-    fontSize: '14px',
-    fontWeight: 800,
-    color: theme.colors.ink,
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    maxWidth: '360px',
-  },
-  metaRow: { display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px', flexWrap: 'wrap' },
-  metaText: { fontFamily: theme.fonts.body, fontSize: '12px', color: theme.colors.inkMuted },
-  moodChip: {
-    fontFamily: theme.fonts.body,
-    fontSize: '12px',
-    color: theme.colors.amberDark,
-    background: theme.colors.amberPale,
-    border: `1px solid ${theme.colors.amber}55`,
-    borderRadius: theme.radius.full,
-    padding: '2px 8px',
-    lineHeight: 1.6,
-  },
-  body: { fontFamily: theme.fonts.body },
-  text: { margin: 0, color: theme.colors.ink, fontSize: '14.5px', lineHeight: 1.6 },
-  imageWrap: {
-    marginTop: '12px',
-    borderRadius: theme.radius.xl,
-    overflow: 'hidden',
-    border: `1px solid ${theme.colors.border}`,
-    background: theme.colors.parchment,
-  },
-  image: { width: '100%', height: 'auto', display: 'block', objectFit: 'cover' },
-  footer: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '12px',
-    marginTop: '12px',
-    paddingTop: '12px',
-    borderTop: `1px solid ${theme.colors.border}`,
-  },
-  footerLeft: { display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' },
-  iconBtn: {
-    border: 'none',
-    background: 'transparent',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: 0,
-    fontFamily: theme.fonts.body,
-    color: theme.colors.inkMuted,
-    fontSize: '13px',
-  },
-  iconLabel: { fontWeight: 700 },
-  shareBtn: {
-    border: 'none',
-    background: 'transparent',
-    cursor: 'pointer',
-    fontFamily: theme.fonts.body,
-    color: theme.colors.inkMuted,
-    fontSize: '13px',
-    fontWeight: 700,
-    padding: 0,
-    whiteSpace: 'nowrap',
-  },
-  menuWrap: { position: 'relative', flexShrink: 0 },
-  menuBtn: {
-    width: '34px',
-    height: '34px',
-    borderRadius: theme.radius.full,
-    border: 'none',
-    background: 'transparent',
-    fontFamily: theme.fonts.body,
-    fontSize: '18px',
-    cursor: 'pointer',
-    color: theme.colors.inkMuted,
-    display: 'grid',
-    placeItems: 'center',
-  },
-  menu: {
-    position: 'absolute',
-    right: 0,
-    top: '38px',
-    background: theme.colors.warmWhite,
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: theme.radius.lg,
-    boxShadow: theme.shadows.md,
-    padding: '6px',
-    zIndex: 50,
-    minWidth: '160px',
-  },
-  menuItem: {
-    width: '100%',
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    textAlign: 'left',
-    padding: '10px 10px',
-    borderRadius: theme.radius.md,
-    fontFamily: theme.fonts.body,
-    fontSize: '13px',
-    color: theme.colors.ink,
-  },
-  replyOverlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(15, 23, 42, 0.55)',
-    zIndex: 30000,
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    padding: '40px 16px',
-  },
-  replyCard: {
-    width: '100%',
-    maxWidth: '620px',
-    background: theme.colors.warmWhite,
-    borderRadius: theme.radius.xl,
-    border: `1px solid ${theme.colors.border}`,
-    boxShadow: '0 24px 80px rgba(0,0,0,0.30)',
-    padding: '14px 16px 16px',
-    fontFamily: theme.fonts.body,
-  },
-  replyTop: { display: 'flex', justifyContent: 'flex-start', marginBottom: '10px' },
-  replyClose: {
-    width: '36px',
-    height: '36px',
-    borderRadius: theme.radius.full,
-    border: 'none',
-    background: 'transparent',
-    cursor: 'pointer',
-    color: theme.colors.inkMuted,
-    fontSize: '16px',
-    display: 'grid',
-    placeItems: 'center',
-  },
-  replyContext: { display: 'flex', gap: '10px', alignItems: 'flex-start', paddingBottom: '10px' },
-  replyAuthor: { fontFamily: theme.fonts.display, fontSize: '14px', fontWeight: 800, color: theme.colors.ink },
-  replyHandle: { fontFamily: theme.fonts.body, fontSize: '13px', fontWeight: 500, color: theme.colors.inkMuted, marginLeft: '6px' },
-  replyingTo: { fontFamily: theme.fonts.body, fontSize: '13px', color: theme.colors.inkMuted, marginTop: '2px' },
-  replyCompose: { display: 'flex', gap: '10px', alignItems: 'flex-start', marginTop: '8px' },
-  replyInput: {
-    flex: 1,
-    border: 'none',
-    outline: 'none',
-    resize: 'none',
-    background: 'transparent',
-    fontFamily: theme.fonts.body,
-    fontSize: '16px',
-    color: theme.colors.ink,
-    paddingTop: '6px',
-    minHeight: '90px',
-  },
-  replyBottom: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px' },
-  replyActions: { display: 'flex', gap: '10px', alignItems: 'center' },
-  replyIconBtn: {
-    width: '36px',
-    height: '36px',
-    borderRadius: theme.radius.full,
-    border: 'none',
-    background: 'transparent',
-    color: theme.colors.inkMuted,
-    cursor: 'not-allowed',
-    display: 'grid',
-    placeItems: 'center',
-    opacity: 0.7,
-  },
-  replyBtn: {
-    border: 'none',
-    borderRadius: theme.radius.full,
-    background: theme.colors.inkMuted,
-    color: theme.colors.warmWhite,
-    fontFamily: theme.fonts.body,
-    fontSize: '14px',
-    fontWeight: 800,
-    padding: '10px 18px',
-    cursor: 'pointer',
-  },
-}
+const S = {
+  card: { background: P.card, borderRadius:16, border:`1px solid ${P.border}`, padding:'18px', marginBottom:12, transition:'all 0.2s', fontFamily: P.fBody },
+  header: { display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom:10 },
+  headerLeft: { display:'flex', gap:12, alignItems:'center', minWidth:0, flex:1, cursor:'pointer' },
+  userName: { fontFamily: P.fHead, fontSize:14, fontWeight:700, color: P.ink, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', maxWidth:360, marginBottom:0 },
+  metaRow: { display:'flex', alignItems:'center', gap:8, marginTop:3, flexWrap:'wrap' },
+  metaText: { fontFamily: P.fMono, fontSize:11, color: P.muted },
+  moodChip: { fontFamily: P.fBody, fontSize:11.5, color: P.amberDark, background: P.amberPale, border:`1px solid rgba(197,162,100,0.35)`, borderRadius:50, padding:'2px 10px', lineHeight:1.6 },
+  body: { fontFamily: P.fBody },
+  text: { margin:0, color: P.ink, fontSize:14.5, lineHeight:1.7 },
+  imageWrap: { marginTop:12, borderRadius:12, overflow:'hidden', border:`1px solid ${P.border}`, background: P.surface },
+  image: { width:'100%', height:'auto', display:'block', objectFit:'cover' },
+  footer: { display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, marginTop:12, paddingTop:12, borderTop:`1px solid ${P.border}` },
+  footerLeft: { display:'flex', alignItems:'center', gap:14, flexWrap:'wrap' },
+  iconBtn: { border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', gap:6, padding:0, fontFamily: P.fBody, color: P.muted, fontSize:13 },
+  iconLabel: { fontWeight:700, color: P.muted, fontSize:12 },
+  shareBtn: { border:'none', background:'transparent', cursor:'pointer', fontFamily: P.fBody, color: P.muted, fontSize:13, fontWeight:700, padding:0, whiteSpace:'nowrap' },
+  menuBtn: { width:34, height:34, borderRadius:50, border:'none', fontFamily: P.fBody, fontSize:18, cursor:'pointer', color: P.muted, display:'flex', alignItems:'center', justifyContent:'center', transition:'background 0.2s' },
+  menu: { position:'absolute', right:0, top:38, background: P.card, border:`1px solid ${P.border}`, borderRadius:14, boxShadow:'0 8px 32px rgba(61,38,0,0.1)', padding:6, zIndex:50, minWidth:160 },
+  menuItem: { width:'100%', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', padding:'9px 12px', borderRadius:10, fontFamily: P.fBody, fontSize:13, color: P.ink, transition:'background 0.15s' },
+  replyOverlay: { position:'fixed', inset:0, background:'rgba(61,38,0,0.3)', zIndex:30000, display:'flex', alignItems:'flex-start', justifyContent:'center', padding:'40px 16px', backdropFilter:'blur(3px)' },
+  replyCard: { width:'100%', maxWidth:580, background: P.card, borderRadius:20, border:`1px solid ${P.border}`, boxShadow:'0 24px 80px rgba(61,38,0,0.16)', padding:'16px 18px 18px', fontFamily: P.fBody },
+  replyClose: { width:34, height:34, borderRadius:50, border:`1px solid ${P.border}`, background: P.surface, cursor:'pointer', color: P.muted, fontSize:14, display:'flex', alignItems:'center', justifyContent:'center', fontFamily: P.fMono },
+  replyContext: { display:'flex', gap:10, alignItems:'flex-start', paddingBottom:10, borderBottom:`1px solid ${P.border}` },
+  replyAuthor: { fontFamily: P.fHead, fontSize:14, fontWeight:700, color: P.ink, marginBottom:2 },
+  replyHandle: { fontFamily: P.fBody, fontSize:13, color: P.muted, marginLeft:6 },
+  replyingTo: { fontFamily: P.fBody, fontSize:12, color: P.muted },
+  replyCompose: { display:'flex', gap:10, alignItems:'flex-start', marginTop:12 },
+  replyInput: { flex:1, border:'none', outline:'none', resize:'none', background:'transparent', fontFamily: P.fBody, fontSize:15, color: P.ink, paddingTop:4, minHeight:80 },
+  replyBottom: { display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:12, paddingTop:10, borderTop:`1px solid ${P.border}` },
+  replyIconBtn: { width:34, height:34, borderRadius:50, border:'none', background:'transparent', color: P.muted, cursor:'not-allowed', display:'flex', alignItems:'center', justifyContent:'center', opacity:0.5 },
+  replyBtn: { border:'none', borderRadius:50, background:`linear-gradient(135deg,#E8C97A,#C9A84C)`, color: P.ink, fontFamily: P.fBody, fontSize:13, fontWeight:700, padding:'9px 22px', cursor:'pointer', transition:'all 0.2s', boxShadow:'0 2px 10px rgba(200,160,60,0.25)' },
+};

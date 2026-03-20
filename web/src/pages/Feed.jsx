@@ -6,31 +6,53 @@ import Avatar from '../components/Avatar';
 import Toast from '../components/Toast';
 import { useAuth } from '../hooks/useAuth';
 import { postsApi, quotesApi, filesApi, userApi } from '../utils/api';
-import { theme } from '../theme';
+
+/* ── Warm Parchment ──────────────────────────────────────────
+   #FFF8EE  warm ivory      — shell background
+   #F5ECD4  parchment       — card/widget bg
+   #EDE0C4  deep parchment  — surface hover
+   #E8C97A  golden amber    — accent
+   #C9A84C  amber dark      — links / active
+   #3D2600  espresso        — primary text
+   #7A6040  warm brown      — muted
+   ─────────────────────────────────────────────────────────── */
+
+const C = {
+  bg:        '#FFF8EE',
+  card:      '#ffffff',
+  surface:   '#F5ECD4',
+  surfaceHi: '#EDE0C4',
+  border:    'rgba(197,162,100,0.28)',
+  borderHov: 'rgba(197,162,100,0.5)',
+  amber:     '#E8C97A',
+  amberDark: '#C9A84C',
+  ink:       '#3D2600',
+  muted:     '#7A6040',
+  mutedSoft: 'rgba(122,96,64,0.6)',
+};
 
 const TABS = ['For You', 'Following'];
 
 export default function FeedPage() {
-  const navigate         = useNavigate();
-  const location         = useLocation();
-  const { user } = useAuth();
-  const isGuest = !user;
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const { user }  = useAuth();
+  const isGuest   = !user;
 
-  const [posts,     setPosts]     = useState([]);
-  const [quote,     setQuote]     = useState(null);
-  const [tab,       setTab]       = useState(() => {
+  const [posts,    setPosts]    = useState([]);
+  const [quote,    setQuote]    = useState(null);
+  const [tab,      setTab]      = useState(() => {
     const t = Number(new URLSearchParams(location.search).get('tab'));
     return Number.isFinite(t) && t >= 0 && t <= 1 ? t : 0;
   });
-  const [page,      setPage]      = useState(0);
-  const [hasMore,   setHasMore]   = useState(true);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState('');
-  const [compose,   setCompose]   = useState('');
-  const [toast,     setToast]     = useState(null);
+  const [page,    setPage]    = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState('');
+  const [compose, setCompose] = useState('');
+  const [toast,   setToast]   = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-  // Fetch daily quote
   useEffect(() => {
     quotesApi.getDailyQuote()
       .then(setQuote)
@@ -42,18 +64,14 @@ export default function FeedPage() {
     if (!raw) return;
     sessionStorage.removeItem('dt_toast');
     try {
-      const parsed = JSON.parse(raw);
-      if (parsed?.message) setToast({ message: String(parsed.message), type: parsed.type === 'error' ? 'error' : 'success' });
-    } catch {
-      setToast({ message: String(raw), type: 'success' });
-    }
+      const p = JSON.parse(raw);
+      if (p?.message) setToast({ message: String(p.message), type: p.type === 'error' ? 'error' : 'success' });
+    } catch { setToast({ message: String(raw), type: 'success' }); }
   }, []);
 
-  // Fetch posts
   const loadPosts = useCallback(async (reset = false) => {
     const p = reset ? 0 : page;
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     try {
       const res = tab === 1
         ? (isGuest || user?.id == null ? { content: [], totalPages: 0 } : await postsApi.getFollowing(user.id, p, 10))
@@ -63,35 +81,27 @@ export default function FeedPage() {
       setHasMore(p + 1 < res.totalPages);
     } catch (e) {
       setError(e?.message || 'Failed to load posts.');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, [isGuest, page, tab, user?.id]);
 
   useEffect(() => {
     const t = Number(new URLSearchParams(location.search).get('tab'));
     const next = Number.isFinite(t) && t >= 0 && t <= 1 ? t : 0;
-    setTab((prev) => (prev === next ? prev : next));
+    setTab(prev => prev === next ? prev : next);
   }, [location.search]);
 
-  useEffect(() => { loadPosts(true); }, [tab, loadPosts]);
+  useEffect(() => { loadPosts(true); }, [tab]);
 
-  const handleDelete = (postId) => {
-    setConfirmDeleteId(postId);
-  };
-
+  const handleDelete  = id  => setConfirmDeleteId(id);
   const confirmDelete = async () => {
-    const postId = confirmDeleteId;
-    if (postId == null) return;
+    const id = confirmDeleteId; if (id == null) return;
     try {
-      await postsApi.delete(postId);
-      setPosts(prev => prev.filter(p => p.id !== postId));
+      await postsApi.delete(id);
+      setPosts(prev => prev.filter(p => p.id !== id));
       setToast({ message: 'Post deleted.', type: 'success' });
     } catch (e) {
-      setToast({ message: e?.message || 'Failed to delete post.', type: 'error' });
-    } finally {
-      setConfirmDeleteId(null);
-    }
+      setToast({ message: e?.message || 'Failed to delete.', type: 'error' });
+    } finally { setConfirmDeleteId(null); }
   };
 
   const handleComposeSubmit = () => {
@@ -101,146 +111,135 @@ export default function FeedPage() {
   };
 
   return (
-    <div style={styles.shell}>
+    <div style={S.shell}>
+      <style>{CSS}</style>
       <Toast message={toast?.message} type={toast?.type || 'success'} onClose={() => setToast(null)} />
+
+      {/* Delete confirm modal */}
       {confirmDeleteId != null && (
-        <div style={styles.modalOverlay} role="dialog" aria-modal="true">
-          <div style={styles.modalCard}>
-            <div style={styles.modalTitle}>Delete Post</div>
-            <div style={styles.modalBody}>Are you sure you want to delete this post?</div>
-            <div style={styles.modalActions}>
-              <button type="button" onClick={() => setConfirmDeleteId(null)} style={styles.modalCancel}>
-                Cancel
-              </button>
-              <button type="button" onClick={confirmDelete} style={styles.modalDanger}>
-                Delete
-              </button>
+        <div style={S.modalOverlay}>
+          <div style={S.modalCard}>
+            <div style={S.modalIcon}>🗑️</div>
+            <h3 style={S.modalTitle}>Delete Post</h3>
+            <p style={S.modalBody}>Are you sure you want to delete this post? This cannot be undone.</p>
+            <div style={S.modalActions}>
+              <button type="button" onClick={() => setConfirmDeleteId(null)} style={S.modalCancel}>Cancel</button>
+              <button type="button" onClick={confirmDelete} style={S.modalDanger}>Delete Post</button>
             </div>
           </div>
         </div>
       )}
-      <div style={styles.layout}>
+
+      <div style={S.layout}>
         <Sidebar dailyQuote={quote} />
 
-        <main style={styles.main}>
-          <div style={styles.header}>
-            <h1 style={styles.title}>
-              Your <span style={{ color: theme.colors.amber }}>Feed</span>
-            </h1>
+        {/* ── Main column ── */}
+        <main style={S.main}>
+
+          {/* Header */}
+          <div style={S.header}>
+            <div>
+              <h1 style={S.title}>
+                Your <span style={{ color:C.amberDark, fontStyle:'italic' }}>Feed</span>
+              </h1>
+              <p style={S.headerSub}>What's on people's minds today</p>
+            </div>
+            {!isGuest && (
+              <button onClick={() => navigate('/create')} style={S.newPostBtn} className="dt-new-post">
+                ✏️ New Thought
+              </button>
+            )}
           </div>
 
-          <div style={styles.tabs}>
+          {/* Tabs */}
+          <div style={S.tabs}>
             {TABS.map((t, i) => (
-              <button
-                key={t}
+              <button key={t}
                 onClick={() => navigate(i === 0 ? '/feed' : `/feed?tab=${i}`)}
-                style={{ ...styles.tab, ...(tab === i ? styles.tabActive : {}) }}
-              >
+                style={{ ...S.tab, ...(tab === i ? S.tabActive : {}) }}>
                 {t}
               </button>
             ))}
           </div>
 
+          {/* Error banner */}
           {error && (
-            <div style={styles.errorBanner}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                <div style={{ fontFamily: theme.fonts.body, color: theme.colors.ink }}>
-                  {error}
-                </div>
-                <button onClick={() => loadPosts(true)} style={styles.retryBtn}>Retry</button>
-              </div>
+            <div style={S.errorBanner}>
+              <span style={{ flex:1, color:C.ink, fontSize:13, fontFamily:"'Lora',serif" }}>{error}</span>
+              <button onClick={() => loadPosts(true)} style={S.retryBtn}>Retry</button>
             </div>
           )}
 
+          {/* Guest banner */}
           {isGuest && (
-            <div style={styles.guestBanner}>
-              <span style={{ fontSize: '28px' }}>🔒</span>
-              <div style={{ flex: 1 }}>
-                <h4 style={styles.guestTitle}>You're viewing as a Guest</h4>
-                <p style={styles.guestSub}>Login to like posts, comment, and share your own daily thoughts.</p>
+            <div style={S.guestBanner}>
+              <div style={S.guestBannerLeft}>
+                <div style={S.guestBannerIcon}>🔒</div>
+                <div>
+                  <h4 style={S.guestTitle}>Viewing as Guest</h4>
+                  <p style={S.guestSub}>Sign in to like, comment, and share your own thoughts.</p>
+                </div>
               </div>
-              <button onClick={() => navigate('/login')} style={styles.guestCta}>
-                Login
-              </button>
+              <button onClick={() => navigate('/login')} style={S.guestCta} className="dt-btn-primary">Login</button>
             </div>
           )}
 
+          {/* Compose box */}
           {!isGuest && (
-            <div style={styles.compose}>
+            <div style={S.compose}>
               <Avatar name={`${user?.firstName} ${user?.lastName}`} size="sm" src={filesApi.getUrl(user?.avatarUrl)} onClick={() => navigate('/profile')} />
-              <div style={{ flex: 1 }}>
+              <div style={{ flex:1 }}>
                 <textarea
                   value={compose}
                   onChange={e => setCompose(e.target.value)}
                   placeholder="What's on your mind today?"
                   rows={compose.split('\n').length > 1 ? 3 : 1}
-                  style={styles.composeInput}
+                  style={S.composeInput}
                   onKeyDown={e => { if (e.key === 'Enter' && e.metaKey) handleComposeSubmit(); }}
                 />
                 {compose && (
-                  <div style={styles.composeActions}>
-                    <button onClick={() => navigate('/create', { state: { prefill: compose } })} style={styles.composeFull}>
+                  <div style={S.composeActions}>
+                    <button onClick={() => navigate('/create', { state: { prefill: compose } })} style={S.composeFull}>
                       📷 Add Image / Mood
                     </button>
-                    <button onClick={handleComposeSubmit} style={styles.composePost}>
-                      Post Thought
-                    </button>
+                    <button onClick={handleComposeSubmit} style={S.composePost}>Post Thought</button>
                   </div>
                 )}
               </div>
             </div>
           )}
 
+          {/* Posts */}
           {loading && posts.length === 0 ? (
-            <div style={styles.loadingState}>
+            <div style={{ marginTop:8 }}>
               {[1,2,3].map(n => <SkeletonCard key={n} />)}
             </div>
           ) : posts.length === 0 ? (
-            <div style={styles.emptyState}>
-              {tab === 1 ? (
-                <>
-                  <span style={{ fontSize: '48px' }}>👥</span>
-                  <p style={{ color: theme.colors.inkMuted, fontFamily: theme.fonts.body }}>
-                    {isGuest
-                      ? 'Login to see posts from people you follow.'
-                      : 'No posts here yet. Follow someone to see their posts in Following.'}
-                  </p>
-                  {isGuest ? (
-                    <button onClick={() => navigate('/login')} style={styles.emptyBtn}>
-                      Login
-                    </button>
-                  ) : null}
-                </>
-              ) : (
-                <>
-                  <span style={{ fontSize: '48px' }}>📓</span>
-                  <p style={{ color: theme.colors.inkMuted, fontFamily: theme.fonts.body }}>
-                    No thoughts yet. Be the first to share!
-                  </p>
-                  {!isGuest && (
-                    <button onClick={() => navigate('/create')} style={styles.emptyBtn}>
-                      Share a Thought
-                    </button>
-                  )}
-                </>
-              )}
+            <div style={S.empty}>
+              <span style={{ fontSize:52 }}>{tab === 1 ? '👥' : '📓'}</span>
+              <p style={S.emptyText}>
+                {tab === 1
+                  ? (isGuest ? 'Login to see posts from people you follow.' : 'Follow someone to see their posts here.')
+                  : 'No thoughts yet. Be the first to share!'}
+              </p>
+              {isGuest ? (
+                <button onClick={() => navigate('/login')} style={S.emptyBtn}>Login</button>
+              ) : !isGuest && tab === 0 ? (
+                <button onClick={() => navigate('/create')} style={S.emptyBtn}>Share a Thought</button>
+              ) : null}
             </div>
           ) : (
             <>
               {posts.map(post => (
-                <ThoughtCard
-                  key={post.id}
-                  post={post}
-                  viewer={user}
-                  onDelete={user?.id === post.userId ? handleDelete : undefined}
-                />
+                <ThoughtCard key={post.id} post={post} viewer={user}
+                  onDelete={user?.id === post.userId ? handleDelete : undefined} />
               ))}
               {hasMore && !loading && (
-                <button onClick={() => loadPosts()} style={styles.loadMore}>
-                  Load more thoughts
+                <button onClick={() => loadPosts()} style={S.loadMore} className="dt-load-more">
+                  Load more thoughts ↓
                 </button>
               )}
-              {loading && <div style={{ textAlign: 'center', color: theme.colors.inkMuted, padding: '16px' }}>Loading…</div>}
+              {loading && <p style={{ textAlign:'center', color:C.mutedSoft, padding:'16px', fontSize:13, fontFamily:"'Lora',serif" }}>Loading…</p>}
             </>
           )}
         </main>
@@ -251,428 +250,181 @@ export default function FeedPage() {
   );
 }
 
-// ─── Right Sidebar ────────────────────────────────────────────────────────────
+/* ─── Right Sidebar ──────────────────────────────────────── */
 function RightSidebar() {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const isGuest = !user
+  const navigate  = useNavigate();
+  const { user }  = useAuth();
+  const isGuest   = !user;
   const suggested = [
     { name: 'Karla Manalo', sub: '34 thoughts this week', initial: 'K' },
-    { name: 'Ben Cruz', sub: 'Philosophy · Stoicism', initial: 'B' },
-    { name: 'Lena Park', sub: 'Mindfulness · Wellness', initial: 'L' },
+    { name: 'Ben Cruz',     sub: 'Philosophy · Stoicism', initial: 'B' },
+    { name: 'Lena Park',    sub: 'Mindfulness · Wellness', initial: 'L' },
   ];
-  const [followed, setFollowed] = useState({});
-  const [query, setQuery] = useState('')
-  const [userResults, setUserResults] = useState([])
-  const [userLoading, setUserLoading] = useState(false)
-  const [userError, setUserError] = useState('')
-
-  const q = query.trim().toLowerCase()
+  const [followed,     setFollowed]     = useState({});
+  const [query,        setQuery]        = useState('');
+  const [userResults,  setUserResults]  = useState([]);
+  const [userLoading,  setUserLoading]  = useState(false);
+  const [userError,    setUserError]    = useState('');
+  const q = query.trim().toLowerCase();
 
   useEffect(() => {
-    const text = query.trim()
-    let ignore = false
+    const text = query.trim();
+    let ignore = false;
     const t = setTimeout(() => {
-      if (!text) return
-      setUserLoading(true)
-      setUserError('')
+      if (!text) return;
+      setUserLoading(true); setUserError('');
       userApi.search(text, { limit: 25 })
-        .then((list) => {
-          if (ignore) return
-          setUserResults(list)
-        })
-        .catch((e) => {
-          if (ignore) return
-          setUserError(e?.message || 'Failed to search users.')
-          setUserResults([])
-        })
-        .finally(() => {
-          if (ignore) return
-          setUserLoading(false)
-        })
-    }, 250)
+        .then(list => { if (!ignore) setUserResults(list); })
+        .catch(e   => { if (!ignore) { setUserError(e?.message || 'Failed.'); setUserResults([]); } })
+        .finally(()=> { if (!ignore) setUserLoading(false); });
+    }, 250);
+    return () => { ignore = true; clearTimeout(t); };
+  }, [query]);
 
-    return () => {
-      ignore = true
-      clearTimeout(t)
-    }
-  }, [query])
-
-  const listUsers = q ? userResults : suggested
+  const listUsers = q ? userResults : suggested;
 
   return (
-    <aside style={styles.rightBar}>
-      <div style={styles.searchBox}>
-        <span style={styles.searchIcon}>🔎</span>
-        <input
-          value={query}
-          onChange={(e) => {
-            const next = e.target.value
-            setQuery(next)
-            if (!next.trim()) {
-              setUserResults([])
-              setUserLoading(false)
-              setUserError('')
-            }
-          }}
+    <aside style={S.rightBar}>
+      {/* Search */}
+      <div style={S.searchBox}>
+        <span style={{ fontSize:13, opacity:0.5 }}>🔎</span>
+        <input value={query}
+          onChange={e => { setQuery(e.target.value); if (!e.target.value.trim()) { setUserResults([]); setUserLoading(false); setUserError(''); } }}
           placeholder="Search users"
-          style={styles.searchInput}
+          style={S.searchInput}
         />
       </div>
 
-      {/* Who to follow */}
-      <div style={styles.widget}>
-        <div style={styles.widgetTitle}>👥 People to Follow</div>
+      {/* Who to follow widget */}
+      <div style={S.widget}>
+        <div style={S.widgetTitle}>👥 People to Follow</div>
         {userLoading ? (
-          <div style={styles.searchEmpty}>Searching…</div>
+          <p style={S.widgetEmpty}>Searching…</p>
         ) : userError ? (
-          <div style={styles.searchEmpty}>{userError}</div>
+          <p style={S.widgetEmpty}>{userError}</p>
         ) : listUsers.length === 0 ? (
-          <div style={styles.searchEmpty}>No user results.</div>
-        ) : listUsers.map((u) => {
-          const id = u?.id
+          <p style={S.widgetEmpty}>No results.</p>
+        ) : listUsers.map(u => {
+          const id   = u?.id;
           const name = u?.firstName || u?.lastName
             ? `${u?.firstName || ''} ${u?.lastName || ''}`.trim()
-            : (u?.name || u?.email || 'Unknown')
-          const sub = u?.sub || u?.email || ''
-          const key = id != null ? `u:${id}` : `s:${name}`
-          const followKey = id != null ? String(id) : name
+            : (u?.name || u?.email || 'Unknown');
+          const sub  = u?.sub || u?.email || '';
+          const key  = id != null ? `u:${id}` : `s:${name}`;
+          const fk   = id != null ? String(id) : name;
           return (
-            <div key={key} style={styles.suggestRow}>
-              <div onClick={() => { if (id != null) navigate(`/profile/${id}`) }} style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0, cursor: id != null ? 'pointer' : 'default' }}>
+            <div key={key} style={S.suggestRow}>
+              <div onClick={() => id != null && navigate(`/profile/${id}`)}
+                style={{ display:'flex', alignItems:'center', gap:10, flex:1, minWidth:0, cursor: id != null ? 'pointer' : 'default' }}>
                 <Avatar name={name} src={u?.avatarUrl} size="sm" />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={styles.suggestName}>{name}</div>
-                  <div style={styles.suggestSub}>{sub}</div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <p style={S.suggestName}>{name}</p>
+                  <p style={S.suggestSub}>{sub}</p>
                 </div>
               </div>
               <button
                 onClick={async () => {
-                  if (id == null) return
-                  if (isGuest) { navigate('/login'); return }
+                  if (id == null) return;
+                  if (isGuest) { navigate('/login'); return; }
                   try {
-                    const res = await userApi.toggleFollow(id, user?.id ?? null)
-                    setFollowed(f => ({ ...f, [followKey]: !!res.following }))
-                  } catch (e) {
-                    alert(e?.message || 'Failed to follow user.')
-                  }
+                    const res = await userApi.toggleFollow(id, user?.id ?? null);
+                    setFollowed(f => ({ ...f, [fk]: !!res.following }));
+                  } catch (e) { alert(e?.message || 'Failed.'); }
                 }}
                 style={{
-                  ...styles.followBtn,
-                  background: followed[followKey] ? theme.colors.amberPale : 'transparent',
-                  color: followed[followKey] ? theme.colors.amberDark : theme.colors.amber,
-                }}
-              >
-                {followed[followKey] ? '✓ Following' : 'Follow'}
+                  ...S.followBtn,
+                  background: followed[fk] ? 'rgba(200,168,76,0.15)' : 'transparent',
+                  color:      followed[fk] ? C.amberDark : C.amberDark,
+                  borderColor: C.amber,
+                }}>
+                {followed[fk] ? '✓ Following' : 'Follow'}
               </button>
             </div>
-          )
+          );
         })}
       </div>
     </aside>
   );
 }
 
-// ─── Skeleton loader ──────────────────────────────────────────────────────────
+/* ─── Skeleton ───────────────────────────────────────────── */
 function SkeletonCard() {
   return (
-    <div style={{ background: theme.colors.warmWhite, borderRadius: theme.radius.xl, padding: '18px', marginBottom: '12px', border: `1px solid ${theme.colors.border}` }}>
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', background: theme.colors.parchment }} />
-        <div style={{ flex: 1 }}>
-          <div style={{ height: 12, background: theme.colors.parchment, borderRadius: 4, width: '40%', marginBottom: 6 }} />
-          <div style={{ height: 10, background: theme.colors.parchment, borderRadius: 4, width: '25%' }} />
+    <div style={{ background:C.card, borderRadius:16, padding:'18px', marginBottom:12, border:`1px solid ${C.border}`, boxShadow:'0 1px 8px rgba(61,38,0,0.04)' }}>
+      <div style={{ display:'flex', gap:12, marginBottom:12 }}>
+        <div style={{ width:34, height:34, borderRadius:'50%', background:C.surface }} />
+        <div style={{ flex:1 }}>
+          <div style={{ height:11, background:C.surface, borderRadius:4, width:'38%', marginBottom:7 }} />
+          <div style={{ height:10, background:C.surface, borderRadius:4, width:'22%' }} />
         </div>
       </div>
-      <div style={{ height: 12, background: theme.colors.parchment, borderRadius: 4, marginBottom: 8 }} />
-      <div style={{ height: 12, background: theme.colors.parchment, borderRadius: 4, width: '80%', marginBottom: 8 }} />
-      <div style={{ height: 12, background: theme.colors.parchment, borderRadius: 4, width: '60%' }} />
+      {[100,80,60].map(w => <div key={w} style={{ height:11, background:C.surface, borderRadius:4, width:`${w}%`, marginBottom:8 }} />)}
     </div>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-const styles = {
-  shell: { minHeight: '100vh', background: theme.colors.cream },
-  layout: {
-    width: '100%',
-    maxWidth: '1240px',
-    margin: '0 auto',
-    padding: '24px 16px',
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    gap: '18px',
-  },
-  main: { flex: '0 1 640px', minWidth: 0 },
-  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' },
-  title: { fontFamily: theme.fonts.display, fontSize: '26px', fontWeight: '700', color: theme.colors.ink },
-  tabs: {
-    display: 'flex',
-    gap: '2px',
-    background: theme.colors.parchment,
-    borderRadius: theme.radius.md,
-    padding: '3px',
-    marginBottom: '20px',
-  },
-  tab: {
-    flex: 1,
-    padding: '8px 12px',
-    borderRadius: theme.radius.sm,
-    border: 'none',
-    background: 'transparent',
-    color: theme.colors.inkMuted,
-    fontSize: '13px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    transition: theme.transition,
-    fontFamily: theme.fonts.body,
-  },
-  tabActive: {
-    background: theme.colors.warmWhite,
-    color: theme.colors.ink,
-    fontWeight: '600',
-    boxShadow: theme.shadows.sm,
-  },
-  errorBanner: {
-    background: theme.colors.warmWhite,
-    border: `1px solid ${theme.colors.rose}40`,
-    borderRadius: theme.radius.lg,
-    padding: '12px 14px',
-    marginBottom: '16px',
-  },
-  retryBtn: {
-    border: `1px solid ${theme.colors.border}`,
-    background: 'transparent',
-    borderRadius: theme.radius.sm,
-    padding: '6px 10px',
-    fontFamily: theme.fonts.body,
-    fontSize: '12px',
-    cursor: 'pointer',
-    color: theme.colors.inkMuted,
-  },
-  guestBanner: {
-    background: `linear-gradient(135deg, ${theme.colors.ink}, #2a1a08)`,
-    borderRadius: theme.radius.xl,
-    padding: '20px',
-    marginBottom: '16px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    border: `1px solid ${theme.colors.amber}30`,
-  },
-  guestTitle: { fontFamily: theme.fonts.display, color: theme.colors.cream, fontSize: '15px', marginBottom: '4px' },
-  guestSub: { color: '#a08060', fontSize: '12.5px', lineHeight: 1.5, fontFamily: theme.fonts.body },
-  guestCta: {
-    flexShrink: 0,
-    padding: '9px 18px',
-    background: theme.colors.amber,
-    border: 'none',
-    borderRadius: theme.radius.sm,
-    fontSize: '13px',
-    fontWeight: '600',
-    color: theme.colors.ink,
-    cursor: 'pointer',
-    fontFamily: theme.fonts.body,
-  },
-  compose: {
-    background: theme.colors.warmWhite,
-    borderRadius: theme.radius.xl,
-    padding: '14px 16px',
-    marginBottom: '16px',
-    border: `1px solid ${theme.colors.border}`,
-    boxShadow: theme.shadows.card,
-    display: 'flex',
-    gap: '12px',
-    alignItems: 'flex-start',
-  },
-  composeInput: {
-    width: '100%',
-    border: 'none',
-    background: 'transparent',
-    resize: 'none',
-    fontFamily: theme.fonts.body,
-    fontSize: '15px',
-    color: theme.colors.ink,
-    outline: 'none',
-    lineHeight: 1.6,
-  },
-  composeActions: {
-    display: 'flex',
-    gap: '8px',
-    paddingTop: '10px',
-    borderTop: `1px solid ${theme.colors.border}`,
-    marginTop: '8px',
-  },
-  composeFull: {
-    padding: '7px 14px',
-    border: `1.5px solid ${theme.colors.border}`,
-    borderRadius: theme.radius.sm,
-    background: 'transparent',
-    color: theme.colors.inkMuted,
-    fontSize: '12px',
-    cursor: 'pointer',
-    fontFamily: theme.fonts.body,
-  },
-  composePost: {
-    marginLeft: 'auto',
-    padding: '8px 20px',
-    background: theme.colors.amber,
-    border: 'none',
-    borderRadius: theme.radius.sm,
-    fontSize: '13px',
-    fontWeight: '600',
-    color: theme.colors.ink,
-    cursor: 'pointer',
-    fontFamily: theme.fonts.body,
-  },
-  loadingState: { marginTop: '8px' },
-  emptyState: {
-    textAlign: 'center',
-    padding: '60px 20px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '16px',
-  },
-  emptyBtn: {
-    padding: '12px 24px',
-    background: theme.colors.amber,
-    border: 'none',
-    borderRadius: theme.radius.md,
-    fontSize: '14px',
-    fontWeight: '600',
-    color: theme.colors.ink,
-    cursor: 'pointer',
-    fontFamily: theme.fonts.body,
-  },
-  loadMore: {
-    width: '100%',
-    padding: '12px',
-    background: 'transparent',
-    border: `1.5px solid ${theme.colors.border}`,
-    borderRadius: theme.radius.md,
-    fontSize: '13px',
-    color: theme.colors.inkMuted,
-    cursor: 'pointer',
-    marginTop: '8px',
-    fontFamily: theme.fonts.body,
-    transition: theme.transition,
-  },
-  rightBar: {
-    width: '280px',
-    flexShrink: 0,
-    position: 'sticky',
-    top: '24px',
-    maxHeight: 'calc(100vh - 48px)',
-    overflowY: 'auto',
-    '@media(max-width:900px)': { display: 'none' },
-  },
-  searchBox: {
-    background: theme.colors.warmWhite,
-    borderRadius: theme.radius.full,
-    border: `1px solid ${theme.colors.border}`,
-    padding: '10px 12px',
-    marginBottom: '14px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-  },
-  searchIcon: { color: theme.colors.inkMuted, fontSize: '14px' },
-  searchInput: {
-    width: '100%',
-    border: 'none',
-    outline: 'none',
-    fontFamily: theme.fonts.body,
-    fontSize: '13px',
-    color: theme.colors.ink,
-    background: 'transparent',
-  },
-  searchEmpty: { color: theme.colors.inkMuted, fontFamily: theme.fonts.body, fontSize: '12px' },
-  widget: {
-    background: theme.colors.warmWhite,
-    borderRadius: theme.radius.xl,
-    padding: '16px',
-    marginBottom: '14px',
-    border: `1px solid ${theme.colors.border}`,
-  },
-  widgetTitle: {
-    fontSize: '12px',
-    fontWeight: '700',
-    color: theme.colors.inkMuted,
-    textTransform: 'uppercase',
-    letterSpacing: '1px',
-    marginBottom: '14px',
-    fontFamily: theme.fonts.mono,
-  },
-  trendRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '8px 0',
-    borderBottom: `1px solid ${theme.colors.border}`,
-    cursor: 'pointer',
-  },
-  trendNum: { fontFamily: theme.fonts.display, fontSize: '20px', fontWeight: '900', color: theme.colors.border, width: '24px' },
-  trendName: { fontSize: '13px', fontWeight: '600', color: theme.colors.ink, fontFamily: theme.fonts.body },
-  trendCount: { fontSize: '11px', color: theme.colors.inkMuted, fontFamily: theme.fonts.body },
-  suggestRow: { display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0' },
-  suggestName: { fontSize: '13px', fontWeight: '600', color: theme.colors.ink, fontFamily: theme.fonts.body },
-  suggestSub: { fontSize: '11px', color: theme.colors.inkMuted, fontFamily: theme.fonts.body },
-  followBtn: {
-    padding: '5px 14px',
-    border: `1.5px solid ${theme.colors.amber}`,
-    borderRadius: theme.radius.full,
-    fontSize: '12px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: theme.transition,
-    fontFamily: theme.fonts.body,
-    whiteSpace: 'nowrap',
-  },
-  modalOverlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(15, 23, 42, 0.55)',
-    zIndex: 20000,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '18px',
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: '560px',
-    background: theme.colors.warmWhite,
-    borderRadius: theme.radius.xl,
-    border: `1px solid ${theme.colors.border}`,
-    boxShadow: '0 24px 80px rgba(0,0,0,0.30)',
-    padding: '22px 22px 18px',
-    fontFamily: theme.fonts.body,
-  },
-  modalTitle: { fontFamily: theme.fonts.display, fontSize: '22px', fontWeight: 800, color: theme.colors.ink, marginBottom: '8px' },
-  modalBody: { color: theme.colors.inkMuted, fontSize: '14px', lineHeight: 1.5, marginBottom: '18px' },
-  modalActions: { display: 'flex', justifyContent: 'space-between', gap: '12px' },
-  modalCancel: {
-    padding: '10px 18px',
-    border: `1.5px solid ${theme.colors.border}`,
-    borderRadius: theme.radius.md,
-    background: 'transparent',
-    color: theme.colors.inkMuted,
-    fontWeight: 700,
-    cursor: 'pointer',
-    fontFamily: theme.fonts.body,
-    minWidth: '120px',
-  },
-  modalDanger: {
-    padding: '10px 22px',
-    border: 'none',
-    borderRadius: theme.radius.md,
-    background: theme.colors.amberDark,
-    color: theme.colors.warmWhite,
-    fontWeight: 800,
-    cursor: 'pointer',
-    fontFamily: theme.fonts.body,
-    minWidth: '120px',
-  },
+/* ─── Styles ─────────────────────────────────────────────── */
+const S = {
+  shell: { minHeight:'100vh', background:C.bg, fontFamily:"'Lora','Georgia',serif" },
+  layout: { width:'100%', maxWidth:1240, margin:'0 auto', padding:'28px 16px', display:'flex', alignItems:'flex-start', justifyContent:'center', gap:18 },
+  main: { flex:'0 1 640px', minWidth:0 },
+
+  header: { display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:12 },
+  title: { fontFamily:"'Playfair Display','Georgia',serif", fontSize:26, fontWeight:700, color:C.ink, marginBottom:3 },
+  headerSub: { fontSize:13, color:C.mutedSoft },
+  newPostBtn: { padding:'10px 20px', background:`linear-gradient(135deg,${C.amber},${C.amberDark})`, border:'none', borderRadius:50, fontSize:13, fontWeight:700, color:C.ink, cursor:'pointer', boxShadow:`0 3px 14px rgba(200,160,60,0.3)`, transition:'all 0.2s', fontFamily:"'Lora',serif", whiteSpace:'nowrap' },
+
+  tabs: { display:'flex', gap:2, background:C.surface, borderRadius:12, padding:3, marginBottom:20 },
+  tab: { flex:1, padding:'8px 12px', borderRadius:10, border:'none', background:'transparent', color:C.mutedSoft, fontSize:13, fontWeight:500, cursor:'pointer', transition:'all 0.2s', fontFamily:"'Lora',serif" },
+  tabActive: { background:C.card, color:C.ink, fontWeight:700, boxShadow:'0 1px 8px rgba(61,38,0,0.07)', border:`1px solid ${C.border}` },
+
+  errorBanner: { background:C.card, border:`1px solid rgba(192,57,43,0.2)`, borderRadius:14, padding:'12px 16px', marginBottom:16, display:'flex', alignItems:'center', gap:12 },
+  retryBtn: { padding:'6px 14px', border:`1px solid ${C.border}`, background:'transparent', borderRadius:8, fontFamily:"'DM Mono',monospace", fontSize:11.5, cursor:'pointer', color:C.muted },
+
+  guestBanner: { background:C.surface, border:`1.5px solid rgba(197,162,100,0.35)`, borderRadius:18, padding:'18px 20px', marginBottom:16, display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, flexWrap:'wrap', boxShadow:'0 4px 18px rgba(61,38,0,0.06)' },
+  guestBannerLeft: { display:'flex', alignItems:'center', gap:14, flex:1 },
+  guestBannerIcon: { width:48, height:48, borderRadius:14, background:`linear-gradient(135deg,${C.surface},${C.surfaceHi})`, border:`1.5px solid rgba(197,162,100,0.3)`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 },
+  guestTitle: { fontFamily:"'Playfair Display',serif", fontSize:15, fontWeight:700, color:C.ink, marginBottom:3 },
+  guestSub: { fontSize:12.5, color:C.mutedSoft, lineHeight:1.5 },
+  guestCta: { flexShrink:0, padding:'10px 22px', background:`linear-gradient(135deg,${C.amber},${C.amberDark})`, border:'none', borderRadius:50, fontSize:13, fontWeight:700, color:C.ink, cursor:'pointer', boxShadow:`0 3px 12px rgba(200,160,60,0.25)`, fontFamily:"'Lora',serif" },
+
+  compose: { background:C.card, borderRadius:18, padding:'14px 16px', marginBottom:16, border:`1px solid ${C.border}`, boxShadow:'0 2px 12px rgba(61,38,0,0.05)', display:'flex', gap:12, alignItems:'flex-start' },
+  composeInput: { width:'100%', border:'none', background:'transparent', resize:'none', fontFamily:"'Lora','Georgia',serif", fontSize:15, color:C.ink, outline:'none', lineHeight:1.6 },
+  composeActions: { display:'flex', gap:8, paddingTop:10, borderTop:`1px solid ${C.border}`, marginTop:8 },
+  composeFull: { padding:'7px 14px', border:`1.5px solid ${C.border}`, borderRadius:8, background:'transparent', color:C.mutedSoft, fontSize:12, cursor:'pointer', fontFamily:"'Lora',serif" },
+  composePost: { marginLeft:'auto', padding:'8px 20px', background:`linear-gradient(135deg,${C.amber},${C.amberDark})`, border:'none', borderRadius:50, fontSize:13, fontWeight:700, color:C.ink, cursor:'pointer', fontFamily:"'Lora',serif" },
+
+  empty: { textAlign:'center', padding:'60px 20px', display:'flex', flexDirection:'column', alignItems:'center', gap:16 },
+  emptyText: { color:C.mutedSoft, fontSize:14, maxWidth:300, lineHeight:1.6 },
+  emptyBtn: { padding:'12px 28px', background:`linear-gradient(135deg,${C.amber},${C.amberDark})`, border:'none', borderRadius:50, fontSize:14, fontWeight:700, color:C.ink, cursor:'pointer', boxShadow:`0 4px 16px rgba(200,160,60,0.3)`, fontFamily:"'Lora',serif" },
+  loadMore: { width:'100%', padding:'13px', background:'transparent', border:`1.5px solid ${C.border}`, borderRadius:14, fontSize:13, color:C.muted, cursor:'pointer', marginTop:8, fontFamily:"'Lora',serif", transition:'all 0.2s' },
+
+  rightBar: { width:280, flexShrink:0, position:'sticky', top:24, maxHeight:'calc(100vh - 48px)', overflowY:'auto' },
+  searchBox: { background:C.card, borderRadius:50, border:`1px solid ${C.border}`, padding:'10px 14px', marginBottom:14, display:'flex', alignItems:'center', gap:10, boxShadow:'0 1px 8px rgba(61,38,0,0.04)' },
+  searchInput: { width:'100%', border:'none', outline:'none', fontFamily:"'Lora',serif", fontSize:13, color:C.ink, background:'transparent' },
+  widget: { background:C.card, borderRadius:18, padding:'16px', marginBottom:14, border:`1px solid ${C.border}`, boxShadow:'0 2px 12px rgba(61,38,0,0.05)' },
+  widgetTitle: { fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:1.5, marginBottom:14, fontFamily:"'DM Mono',monospace" },
+  widgetEmpty: { color:C.mutedSoft, fontSize:12, fontFamily:"'Lora',serif" },
+  suggestRow: { display:'flex', alignItems:'center', gap:10, padding:'8px 0', borderBottom:`1px solid rgba(197,162,100,0.12)` },
+  suggestName: { fontSize:13, fontWeight:600, color:C.ink, fontFamily:"'Lora',serif" },
+  suggestSub: { fontSize:11, color:C.mutedSoft, fontFamily:"'Lora',serif" },
+  followBtn: { padding:'5px 14px', border:`1.5px solid ${C.amber}`, borderRadius:50, fontSize:11.5, fontWeight:600, cursor:'pointer', transition:'all 0.2s', fontFamily:"'Lora',serif", whiteSpace:'nowrap' },
+
+  modalOverlay: { position:'fixed', inset:0, background:'rgba(61,38,0,0.35)', zIndex:20000, display:'flex', alignItems:'center', justifyContent:'center', padding:18, backdropFilter:'blur(4px)' },
+  modalCard: { width:'100%', maxWidth:440, background:C.card, borderRadius:22, border:`1px solid ${C.border}`, boxShadow:'0 24px 80px rgba(61,38,0,0.2)', padding:'28px 28px 24px', fontFamily:"'Lora',serif" },
+  modalIcon: { fontSize:32, marginBottom:14 },
+  modalTitle: { fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700, color:C.ink, marginBottom:8 },
+  modalBody: { color:C.mutedSoft, fontSize:14, lineHeight:1.6, marginBottom:24 },
+  modalActions: { display:'flex', justifyContent:'flex-end', gap:12 },
+  modalCancel: { padding:'10px 20px', border:`1.5px solid ${C.border}`, borderRadius:12, background:'transparent', color:C.muted, fontWeight:600, cursor:'pointer', fontFamily:"'Lora',serif", fontSize:13 },
+  modalDanger: { padding:'10px 24px', border:'none', borderRadius:12, background:C.ink, color:C.surface, fontWeight:700, cursor:'pointer', fontFamily:"'Lora',serif", fontSize:13, boxShadow:`0 3px 12px rgba(61,38,0,0.25)` },
 };
+
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&display=swap');
+  .dt-new-post:hover { transform: translateY(-1px) !important; box-shadow: 0 6px 22px rgba(200,160,60,0.4) !important; }
+  .dt-btn-primary:hover { transform: translateY(-1px) !important; }
+  .dt-load-more:hover { background: #F5ECD4 !important; border-color: rgba(197,162,100,0.5) !important; color: #3D2600 !important; }
+  textarea::placeholder { color: rgba(122,96,64,0.35) !important; }
+  input::placeholder { color: rgba(122,96,64,0.3) !important; }
+`;

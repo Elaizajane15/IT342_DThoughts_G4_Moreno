@@ -1,5 +1,12 @@
 import { useState } from 'react'
-import { theme } from '../theme'
+
+/* Warm Parchment */
+const C = {
+  surface:   '#F5ECD4',
+  border:    'rgba(197,162,100,0.3)',
+  ink:       '#3D2600',
+  amberDark: '#C9A84C',
+}
 
 function initialsFromName(name) {
   if (!name) return '?'
@@ -9,34 +16,30 @@ function initialsFromName(name) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-const SIZES = {
-  sm: 32,
-  md: 40,
-  lg: 56,
-  xl: 96,
-}
+const SIZES = { sm: 32, md: 40, lg: 56, xl: 96 }
 
 export default function Avatar({ name, size = 'md', src, style, onClick }) {
-  const px = SIZES[size] ?? SIZES.md
+  const px       = SIZES[size] ?? SIZES.md
   const initials = initialsFromName(name)
   const [failedSrc, setFailedSrc] = useState(null)
-  const failed = !!src && failedSrc === src
+  const failed   = !!src && failedSrc === src
 
-  const baseStyle = {
-    width: px,
-    height: px,
-    borderRadius: '50%',
-    overflow: 'hidden',
-    display: 'grid',
-    placeItems: 'center',
-    background: theme.colors.parchment,
-    border: `1px solid ${theme.colors.border}`,
+  const base = {
+    width: px, height: px,
+    borderRadius: '50%', overflow: 'hidden',
+    display: 'grid', placeItems: 'center',
+    /* warm parchment surface with amber border */
+    background: `linear-gradient(145deg, ${C.surface}, #EDE0C4)`,
+    border: `1.5px solid rgba(197,162,100,0.4)`,
+    boxShadow: `0 1px 6px rgba(61,38,0,0.1)`,
     flexShrink: 0,
-    fontFamily: theme.fonts.display,
+    fontFamily: "'Playfair Display','Georgia',serif",
     fontWeight: 700,
-    color: theme.colors.ink,
-    fontSize: px <= 32 ? '12px' : px <= 40 ? '13px' : '16px',
+    color: C.amberDark,
+    fontSize: px <= 32 ? '11px' : px <= 40 ? '13px' : px <= 56 ? '16px' : '24px',
     cursor: onClick ? 'pointer' : 'default',
+    letterSpacing: '0.5px',
+    transition: 'transform 0.2s, box-shadow 0.2s',
   }
 
   if (src && !failed) {
@@ -44,12 +47,16 @@ export default function Avatar({ name, size = 'md', src, style, onClick }) {
       <img
         src={src}
         alt={name ? `${name} avatar` : 'avatar'}
-        style={{ ...baseStyle, objectFit: 'cover', display: 'block', ...(style || {}) }}
+        style={{ ...base, objectFit: 'cover', display: 'block', ...(style || {}) }}
         onClick={onClick}
         onError={() => setFailedSrc(src)}
       />
     )
   }
 
-  return <div style={{ ...baseStyle, ...(style || {}) }} onClick={onClick}>{initials}</div>
+  return (
+    <div style={{ ...base, ...(style || {}) }} onClick={onClick}>
+      {initials}
+    </div>
+  )
 }

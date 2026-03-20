@@ -3,15 +3,43 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Avatar from './Avatar'
 import { useAuth } from '../hooks/useAuth'
 import { authApi, filesApi, notificationsApi, oauthApi } from '../utils/api'
-import { theme } from '../theme'
+
+/* ── Warm Parchment Palette ──────────────────────────────────
+   #FFF8EE  warm ivory      — sidebar background
+   #F5ECD4  parchment       — card / widget surface
+   #EDE0C4  deep parchment  — hover states
+   #E8C97A  golden amber    — accent / badge bg
+   #C9A84C  amber dark      — active nav / links
+   #A67C28  amber deep      — hover accent
+   #3D2600  espresso        — primary text
+   #7A6040  warm brown      — muted text
+   rgba(197,162,100,0.28)   — border
+   ─────────────────────────────────────────────────────────── */
+
+const C = {
+  bg:        '#FFF8EE',
+  surface:   '#F5ECD4',
+  surfaceHi: '#EDE0C4',
+  border:    'rgba(197,162,100,0.28)',
+  borderHov: 'rgba(197,162,100,0.55)',
+  amber:     '#E8C97A',
+  amberDark: '#C9A84C',
+  amberDeep: '#A67C28',
+  ink:       '#3D2600',
+  muted:     '#7A6040',
+  mutedSoft: 'rgba(122,96,64,0.6)',
+  white:     '#ffffff',
+  rose:      '#c0392b',
+  rosePale:  'rgba(192,57,43,0.07)',
+};
 
 const QUOTES = [
   { quoteText: 'The future belongs to those who believe in the beauty of their dreams.', author: 'Eleanor Roosevelt' },
   { quoteText: 'Success usually comes to those who are too busy to be looking for it.', author: 'Henry David Thoreau' },
-  { quoteText: "Don’t watch the clock; do what it does. Keep going.", author: 'Sam Levenson' },
-  { quoteText: "Believe you can and you’re halfway there.", author: 'Theodore Roosevelt' },
-  { quoteText: 'It always seems impossible until it’s done.', author: 'Nelson Mandela' },
-  { quoteText: 'Your time is limited, so don’t waste it living someone else’s life.', author: 'Steve Jobs' },
+  { quoteText: "Don't watch the clock; do what it does. Keep going.", author: 'Sam Levenson' },
+  { quoteText: "Believe you can and you're halfway there.", author: 'Theodore Roosevelt' },
+  { quoteText: 'It always seems impossible until its done.', author: 'Nelson Mandela' },
+  { quoteText: 'Your time is limited, so dont waste it living someone else life.', author: 'Steve Jobs' },
   { quoteText: 'The only way to do great work is to love what you do.', author: 'Steve Jobs' },
   { quoteText: 'Act as if what you do makes a difference. It does.', author: 'William James' },
   { quoteText: 'Hardships often prepare ordinary people for an extraordinary destiny.', author: 'C. S. Lewis' },
@@ -33,80 +61,58 @@ export default function Sidebar({ notifCount }) {
   const navigate = useNavigate()
   const { user, login, logout } = useAuth()
   const isGuest = !user
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [quote, setQuote] = useState(() => pickQuote(null))
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [logoutOpen, setLogoutOpen] = useState(false)
-  const [addAccountOpen, setAddAccountOpen] = useState(false)
-  const [addForm, setAddForm] = useState({ email: '', password: '' })
-  const [addError, setAddError] = useState('')
-  const [addLoading, setAddLoading] = useState(false)
-  const menuRef = useRef(null)
-  const isFeedActive = location.pathname === '/feed'
-  const isNotificationActive = location.pathname === '/notification'
-  const isDraftsActive = location.pathname === '/drafts'
 
+  const [unreadCount,     setUnreadCount]     = useState(0)
+  const [quote,           setQuote]           = useState(() => pickQuote(null))
+  const [menuOpen,        setMenuOpen]        = useState(false)
+  const [logoutOpen,      setLogoutOpen]      = useState(false)
+  const [addAccountOpen,  setAddAccountOpen]  = useState(false)
+  const [addForm,         setAddForm]         = useState({ email: '', password: '' })
+  const [addError,        setAddError]        = useState('')
+  const [addLoading,      setAddLoading]      = useState(false)
+  const [addFocused,      setAddFocused]      = useState('')
+  const menuRef = useRef(null)
+
+  const isFeedActive         = location.pathname === '/feed'
+  const isNotificationActive = location.pathname === '/notification'
+  const isDraftsActive       = location.pathname === '/drafts'
+
+  // Rotate quote every minute
   useEffect(() => {
-    const id = setInterval(() => {
-      setQuote((prev) => pickQuote(prev?.quoteText))
-    }, 60_000)
+    const id = setInterval(() => setQuote(prev => pickQuote(prev?.quoteText)), 60_000)
     return () => clearInterval(id)
   }, [])
 
+  // Unread notifications
   useEffect(() => {
     if (typeof notifCount === 'number') return
     if (!user?.id) return
     let cancelled = false
     notificationsApi.unreadCount(user.id)
-      .then((count) => { if (!cancelled) setUnreadCount(Number(count) || 0) })
-      .catch(() => { if (!cancelled) setUnreadCount(0) })
+      .then(count => { if (!cancelled) setUnreadCount(Number(count) || 0) })
+      .catch(()   => { if (!cancelled) setUnreadCount(0) })
     return () => { cancelled = true }
   }, [notifCount, user?.id, location.pathname, location.search])
 
+  // Close menu on outside click
   useEffect(() => {
     if (!menuOpen) return
-
-    const onMouseDown = (e) => {
-      if (!menuRef.current) return
-      if (menuRef.current.contains(e.target)) return
-      setMenuOpen(false)
-    }
-
-    const onKeyDown = (e) => {
-      if (e.key === 'Escape') setMenuOpen(false)
-    }
-
-    document.addEventListener('mousedown', onMouseDown)
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('mousedown', onMouseDown)
-      document.removeEventListener('keydown', onKeyDown)
-    }
+    const onMD = e => { if (!menuRef.current?.contains(e.target)) setMenuOpen(false) }
+    const onKD = e => { if (e.key === 'Escape') setMenuOpen(false) }
+    document.addEventListener('mousedown', onMD)
+    document.addEventListener('keydown', onKD)
+    return () => { document.removeEventListener('mousedown', onMD); document.removeEventListener('keydown', onKD) }
   }, [menuOpen])
 
+  // ESC closes modals
   useEffect(() => {
-    if (!logoutOpen) return
-    const onKeyDown = (e) => {
-      if (e.key === 'Escape') setLogoutOpen(false)
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [logoutOpen])
-
-  useEffect(() => {
-    if (!addAccountOpen) return
-    const onKeyDown = (e) => {
-      if (e.key === 'Escape') setAddAccountOpen(false)
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [addAccountOpen])
+    const onKD = e => { if (e.key === 'Escape') { setLogoutOpen(false); setAddAccountOpen(false) } }
+    document.addEventListener('keydown', onKD)
+    return () => document.removeEventListener('keydown', onKD)
+  }, [])
 
   const handleAddAccount = () => {
-    setMenuOpen(false)
-    setAddError('')
-    setAddForm({ email: '', password: '' })
-    setAddAccountOpen(true)
+    setMenuOpen(false); setAddError(''); setAddForm({ email: '', password: '' }); setAddAccountOpen(true)
   }
 
   const handleLogout = async () => {
@@ -116,102 +122,111 @@ export default function Sidebar({ notifCount }) {
     navigate('/login', { replace: true })
   }
 
-  const handleLogoutPrompt = () => {
-    setMenuOpen(false)
-    setLogoutOpen(true)
-  }
+  const handleLogoutPrompt = () => { setMenuOpen(false); setLogoutOpen(true) }
 
   const effectiveCount = typeof notifCount === 'number' ? notifCount : (user?.id ? unreadCount : 0)
 
   return (
-    <aside style={styles.sidebar}>
-      <div style={styles.scrollArea}>
-        <div style={styles.brand}>
-          <div style={styles.brandIcon}>📓</div>
-          <div style={styles.brandText}>
-            Daily<span style={{ color: theme.colors.amber }}>Thoughts</span>
+    <aside style={S.sidebar}>
+      <style>{CSS}</style>
+
+      {/* ── Scroll area ── */}
+      <div style={S.scrollArea}>
+
+        {/* Brand */}
+        <div style={S.brand}>
+          <div style={S.brandBox}>
+            <span style={{ fontSize:18, position:'relative', zIndex:1 }}>📓</span>
+            <div style={S.brandShine} />
+          </div>
+          <div style={S.brandText}>
+            Daily<span style={{ color:C.amberDark }}>Thoughts</span>
           </div>
         </div>
 
-        <nav style={styles.nav}>
-          <NavItem to="/feed" active={isFeedActive}>
-            🏠 Feed
-          </NavItem>
+        {/* Nav */}
+        <nav style={S.nav}>
+          <NavItem to="/feed" active={isFeedActive}>🏠 Feed</NavItem>
+
           {!isGuest && (
             <NavItem to="/create" active={location.pathname === '/create' || location.pathname === '/create-post'}>
               ✏️ New Thought
             </NavItem>
           )}
           {!isGuest && (
-            <NavItem to="/drafts" active={isDraftsActive}>
-              🗂️ Drafts
-            </NavItem>
+            <NavItem to="/drafts" active={isDraftsActive}>🗂️ Drafts</NavItem>
           )}
+
           <NavItem
             to="/notification"
             active={isNotificationActive}
-            right={effectiveCount ? <span style={styles.badge}>{effectiveCount}</span> : null}
+            right={effectiveCount
+              ? <span style={S.badge}>{effectiveCount}</span>
+              : null}
           >
             🔔 Notifications
           </NavItem>
+
           {!isGuest && (
             <NavItem to="/profile" active={location.pathname === '/profile'}>
               👤 My Profile
             </NavItem>
           )}
+
           {isGuest && (
             <>
-              <NavItem to="/login" active={location.pathname === '/login'}>
-                � Login
-              </NavItem>
-              <NavItem to="/register" active={location.pathname === '/register'}>
-                ✍️ Register
-              </NavItem>
+              <NavItem to="/login"    active={location.pathname === '/login'}>🔑 Login</NavItem>
+              <NavItem to="/register" active={location.pathname === '/register'}>✍️ Register</NavItem>
             </>
           )}
         </nav>
       </div>
 
-      <div style={styles.bottomArea}>
+      {/* ── Bottom area ── */}
+      <div style={S.bottomArea}>
+
+        {/* Quote card */}
         {quote && (
-          <div style={styles.quoteCard}>
-            <div style={styles.quoteLabel}>✨ Daily Quote</div>
-            <div style={styles.quoteText}>"{quote.quoteText}"</div>
-            <div style={styles.quoteAuthor}>— {quote.author}</div>
+          <div style={S.quoteCard}>
+            <div style={S.quoteTopLine} />
+            <div style={S.quoteLabel}>✦ Daily Quote</div>
+            <p style={S.quoteText}>"{quote.quoteText}"</p>
+            <p style={S.quoteAuthor}>— {quote.author}</p>
           </div>
         )}
 
+        {/* Account card */}
         {!isGuest && (
-          <div ref={menuRef} style={styles.accountWrap}>
-            <div style={styles.accountCard} onClick={() => navigate('/profile')}>
-              <div style={styles.accountRow}>
+          <div ref={menuRef} style={S.accountWrap}>
+            <div style={S.accountCard} onClick={() => navigate('/profile')} className="dt-account-card">
+              <div style={S.accountRow}>
                 <Avatar
                   name={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.email || 'User'}
                   src={filesApi.getUrl(user?.avatarUrl)}
                   size="sm"
                 />
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={styles.accountName}>{user?.firstName} {user?.lastName}</div>
-                  <div style={styles.accountEmail}>{user?.email}</div>
+                <div style={{ minWidth:0, flex:1 }}>
+                  <p style={S.accountName}>{user?.firstName} {user?.lastName}</p>
+                  <p style={S.accountEmail}>{user?.email}</p>
                 </div>
-                <button
-                  type="button"
-                  aria-label="Account menu"
-                  onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v) }}
-                  style={styles.moreBtn}
-                >
+                <button type="button" aria-label="Account menu"
+                  onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
+                  style={{ ...S.moreBtn, background: menuOpen ? C.surfaceHi : C.surface }}
+                  className="dt-more-btn">
                   ⋯
                 </button>
               </div>
             </div>
 
             {menuOpen && (
-              <div style={styles.menu}>
-                <button type="button" onClick={handleAddAccount} style={styles.menuItem}>
-                  Add an existing account
+              <div style={S.menu}>
+                <div style={S.menuArrow} />
+                <button type="button" onClick={handleAddAccount} style={S.menuItem} className="dt-menu-item">
+                  <span style={S.menuIcon}>➕</span> Add an existing account
                 </button>
-                <button type="button" onClick={handleLogoutPrompt} style={styles.menuItem}>
-                  Log out {user?.email ? `@${String(user.email).split('@')[0]}` : ''}
+                <div style={S.menuDivider} />
+                <button type="button" onClick={handleLogoutPrompt} style={{ ...S.menuItem, color:C.rose }} className="dt-menu-item">
+                  <span style={S.menuIcon}>🚪</span> Log out @{String(user?.email || '').split('@')[0]}
                 </button>
               </div>
             )}
@@ -219,35 +234,26 @@ export default function Sidebar({ notifCount }) {
         )}
       </div>
 
+      {/* ════ LOGOUT MODAL ════ */}
       {logoutOpen && (
-        <div
-          style={styles.logoutOverlay}
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setLogoutOpen(false)
-          }}
-        >
-          <div role="dialog" aria-modal="true" style={styles.logoutModal}>
-            <div style={styles.logoutLogo}>📓</div>
-            <div style={styles.logoutTitle}>Log out of DailyThoughts?</div>
-            <div style={styles.logoutText}>
-              You can always log back in at any time. If you just want to switch accounts, you can do that by adding an existing account.
+        <div style={S.overlay} onMouseDown={e => { if (e.target === e.currentTarget) setLogoutOpen(false) }}>
+          <div role="dialog" aria-modal="true" style={S.modal}>
+            <div style={S.modalLogoBox}>
+              <span style={{ fontSize:24 }}>📓</span>
+              <div style={S.modalLogoShine} />
             </div>
-            <div style={styles.logoutActions}>
-              <button
-                type="button"
-                onClick={async () => {
-                  setLogoutOpen(false)
-                  await handleLogout()
-                }}
-                style={styles.logoutPrimary}
-              >
-                Log out
+            <h3 style={S.modalTitle}>Log out of DailyThoughts?</h3>
+            <p style={S.modalText}>
+              You can always log back in at any time. To switch accounts, add an existing account from the menu.
+            </p>
+            <div style={S.modalActions}>
+              <button type="button"
+                onClick={async () => { setLogoutOpen(false); await handleLogout() }}
+                style={S.btnDanger} className="dt-btn-danger">
+                Log Out
               </button>
-              <button
-                type="button"
-                onClick={() => setLogoutOpen(false)}
-                style={styles.logoutSecondary}
-              >
+              <button type="button" onClick={() => setLogoutOpen(false)}
+                style={S.btnCancel} className="dt-btn-cancel">
                 Cancel
               </button>
             </div>
@@ -255,101 +261,105 @@ export default function Sidebar({ notifCount }) {
         </div>
       )}
 
+      {/* ════ ADD ACCOUNT MODAL ════ */}
       {addAccountOpen && (
-        <div
-          style={styles.addOverlay}
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setAddAccountOpen(false)
-          }}
-        >
-          <div role="dialog" aria-modal="true" style={styles.addModal}>
-            <button type="button" aria-label="Close" onClick={() => setAddAccountOpen(false)} style={styles.addClose}>
-              ✕
-            </button>
+        <div style={S.overlay} onMouseDown={e => { if (e.target === e.currentTarget) setAddAccountOpen(false) }}>
+          <div role="dialog" aria-modal="true" style={S.modal}>
+            {/* Close */}
+            <button type="button" aria-label="Close" onClick={() => setAddAccountOpen(false)} style={S.closeBtn}>✕</button>
 
-            <div style={styles.addLogo}>📓</div>
-            <div style={styles.addTitle}>Sign in to DailyThoughts</div>
+            {/* Logo */}
+            <div style={S.modalLogoBox}>
+              <span style={{ fontSize:24 }}>📓</span>
+              <div style={S.modalLogoShine} />
+            </div>
+            <h3 style={S.modalTitle}>Sign in to DailyThoughts</h3>
+            <p style={S.modalText}>Add another account to switch between them easily.</p>
 
-            <button
-              type="button"
+            {/* Google */}
+            <button type="button"
               onClick={() => { window.location.href = oauthApi.googleLoginUrl() }}
-              style={styles.addGoogle}
-            >
-              Continue with Google
+              style={S.googleBtn} className="dt-google-btn">
+              <GoogleIcon />
+              <span>Continue with Google</span>
             </button>
 
-            <div style={styles.addDividerRow}>
-              <div style={styles.addDividerLine} />
-              <div style={styles.addDividerText}>or</div>
-              <div style={styles.addDividerLine} />
+            {/* Divider */}
+            <div style={S.divider}>
+              <div style={S.divLine} /><span style={S.divText}>or</span><div style={S.divLine} />
             </div>
 
-            {addError && <div style={styles.addError}>⚠️ {addError}</div>}
+            {/* Error */}
+            {addError && (
+              <div style={S.errorBox}>
+                <span>⚠</span><span style={{ flex:1 }}>{addError}</span>
+              </div>
+            )}
 
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault()
-                if (addLoading) return
-                setAddError('')
-                const email = String(addForm.email || '').trim()
-                const password = String(addForm.password || '')
-                if (!email || !password) { setAddError('Please enter your email and password.'); return }
-                setAddLoading(true)
-                try {
-                  const res = await authApi.login({ email, password })
-
-                  const prevToken = localStorage.getItem('token')
-                  const prevUserRaw = localStorage.getItem('user')
-                  let prevUser = null
-                  try { prevUser = prevUserRaw ? JSON.parse(prevUserRaw) : null } catch { prevUser = null }
-
-                  const storedRaw = localStorage.getItem('dt_accounts')
-                  let stored = []
-                  try { stored = storedRaw ? JSON.parse(storedRaw) : [] } catch { stored = [] }
-                  if (!Array.isArray(stored)) stored = []
-
-                  if (prevUser?.email && prevToken) {
-                    const exists = stored.some(a => String(a?.user?.email || '').toLowerCase() === String(prevUser.email).toLowerCase())
-                    if (!exists) stored.unshift({ token: prevToken, user: prevUser })
-                  }
-
-                  const nextUser = res?.user || null
-                  const nextToken = res?.token || null
-                  if (nextUser?.email && nextToken) {
-                    stored = stored.filter(a => String(a?.user?.email || '').toLowerCase() !== String(nextUser.email).toLowerCase())
-                    stored.unshift({ token: nextToken, user: nextUser })
-                  }
-                  localStorage.setItem('dt_accounts', JSON.stringify(stored.slice(0, 5)))
-
-                  login(res.token, res.user)
-                  sessionStorage.setItem('dt_toast', JSON.stringify({ message: 'Account added.', type: 'success' }))
-                  setAddAccountOpen(false)
-                  navigate('/feed')
-                } catch (err) {
-                  setAddError(err?.message || 'Failed to sign in.')
-                } finally {
-                  setAddLoading(false)
+            {/* Form */}
+            <form onSubmit={async e => {
+              e.preventDefault()
+              if (addLoading) return
+              setAddError('')
+              const email    = String(addForm.email || '').trim()
+              const password = String(addForm.password || '')
+              if (!email || !password) { setAddError('Please enter your email and password.'); return }
+              setAddLoading(true)
+              try {
+                const res = await authApi.login({ email, password })
+                const prevToken    = localStorage.getItem('token')
+                const prevUserRaw  = localStorage.getItem('user')
+                let prevUser = null
+                try { prevUser = prevUserRaw ? JSON.parse(prevUserRaw) : null } catch { prevUser = null }
+                const storedRaw = localStorage.getItem('dt_accounts')
+                let stored = []
+                try { stored = storedRaw ? JSON.parse(storedRaw) : [] } catch { stored = [] }
+                if (!Array.isArray(stored)) stored = []
+                if (prevUser?.email && prevToken) {
+                  const exists = stored.some(a => String(a?.user?.email||'').toLowerCase() === String(prevUser.email).toLowerCase())
+                  if (!exists) stored.unshift({ token: prevToken, user: prevUser })
                 }
-              }}
-            >
-              <input
-                value={addForm.email}
-                onChange={(e) => setAddForm(f => ({ ...f, email: e.target.value }))}
-                placeholder="Email"
-                autoComplete="email"
-                style={styles.addInput}
-              />
-              <input
-                value={addForm.password}
-                onChange={(e) => setAddForm(f => ({ ...f, password: e.target.value }))}
-                placeholder="Password"
-                type="password"
-                autoComplete="current-password"
-                style={styles.addInput}
-              />
+                const nextUser  = res?.user || null
+                const nextToken = res?.token || null
+                if (nextUser?.email && nextToken) {
+                  stored = stored.filter(a => String(a?.user?.email||'').toLowerCase() !== String(nextUser.email).toLowerCase())
+                  stored.unshift({ token: nextToken, user: nextUser })
+                }
+                localStorage.setItem('dt_accounts', JSON.stringify(stored.slice(0, 5)))
+                login(res.token, res.user)
+                sessionStorage.setItem('dt_toast', JSON.stringify({ message: 'Account added.', type: 'success' }))
+                setAddAccountOpen(false)
+                navigate('/feed')
+              } catch (err) {
+                setAddError(err?.message || 'Failed to sign in.')
+              } finally { setAddLoading(false) }
+            }}>
+              {[['email','email','Email address','you@example.com'],['password','password','Password','Enter your password']].map(([name,type,lbl,ph]) => (
+                <div key={name} style={{ marginBottom:14 }}>
+                  <label style={{ ...S.fieldLabel, color: addFocused===name ? C.amberDeep : C.muted }}>{lbl}</label>
+                  <div style={{ position:'relative' }}>
+                    <input name={name} type={type} autoComplete={type==='email'?'email':'current-password'}
+                      value={addForm[name]} placeholder={ph}
+                      onChange={e => setAddForm(f => ({ ...f, [name]: e.target.value }))}
+                      onFocus={() => setAddFocused(name)} onBlur={() => setAddFocused('')}
+                      style={{
+                        ...S.addInput,
+                        borderColor: addFocused===name ? C.amberDark : addForm[name] ? 'rgba(197,162,100,0.5)' : C.border,
+                        boxShadow:   addFocused===name ? '0 0 0 3px rgba(200,168,76,0.1)' : 'none',
+                        background:  addFocused===name ? C.white : C.bg,
+                      }}
+                    />
+                    <div style={{ position:'absolute', bottom:0, left:0, height:2, borderRadius:'0 0 12px 12px',
+                      width: addFocused===name ? '100%' : '0%',
+                      background:`linear-gradient(90deg,${C.amber},${C.amberDark})`,
+                      transition:'width 0.35s ease' }} />
+                  </div>
+                </div>
+              ))}
 
-              <button type="submit" style={{ ...styles.addPrimary, opacity: addLoading ? 0.7 : 1 }}>
-                {addLoading ? 'Signing in…' : 'Next'}
+              <button type="submit" disabled={addLoading} className="dt-btn-primary"
+                style={{ ...S.btnPrimary, opacity: addLoading ? 0.75 : 1 }}>
+                {addLoading ? <><span style={S.spinner} />Signing in…</> : <><span>Sign In</span><span>→</span></>}
               </button>
             </form>
           </div>
@@ -359,323 +369,293 @@ export default function Sidebar({ notifCount }) {
   )
 }
 
+/* ─── NavItem ─────────────────────────────────────────────── */
 function NavItem({ to, active, children, right }) {
   return (
-    <Link
-      to={to}
-      style={{
-        ...styles.navItem,
-        background: active ? theme.colors.warmWhite : 'transparent',
-        color: active ? theme.colors.ink : theme.colors.inkMuted,
-        borderColor: active ? theme.colors.border : 'transparent',
-        boxShadow: active ? theme.shadows.sm : 'none',
-      }}
-    >
-      <span style={styles.navLabel}>{children}</span>
+    <Link to={to} className={`dt-nav-item${active ? ' active' : ''}`} style={{
+      ...S.navItem,
+      background: active ? C.surface : 'transparent',
+      color:      active ? C.ink     : C.muted,
+      borderColor: active ? 'rgba(197,162,100,0.4)' : 'transparent',
+      boxShadow:  active ? '0 1px 8px rgba(61,38,0,0.07)' : 'none',
+      fontWeight: active ? 700 : 400,
+    }}>
+      <span style={S.navLabel}>{children}</span>
       {right}
     </Link>
   )
 }
 
-const styles = {
+/* ─── Google icon ─────────────────────────────────────────── */
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" style={{ flexShrink:0 }}>
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+  )
+}
+
+/* ─── Styles ──────────────────────────────────────────────── */
+const S = {
   sidebar: {
-    width: '240px',
+    width: 240,
     flexShrink: 0,
-    padding: '24px 16px',
+    padding: '24px 14px',
     position: 'sticky',
-    top: '24px',
+    top: 24,
     height: 'calc(100vh - 48px)',
     overflow: 'hidden',
-    borderRight: `1px solid ${theme.colors.border}`,
-    background: theme.colors.cream,
+    borderRight: `1px solid rgba(197,162,100,0.22)`,
+    background: C.bg,
     display: 'flex',
     flexDirection: 'column',
+    fontFamily: "'Lora','Georgia',serif",
   },
-  brand: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' },
-  brandIcon: {
-    width: '36px',
-    height: '36px',
-    borderRadius: '10px',
-    background: theme.colors.amber,
-    display: 'grid',
-    placeItems: 'center',
-    fontSize: '18px',
+  scrollArea: { overflowY: 'auto', paddingBottom: 12, flex: 1, minHeight: 0 },
+  bottomArea: { paddingTop: 12, borderTop:`1px solid rgba(197,162,100,0.22)`, position:'relative', marginTop:'auto' },
+
+  /* Brand */
+  brand: { display:'flex', alignItems:'center', gap:10, marginBottom:20 },
+  brandBox: {
+    width:38, height:38, borderRadius:11, flexShrink:0,
+    background:`linear-gradient(135deg,${C.amber},${C.amberDark})`,
+    display:'flex', alignItems:'center', justifyContent:'center',
+    boxShadow:`0 4px 14px rgba(200,160,60,0.35)`,
+    position:'relative', overflow:'hidden',
   },
-  brandText: { fontFamily: theme.fonts.display, fontSize: '16px', fontWeight: 800, color: theme.colors.ink },
-  scrollArea: { overflowY: 'auto', paddingBottom: '12px', flex: 1, minHeight: 0 },
-  bottomArea: { paddingTop: '12px', borderTop: `1px solid ${theme.colors.border}`, position: 'relative', marginTop: 'auto' },
-  nav: { display: 'grid', gap: '10px' },
+  brandShine: { position:'absolute', inset:0, background:'radial-gradient(circle at 28% 28%,rgba(255,255,255,0.3),transparent 55%)' },
+  brandText: { fontFamily:"'Playfair Display','Georgia',serif", fontSize:16, fontWeight:700, color:C.ink },
+
+  /* Nav */
+  nav: { display:'grid', gap:6 },
   navItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '10px 12px',
-    borderRadius: theme.radius.md,
-    textDecoration: 'none',
-    border: '1px solid',
-    fontFamily: theme.fonts.body,
-    fontSize: '13px',
-    transition: theme.transition,
-    width: '100%',
+    display:'flex', alignItems:'center', gap:10,
+    padding:'10px 12px', borderRadius:12,
+    textDecoration:'none', border:'1px solid',
+    fontFamily:"'Lora','Georgia',serif", fontSize:13,
+    transition:'all 0.2s', width:'100%',
   },
-  navBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '10px 12px',
-    borderRadius: theme.radius.md,
-    border: `1px solid ${theme.colors.border}`,
-    fontFamily: theme.fonts.body,
-    fontSize: '13px',
-    transition: theme.transition,
-    width: '100%',
-    background: theme.colors.amber,
-    color: theme.colors.ink,
-    textAlign: 'left',
-  },
-  navLabel: { flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  navLabel: { flex:1, minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' },
   badge: {
-    background: theme.colors.rose,
-    color: theme.colors.warmWhite,
-    borderRadius: theme.radius.full,
-    padding: '2px 8px',
-    fontFamily: theme.fonts.display,
-    fontSize: '11px',
-    fontWeight: 800,
-    lineHeight: 1.4,
+    background:`linear-gradient(135deg,${C.amber},${C.amberDark})`,
+    color: C.ink, borderRadius:50,
+    padding:'2px 8px',
+    fontFamily:"'DM Mono',monospace",
+    fontSize:10, fontWeight:700, lineHeight:1.4,
+    boxShadow:`0 1px 6px rgba(200,160,60,0.3)`,
   },
+
+  /* Quote card */
   quoteCard: {
-    background: theme.colors.ink,
-    borderRadius: theme.radius.lg,
-    padding: '14px',
-    marginBottom: '12px',
+    background:`linear-gradient(145deg,${C.surface},#f0e4c8)`,
+    borderRadius:14, padding:'14px 16px', marginBottom:12,
+    border:`1px solid rgba(197,162,100,0.3)`,
+    boxShadow:'0 2px 12px rgba(61,38,0,0.06)',
+    position:'relative', overflow:'hidden',
   },
-  quoteLabel: { fontFamily: theme.fonts.mono, fontSize: '10px', color: theme.colors.amber, letterSpacing: '2px', marginBottom: '8px', textTransform: 'uppercase' },
-  quoteText: { fontFamily: theme.fonts.display, fontSize: '13px', color: '#d4c4a8', fontStyle: 'italic', lineHeight: 1.5 },
-  quoteAuthor: { fontFamily: theme.fonts.mono, fontSize: '11px', color: '#6a5a40', marginTop: '10px' },
+  quoteTopLine: {
+    position:'absolute', top:0, left:0, right:0, height:2,
+    background:`linear-gradient(90deg,transparent,${C.amber},transparent)`,
+  },
+  quoteLabel: { fontFamily:"'DM Mono',monospace", fontSize:9, color:C.amberDark, letterSpacing:2.5, marginBottom:8, textTransform:'uppercase' },
+  quoteText:  { fontFamily:"'Playfair Display','Georgia',serif", fontSize:12, color:C.ink, fontStyle:'italic', lineHeight:1.55, margin:0, marginBottom:8 },
+  quoteAuthor:{ fontFamily:"'DM Mono',monospace", fontSize:10, color:C.muted },
+
+  /* Account card */
+  accountWrap: { position:'relative' },
   accountCard: {
-    background: theme.colors.warmWhite,
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: theme.radius.lg,
-    padding: '12px',
-    boxShadow: theme.shadows.sm,
-    cursor: 'pointer',
-    marginBottom: '10px',
+    background: C.white,
+    border:`1px solid rgba(197,162,100,0.28)`,
+    borderRadius:14, padding:'12px',
+    boxShadow:'0 2px 10px rgba(61,38,0,0.05)',
+    cursor:'pointer', marginBottom:0,
+    transition:'all 0.2s',
   },
-  accountWrap: { position: 'relative' },
-  accountRow: { display: 'flex', alignItems: 'center', gap: '10px' },
-  accountTitle: { fontFamily: theme.fonts.display, fontSize: '12px', fontWeight: 800, color: theme.colors.ink, marginBottom: '6px' },
-  accountName: { fontFamily: theme.fonts.display, fontSize: '13px', fontWeight: 800, color: theme.colors.ink },
-  accountEmail: { fontFamily: theme.fonts.body, fontSize: '12px', color: theme.colors.inkMuted, marginTop: '2px', wordBreak: 'break-word' },
+  accountRow: { display:'flex', alignItems:'center', gap:10 },
+  accountName: { fontFamily:"'Playfair Display','Georgia',serif", fontSize:13, fontWeight:700, color:C.ink, marginBottom:1 },
+  accountEmail:{ fontFamily:"'DM Mono',monospace", fontSize:10.5, color:C.muted, wordBreak:'break-word' },
   moreBtn: {
-    width: '34px',
-    height: '34px',
-    borderRadius: theme.radius.full,
-    border: `1px solid ${theme.colors.border}`,
-    background: theme.colors.cream,
-    fontFamily: theme.fonts.body,
-    fontSize: '18px',
-    cursor: 'pointer',
-    color: theme.colors.inkMuted,
-    display: 'grid',
-    placeItems: 'center',
+    width:32, height:32, borderRadius:50, flexShrink:0,
+    border:`1px solid rgba(197,162,100,0.3)`,
+    background: C.surface,
+    fontSize:18, cursor:'pointer', color:C.muted,
+    display:'flex', alignItems:'center', justifyContent:'center',
+    transition:'all 0.2s',
   },
+
+  /* Dropdown menu */
   menu: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: '58px',
-    background: theme.colors.warmWhite,
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: theme.radius.lg,
-    boxShadow: theme.shadows.md,
-    padding: '6px',
-    zIndex: 50,
+    position:'absolute', left:0, right:0, bottom:52,
+    background: C.white,
+    border:`1px solid rgba(197,162,100,0.3)`,
+    borderRadius:14, boxShadow:'0 8px 32px rgba(61,38,0,0.12)',
+    padding:'6px', zIndex:50,
+  },
+  menuArrow: {
+    position:'absolute', bottom:-6, left:24,
+    width:12, height:12, background:C.white,
+    border:`1px solid rgba(197,162,100,0.3)`,
+    transform:'rotate(45deg)',
+    borderTop:'none', borderLeft:'none',
   },
   menuItem: {
-    width: '100%',
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    textAlign: 'left',
-    padding: '10px 10px',
-    borderRadius: theme.radius.md,
-    fontFamily: theme.fonts.body,
-    fontSize: '13px',
-    color: theme.colors.ink,
+    width:'100%', background:'transparent', border:'none',
+    cursor:'pointer', textAlign:'left', padding:'9px 12px',
+    borderRadius:10, fontFamily:"'Lora','Georgia',serif",
+    fontSize:13, color:C.ink, display:'flex', alignItems:'center', gap:10,
+    transition:'background 0.15s',
   },
-  logoutOverlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.35)',
-    display: 'grid',
-    placeItems: 'center',
-    zIndex: 200,
-    padding: '18px',
+  menuIcon: { fontSize:14, flexShrink:0, opacity:0.7 },
+  menuDivider: { height:1, background:`rgba(197,162,100,0.2)`, margin:'4px 0' },
+
+  /* Overlay */
+  overlay: {
+    position:'fixed', inset:0,
+    background:'rgba(61,38,0,0.3)',
+    display:'grid', placeItems:'center',
+    zIndex:200, padding:18,
+    backdropFilter:'blur(3px)',
   },
-  logoutModal: {
-    width: '100%',
-    maxWidth: '420px',
-    background: theme.colors.warmWhite,
-    borderRadius: theme.radius.xl,
-    padding: '26px 22px',
-    border: `1px solid ${theme.colors.border}`,
-    boxShadow: theme.shadows.md,
-    textAlign: 'center',
+
+  /* Modal */
+  modal: {
+    width:'100%', maxWidth:440,
+    background: C.white,
+    borderRadius:22,
+    padding:'32px 28px 28px',
+    border:`1px solid rgba(197,162,100,0.25)`,
+    boxShadow:'0 24px 80px rgba(61,38,0,0.18)',
+    position:'relative', textAlign:'center',
+    overflow:'hidden',
   },
-  logoutLogo: {
-    width: '54px',
-    height: '54px',
-    borderRadius: '16px',
-    background: theme.colors.cream,
-    display: 'grid',
-    placeItems: 'center',
-    margin: '0 auto 12px',
-    fontSize: '26px',
-    border: `1px solid ${theme.colors.border}`,
+  modalLogoBox: {
+    width:56, height:56, borderRadius:16, margin:'0 auto 16px',
+    background:`linear-gradient(135deg,${C.amber},${C.amberDark})`,
+    display:'flex', alignItems:'center', justifyContent:'center',
+    boxShadow:`0 6px 20px rgba(200,160,60,0.35)`,
+    position:'relative', overflow:'hidden',
   },
-  logoutTitle: {
-    fontFamily: theme.fonts.display,
-    fontSize: '20px',
-    fontWeight: 800,
-    color: theme.colors.ink,
-    marginBottom: '10px',
+  modalLogoShine: { position:'absolute', inset:0, background:'radial-gradient(circle at 28% 28%,rgba(255,255,255,0.3),transparent 55%)' },
+  modalTitle: { fontFamily:"'Playfair Display','Georgia',serif", fontSize:20, fontWeight:700, color:C.ink, marginBottom:10 },
+  modalText:  { fontFamily:"'Lora','Georgia',serif", fontSize:13, lineHeight:1.65, color:C.mutedSoft, marginBottom:22 },
+  modalActions: { display:'grid', gap:10 },
+
+  /* Buttons */
+  btnDanger: {
+    width:'100%', padding:'12px 14px', borderRadius:50, border:'none',
+    background:C.ink, color:C.surface,
+    fontFamily:"'Lora','Georgia',serif", fontSize:14, fontWeight:700,
+    cursor:'pointer', boxShadow:`0 3px 12px rgba(61,38,0,0.2)`,
+    transition:'all 0.2s',
   },
-  logoutText: {
-    fontFamily: theme.fonts.body,
-    fontSize: '13px',
-    lineHeight: 1.6,
-    color: theme.colors.inkMuted,
-    marginBottom: '18px',
+  btnCancel: {
+    width:'100%', padding:'12px 14px', borderRadius:50,
+    border:`1.5px solid rgba(197,162,100,0.35)`,
+    background:'transparent', color:C.muted,
+    fontFamily:"'Lora','Georgia',serif", fontSize:14, fontWeight:600,
+    cursor:'pointer', transition:'all 0.2s',
   },
-  logoutActions: { display: 'grid', gap: '10px' },
-  logoutPrimary: {
-    width: '100%',
-    padding: '12px 14px',
-    borderRadius: theme.radius.full,
-    border: 'none',
-    background: theme.colors.ink,
-    color: theme.colors.cream,
-    fontFamily: theme.fonts.body,
-    fontSize: '14px',
-    fontWeight: 800,
-    cursor: 'pointer',
+  closeBtn: {
+    position:'absolute', top:14, right:14,
+    width:32, height:32, borderRadius:50,
+    border:`1.5px solid rgba(197,162,100,0.3)`,
+    background:C.surface, cursor:'pointer',
+    fontFamily:"'DM Mono',monospace", fontSize:12, fontWeight:700,
+    display:'flex', alignItems:'center', justifyContent:'center',
+    color:C.muted, transition:'all 0.2s',
   },
-  logoutSecondary: {
-    width: '100%',
-    padding: '12px 14px',
-    borderRadius: theme.radius.full,
-    border: `1.5px solid ${theme.colors.border}`,
-    background: 'transparent',
-    color: theme.colors.ink,
-    fontFamily: theme.fonts.body,
-    fontSize: '14px',
-    fontWeight: 800,
-    cursor: 'pointer',
+  googleBtn: {
+    width:'100%', padding:'12px 14px', borderRadius:50,
+    border:`1.5px solid rgba(197,162,100,0.3)`,
+    background: C.bg, color:C.ink,
+    fontFamily:"'Lora','Georgia',serif", fontSize:13, fontWeight:700,
+    cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:10,
+    marginBottom:0, transition:'all 0.2s',
+    boxShadow:'0 1px 6px rgba(61,38,0,0.05)',
   },
-  addOverlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.35)',
-    display: 'grid',
-    placeItems: 'center',
-    zIndex: 220,
-    padding: '18px',
+  divider: { display:'flex', alignItems:'center', gap:10, margin:'16px 0' },
+  divLine:  { flex:1, height:1, background:'rgba(197,162,100,0.2)' },
+  divText:  { fontFamily:"'DM Mono',monospace", fontSize:10, color:C.mutedSoft, letterSpacing:1.5, textTransform:'uppercase' },
+  errorBox: {
+    background:C.rosePale, border:`1px solid rgba(192,57,43,0.2)`,
+    borderRadius:10, padding:'10px 14px', fontSize:13, color:C.rose,
+    marginBottom:14, display:'flex', alignItems:'center', gap:10,
+    fontFamily:"'Lora',serif", textAlign:'left',
   },
-  addModal: {
-    width: '100%',
-    maxWidth: '520px',
-    background: theme.colors.warmWhite,
-    borderRadius: theme.radius.xl,
-    padding: '26px 22px',
-    border: `1px solid ${theme.colors.border}`,
-    boxShadow: theme.shadows.md,
-    position: 'relative',
-  },
-  addClose: {
-    position: 'absolute',
-    top: 14,
-    left: 14,
-    width: 34,
-    height: 34,
-    borderRadius: theme.radius.full,
-    border: `1px solid ${theme.colors.border}`,
-    background: theme.colors.cream,
-    cursor: 'pointer',
-    fontFamily: theme.fonts.body,
-    fontSize: '14px',
-    fontWeight: 900,
-    display: 'grid',
-    placeItems: 'center',
-    color: theme.colors.ink,
-  },
-  addLogo: {
-    width: '54px',
-    height: '54px',
-    borderRadius: '16px',
-    background: theme.colors.cream,
-    display: 'grid',
-    placeItems: 'center',
-    margin: '0 auto 12px',
-    fontSize: '26px',
-    border: `1px solid ${theme.colors.border}`,
-  },
-  addTitle: {
-    fontFamily: theme.fonts.display,
-    fontSize: '24px',
-    fontWeight: 900,
-    color: theme.colors.ink,
-    textAlign: 'center',
-    marginBottom: '14px',
-  },
-  addGoogle: {
-    width: '100%',
-    padding: '12px 14px',
-    borderRadius: theme.radius.full,
-    border: `1.5px solid ${theme.colors.border}`,
-    background: theme.colors.warmWhite,
-    color: theme.colors.ink,
-    fontFamily: theme.fonts.body,
-    fontSize: '14px',
-    fontWeight: 800,
-    cursor: 'pointer',
-  },
-  addDividerRow: { display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0' },
-  addDividerLine: { height: 1, background: theme.colors.border, flex: 1, opacity: 0.8 },
-  addDividerText: { fontFamily: theme.fonts.mono, fontSize: '11px', color: theme.colors.inkMuted, textTransform: 'uppercase', letterSpacing: '2px' },
-  addError: {
-    background: theme.colors.rosePale,
-    border: `1px solid ${theme.colors.rose}40`,
-    borderRadius: theme.radius.sm,
-    padding: '10px 14px',
-    fontSize: '13px',
-    color: theme.colors.rose,
-    marginBottom: '12px',
-    fontFamily: theme.fonts.body,
-    fontWeight: 700,
+  fieldLabel: {
+    display:'block', marginBottom:7,
+    fontFamily:"'DM Mono',monospace", fontSize:10, fontWeight:500,
+    letterSpacing:1.5, textTransform:'uppercase', transition:'color 0.2s',
+    textAlign:'left',
   },
   addInput: {
-    width: '100%',
-    padding: '12px 12px',
-    borderRadius: theme.radius.lg,
-    border: `1.5px solid ${theme.colors.border}`,
-    background: theme.colors.cream,
-    outline: 'none',
-    fontFamily: theme.fonts.body,
-    fontSize: '14px',
-    marginBottom: '10px',
+    width:'100%', padding:'12px 14px',
+    background:C.bg, border:`1.5px solid rgba(197,162,100,0.3)`,
+    borderRadius:12, outline:'none',
+    fontFamily:"'Lora',serif", fontSize:14, color:C.ink,
+    transition:'border-color 0.2s, box-shadow 0.2s, background 0.2s',
+    boxSizing:'border-box',
   },
-  addPrimary: {
-    width: '100%',
-    padding: '12px 14px',
-    borderRadius: theme.radius.full,
-    border: 'none',
-    background: theme.colors.ink,
-    color: theme.colors.cream,
-    fontFamily: theme.fonts.body,
-    fontSize: '14px',
-    fontWeight: 800,
-    cursor: 'pointer',
-    marginTop: '6px',
+  btnPrimary: {
+    width:'100%', padding:'13px 20px', marginTop:4,
+    background:`linear-gradient(135deg,${C.amber} 0%,${C.amberDark} 100%)`,
+    border:'none', borderRadius:50, fontSize:14, fontWeight:700, color:C.ink,
+    cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:10,
+    fontFamily:"'Lora',serif",
+    boxShadow:`0 4px 18px rgba(200,160,60,0.3)`, transition:'all 0.2s',
   },
-}
+  spinner: {
+    display:'inline-block', width:13, height:13,
+    border:`2px solid rgba(61,38,0,0.25)`, borderTopColor:C.ink,
+    borderRadius:'50%', animation:'dt-spin 0.7s linear infinite',
+  },
+
+  get bg() { return C.bg },
+};
+
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&display=swap');
+
+  @keyframes dt-spin { to { transform: rotate(360deg); } }
+
+  .dt-nav-item:hover:not(.active) {
+    background: #F5ECD4 !important;
+    color: #3D2600 !important;
+    border-color: rgba(197,162,100,0.3) !important;
+  }
+  .dt-account-card:hover {
+    border-color: rgba(197,162,100,0.55) !important;
+    box-shadow: 0 4px 18px rgba(61,38,0,0.09) !important;
+  }
+  .dt-more-btn:hover {
+    background: #EDE0C4 !important;
+    border-color: rgba(197,162,100,0.5) !important;
+    color: #3D2600 !important;
+  }
+  .dt-menu-item:hover {
+    background: #F5ECD4 !important;
+  }
+  .dt-google-btn:hover {
+    background: #FFF8EE !important;
+    border-color: rgba(197,162,100,0.55) !important;
+    box-shadow: 0 4px 14px rgba(61,38,0,0.08) !important;
+  }
+  .dt-btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 8px 28px rgba(200,160,60,0.4) !important;
+  }
+  .dt-btn-danger:hover {
+    background: #5c2000 !important;
+    transform: translateY(-1px) !important;
+  }
+  .dt-btn-cancel:hover {
+    background: #F5ECD4 !important;
+    color: #3D2600 !important;
+  }
+  input::placeholder { color: rgba(122,96,64,0.3) !important; }
+  input[type="password"] { letter-spacing: 3px; }
+  input[type="password"]::placeholder { letter-spacing: normal; }
+`;
