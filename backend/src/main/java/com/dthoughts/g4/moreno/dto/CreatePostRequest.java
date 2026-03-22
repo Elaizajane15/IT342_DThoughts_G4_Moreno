@@ -3,6 +3,7 @@ package com.dthoughts.g4.moreno.dto;
 public class CreatePostRequest {
 	private Long userId;
 	private String content;
+	private String mood;
 
 	public CreatePostRequest() {}
 
@@ -20,6 +21,14 @@ public class CreatePostRequest {
 
 	public void setContent(String content) {
 		this.content = content;
+	}
+
+	public String getMood() {
+		return mood;
+	}
+
+	public void setMood(String mood) {
+		this.mood = mood;
 	}
 }
 

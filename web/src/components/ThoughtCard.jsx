@@ -15,6 +15,17 @@ const P = {
   fMono: "'DM Mono',monospace",
 };
 
+const MOODS = [
+  { emoji: '😊', label: 'Happy' },
+  { emoji: '🤔', label: 'Reflective' },
+  { emoji: '😢', label: 'Sad' },
+  { emoji: '💪', label: 'Motivated' },
+  { emoji: '😌', label: 'Peaceful' },
+  { emoji: '😤', label: 'Frustrated' },
+  { emoji: '🎉', label: 'Excited' },
+  { emoji: '😴', label: 'Tired' },
+]
+
 function formatRelativeTime(value) {
   if (!value) return ''
   const d = new Date(value)
@@ -50,6 +61,8 @@ export default function ThoughtCard({ post, onDelete, viewer = null, initialSave
   const [replyLoading,  setReplyLoading]  = useState(false)
 
   const moodLabel = post?.mood ?? null
+  const [moodOpen, setMoodOpen] = useState(false)
+  const moodRef = useRef(null)
   const handle    = String(name).trim().toLowerCase().replace(/\s+/g, '')
   const moodEmoji = useMemo(() => {
     const m = String(moodLabel || '').toLowerCase()
@@ -77,6 +90,15 @@ export default function ThoughtCard({ post, onDelete, viewer = null, initialSave
     document.addEventListener('keydown', onKD)
     return () => { document.removeEventListener('mousedown', onMD); document.removeEventListener('keydown', onKD) }
   }, [menuOpen])
+
+  useEffect(() => {
+    if (!moodOpen) return
+    const onMD = e => { if (!moodRef.current?.contains(e.target)) setMoodOpen(false) }
+    const onKD = e => { if (e.key === 'Escape') setMoodOpen(false) }
+    document.addEventListener('mousedown', onMD)
+    document.addEventListener('keydown', onKD)
+    return () => { document.removeEventListener('mousedown', onMD); document.removeEventListener('keydown', onKD) }
+  }, [moodOpen])
 
   const toggleLike = async e => {
     e.stopPropagation()
@@ -177,7 +199,31 @@ export default function ThoughtCard({ post, onDelete, viewer = null, initialSave
               <div style={S.metaRow}>
                 <span style={S.metaText}>{createdAt}</span>
                 {moodLabel && (
-                  <span style={S.moodChip}>{moodEmoji ? `${moodEmoji} ` : ''}{moodLabel}</span>
+                  <span ref={moodRef} style={S.moodWrap}>
+                    <button
+                      type="button"
+                      onClick={e => { e.stopPropagation(); setMoodOpen(v => !v) }}
+                      onKeyDown={e => { if (e.key !== 'Enter' && e.key !== ' ') return; e.stopPropagation(); setMoodOpen(v => !v) }}
+                      style={S.moodChipBtn}
+                      aria-label="Emotions"
+                    >
+                      {moodEmoji ? `${moodEmoji} ` : ''}{moodLabel}
+                    </button>
+                    {moodOpen && (
+                      <div style={S.moodPopover} onClick={e => e.stopPropagation()} role="dialog" aria-modal="false">
+                        {MOODS.map(m => (
+                          <button
+                            key={m.label}
+                            type="button"
+                            style={{ ...S.moodItem, ...(String(moodLabel).toLowerCase() === String(m.label).toLowerCase() ? S.moodItemActive : null) }}
+                            onClick={() => setMoodOpen(false)}
+                          >
+                            {m.emoji} {m.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </span>
                 )}
               </div>
             </div>
@@ -241,7 +287,11 @@ const S = {
   userName: { fontFamily: P.fHead, fontSize:14, fontWeight:700, color: P.ink, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', maxWidth:360, marginBottom:0 },
   metaRow: { display:'flex', alignItems:'center', gap:8, marginTop:3, flexWrap:'wrap' },
   metaText: { fontFamily: P.fMono, fontSize:11, color: P.muted },
-  moodChip: { fontFamily: P.fBody, fontSize:11.5, color: P.amberDark, background: P.amberPale, border:`1px solid rgba(197,162,100,0.35)`, borderRadius:50, padding:'2px 10px', lineHeight:1.6 },
+  moodWrap: { position:'relative', display:'inline-flex' },
+  moodChipBtn: { fontFamily: P.fBody, fontSize:11.5, color: P.amberDark, background: P.amberPale, border:`1px solid rgba(197,162,100,0.35)`, borderRadius:50, padding:'2px 10px', lineHeight:1.6, cursor:'pointer' },
+  moodPopover: { position:'absolute', top:'calc(100% + 6px)', left:0, background: P.card, border:`1px solid ${P.border}`, borderRadius:14, boxShadow:'0 8px 32px rgba(61,38,0,0.1)', padding:6, zIndex:60, minWidth:170 },
+  moodItem: { width:'100%', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', padding:'8px 10px', borderRadius:10, fontFamily: P.fBody, fontSize:12.5, color: P.ink },
+  moodItemActive: { background: P.amberPale, color: P.amberDark },
   body: { fontFamily: P.fBody },
   text: { margin:0, color: P.ink, fontSize:14.5, lineHeight:1.7 },
   imageWrap: { marginTop:12, borderRadius:12, overflow:'hidden', border:`1px solid ${P.border}`, background: P.surface },

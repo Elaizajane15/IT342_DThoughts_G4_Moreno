@@ -8,6 +8,7 @@ public class PostDto {
 	private String userName;
 	private String userAvatarUrl;
 	private String content;
+	private String mood;
 	private String imagePath;
 	private long likeCount;
 	private long commentCount;
@@ -16,12 +17,13 @@ public class PostDto {
 
 	public PostDto() {}
 
-	public PostDto(Long id, Long userId, String userName, String userAvatarUrl, String content, String imagePath, long likeCount, long commentCount, LocalDateTime createdAt, LocalDateTime updatedAt) {
+	public PostDto(Long id, Long userId, String userName, String userAvatarUrl, String content, String mood, String imagePath, long likeCount, long commentCount, LocalDateTime createdAt, LocalDateTime updatedAt) {
 		this.id = id;
 		this.userId = userId;
 		this.userName = userName;
 		this.userAvatarUrl = userAvatarUrl;
 		this.content = content;
+		this.mood = mood;
 		this.imagePath = imagePath;
 		this.likeCount = likeCount;
 		this.commentCount = commentCount;
@@ -67,6 +69,14 @@ public class PostDto {
 
 	public void setContent(String content) {
 		this.content = content;
+	}
+
+	public String getMood() {
+		return mood;
+	}
+
+	public void setMood(String mood) {
+		this.mood = mood;
 	}
 
 	public String getImagePath() {

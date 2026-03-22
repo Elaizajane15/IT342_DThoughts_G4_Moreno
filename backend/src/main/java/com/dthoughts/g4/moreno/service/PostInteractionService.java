@@ -196,6 +196,6 @@ public class PostInteractionService {
 			userName = joined.isEmpty() ? p.getUser().getEmail() : joined;
 			userAvatarUrl = p.getUser().getAvatarUrl();
 		}
-		return new PostDto(p.getId(), userId, userName, userAvatarUrl, p.getContent(), p.getImagePath(), likeCount, commentCount, p.getCreatedAt(), p.getUpdatedAt());
+		return new PostDto(p.getId(), userId, userName, userAvatarUrl, p.getContent(), p.getMood(), p.getImagePath(), likeCount, commentCount, p.getCreatedAt(), p.getUpdatedAt());
 	}
 }

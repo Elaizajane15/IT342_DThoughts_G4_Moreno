@@ -27,6 +27,9 @@ public class Post {
 	@Column(name = "content", nullable = false, length = 500)
 	private String content;
 
+	@Column(name = "mood", length = 50)
+	private String mood;
+
 	@Column(name = "image_path", length = 500)
 	private String imagePath;
 
@@ -77,6 +80,14 @@ public class Post {
 
 	public void setContent(String content) {
 		this.content = content;
+	}
+
+	public String getMood() {
+		return mood;
+	}
+
+	public void setMood(String mood) {
+		this.mood = mood;
 	}
 
 	public String getImagePath() {

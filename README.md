@@ -63,3 +63,9 @@ Files updated:
 - Added logout toast notification and kept the handle format like `@"user"`.
 ### Day 7 
 - Added edit comment feature (only the comment owner can edit).
+### Day 8
+- Added delete comment feature (only the comment owner can delete).
+- Added “How are you feeling?” mood when creating a post and saved it to the database.
+- Displayed the selected mood beside the user name on posts.
+- Added an emotions popup when clicking the mood chip.
+- Add the new ui features continuation 

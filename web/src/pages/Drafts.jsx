@@ -1,459 +1,88 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import Avatar from '../components/Avatar'
 import Toast from '../components/Toast'
 import { useAuth } from '../hooks/useAuth'
 import { draftsApi, quotesApi, userApi } from '../utils/api'
-import { theme } from '../theme'
 
-export default function DraftsPage() {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const isGuest = !user
+const P={bg:'#FFF8EE',card:'#ffffff',surface:'#F5ECD4',surfaceHi:'#EDE0C4',border:'rgba(197,162,100,0.28)',amber:'#E8C97A',amberDark:'#C9A84C',amberPale:'rgba(232,201,122,0.18)',ink:'#3D2600',muted:'#7A6040',rose:'#c0392b',rosePale:'rgba(192,57,43,0.07)',fH:"'Playfair Display','Georgia',serif",fB:"'Lora','Georgia',serif",fM:"'DM Mono',monospace"};
 
-  const [quote, setQuote] = useState(null)
-  const [draft, setDraft] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [toast, setToast] = useState(null)
-  const [error, setError] = useState('')
+export default function DraftsPage(){
+  const navigate=useNavigate();const{user}=useAuth();const isGuest=!user;
+  const[quote,setQuote]=useState(null);const[draft,setDraft]=useState(null);const[loading,setLoading]=useState(true);const[toast,setToast]=useState(null);const[error,setError]=useState('');
+  useEffect(()=>{if(isGuest)navigate('/login',{replace:true});},[isGuest,navigate]);
+  useEffect(()=>{quotesApi.getDailyQuote().then(setQuote).catch(()=>setQuote(null));},[]);
+  useEffect(()=>{const raw=sessionStorage.getItem('dt_toast');if(!raw)return;sessionStorage.removeItem('dt_toast');let next=null;try{const p=JSON.parse(raw);if(p?.message)next={message:String(p.message),type:p.type==='error'?'error':'success'};}catch{next={message:String(raw),type:'success'};};if(!next)return;Promise.resolve().then(()=>setToast(next));},[]);
+  useEffect(()=>{if(!user?.id)return;let c=false;Promise.resolve().then(()=>{if(!c){setLoading(true);setError('');}});draftsApi.getMy(user.id).then(d=>{if(!c)setDraft(d);}).catch(e=>{if(!c){setDraft(null);setError(e?.message||'Failed.');}}).finally(()=>{if(!c)setLoading(false);});return()=>{c=true};},[user?.id]);
+  const handleDelete=async()=>{if(!draft?.id)return;try{await draftsApi.delete(draft.id);setDraft(null);setToast({message:'Draft deleted.',type:'success'});}catch(e){setToast({message:e?.message||'Failed.',type:'error'});}};
+  const subtitle=(()=>{if(!draft?.updatedAt&&!draft?.createdAt)return null;const raw=draft.updatedAt||draft.createdAt;const d=new Date(raw);if(Number.isNaN(d.getTime()))return null;return d.toLocaleString();})();
 
-  useEffect(() => {
-    if (isGuest) navigate('/login', { replace: true })
-  }, [isGuest, navigate])
-
-  useEffect(() => {
-    quotesApi.getDailyQuote()
-      .then(setQuote)
-      .catch(() => setQuote(null))
-  }, [])
-
-  useEffect(() => {
-    const raw = sessionStorage.getItem('dt_toast')
-    if (!raw) return
-    sessionStorage.removeItem('dt_toast')
-    try {
-      const parsed = JSON.parse(raw)
-      if (parsed?.message) setToast({ message: String(parsed.message), type: parsed.type === 'error' ? 'error' : 'success' })
-    } catch {
-      setToast({ message: String(raw), type: 'success' })
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!user?.id) return
-    let cancelled = false
-
-    const load = async () => {
-      setLoading(true)
-      setError('')
-      try {
-        const d = await draftsApi.getMy(user.id)
-        if (cancelled) return
-        setDraft(d)
-      } catch (e) {
-        if (cancelled) return
-        setDraft(null)
-        setError(e?.message || 'Failed to load draft.')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    load()
-    return () => { cancelled = true }
-  }, [user?.id])
-
-  const handleDelete = async () => {
-    if (!draft?.id) return
-    try {
-      await draftsApi.delete(draft.id)
-      setDraft(null)
-      setToast({ message: 'Draft deleted.', type: 'success' })
-    } catch (e) {
-      setToast({ message: e?.message || 'Failed to delete draft.', type: 'error' })
-    }
-  }
-
-  const subtitle = useMemo(() => {
-    if (!draft?.updatedAt && !draft?.createdAt) return null
-    const raw = draft.updatedAt || draft.createdAt
-    const d = new Date(raw)
-    if (Number.isNaN(d.getTime())) return null
-    return d.toLocaleString()
-  }, [draft?.createdAt, draft?.updatedAt])
-
-  return (
-    <div style={styles.shell}>
-      <Toast message={toast?.message} type={toast?.type || 'success'} onClose={() => setToast(null)} />
-      <div style={styles.layout}>
+  return(
+    <div style={{minHeight:'100vh',background:P.bg,fontFamily:P.fB}}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora:ital,wght@0,400;0,600&family=DM+Mono:wght@400;500&display=swap');`}</style>
+      <Toast message={toast?.message} type={toast?.type||'success'} onClose={()=>setToast(null)} />
+      <div style={{width:'100%',maxWidth:1240,margin:'0 auto',padding:'28px 16px',display:'flex',alignItems:'flex-start',justifyContent:'center',gap:18}}>
         <Sidebar dailyQuote={quote} />
-
-        <main style={styles.main}>
-          <div style={styles.headerRow}>
-            <h1 style={styles.title}>Your Drafts</h1>
-            <button type="button" onClick={() => navigate('/create')} style={styles.primaryBtn}>
-              ✏️ New Thought
-            </button>
+        <main style={{flex:'0 1 640px',minWidth:0}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:16}}>
+            <h1 style={{fontFamily:P.fH,fontSize:24,fontWeight:700,color:P.ink}}>Your Drafts</h1>
+            <button type="button" onClick={()=>navigate('/create')} style={{padding:'10px 18px',borderRadius:50,background:`linear-gradient(135deg,${P.amber},${P.amberDark})`,border:'none',cursor:'pointer',fontFamily:P.fB,fontWeight:700,color:P.ink,boxShadow:`0 2px 12px rgba(200,160,60,0.25)`,fontSize:13}}>✏️ New Thought</button>
           </div>
-
-          {error && <div style={styles.errorBox}>⚠️ {error}</div>}
-
-          {loading ? (
-            <div style={styles.loading}>Loading…</div>
-          ) : !draft ? (
-            <div style={styles.empty}>
-              <div style={styles.emptyIcon}>📄</div>
-              <div style={styles.emptyTitle}>No saved drafts yet</div>
-              <div style={styles.emptySub}>Save a draft from Feed or New Thought, then it will show here.</div>
-              <button type="button" onClick={() => navigate('/create')} style={styles.secondaryBtn}>
-                Continue Writing
-              </button>
-            </div>
-          ) : (
-            <div style={styles.card}>
-              <div style={styles.cardTop}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={styles.cardTitle}>{draft.title || 'Untitled draft'}</div>
-                  {subtitle && <div style={styles.cardSub}>Last saved: {subtitle}</div>}
+          {error&&<div style={{background:P.rosePale,border:`1px solid rgba(192,57,43,0.22)`,borderRadius:12,padding:'10px 14px',fontSize:13,color:P.rose,marginBottom:14,fontFamily:P.fB}}>⚠️ {error}</div>}
+          {loading?<p style={{padding:'22px 0',color:P.muted,fontFamily:P.fB}}>Loading…</p>
+          :!draft?<div style={{background:P.card,borderRadius:20,padding:'36px 28px',border:`1px solid ${P.border}`,boxShadow:'0 2px 16px rgba(61,38,0,0.06)',textAlign:'center'}}>
+            <div style={{fontSize:48,marginBottom:10}}>📄</div>
+            <h3 style={{fontFamily:P.fH,fontSize:18,fontWeight:700,color:P.ink,marginBottom:6}}>No saved drafts yet</h3>
+            <p style={{fontFamily:P.fB,fontSize:13,color:P.muted,marginBottom:20}}>Save a draft from Feed or New Thought — it will show here.</p>
+            <button type="button" onClick={()=>navigate('/create')} style={{padding:'11px 24px',borderRadius:50,background:'transparent',border:`1.5px solid ${P.border}`,cursor:'pointer',fontFamily:P.fB,fontWeight:700,color:P.muted}}>Continue Writing</button>
+          </div>
+          :<div style={{background:P.card,borderRadius:20,border:`1px solid ${P.border}`,boxShadow:'0 4px 24px rgba(61,38,0,0.08)',overflow:'hidden'}}>
+            <div style={{height:4,background:`linear-gradient(90deg,transparent,${P.amber},${P.amberDark},transparent)`}} />
+            <div style={{padding:'24px 28px'}}>
+              <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,marginBottom:16}}>
+                <div style={{minWidth:0}}>
+                  <p style={{fontFamily:P.fH,fontSize:17,fontWeight:700,color:P.ink,marginBottom:4}}>{draft.title||'Untitled draft'}</p>
+                  {subtitle&&<p style={{fontFamily:P.fM,fontSize:11,color:P.muted}}>Last saved: {subtitle}</p>}
                 </div>
-                {draft.mood && <div style={styles.moodChip}>😊 {draft.mood}</div>}
+                {draft.mood&&<span style={{padding:'5px 12px',borderRadius:50,border:`1px solid ${P.border}`,fontFamily:P.fB,fontSize:12,color:P.muted,background:P.surface,whiteSpace:'nowrap'}}>😊 {draft.mood}</span>}
               </div>
-
-              <div style={styles.contentBox}>{draft.content}</div>
-
-              <div style={styles.actions}>
-                <button type="button" onClick={() => navigate('/create')} style={styles.secondaryBtn}>
-                  Continue Writing
-                </button>
-                <button type="button" onClick={handleDelete} style={styles.dangerBtn}>
-                  Delete Draft
-                </button>
+              <div style={{whiteSpace:'pre-wrap',fontFamily:P.fB,fontSize:14,color:P.ink,lineHeight:1.75,padding:'14px 16px',borderRadius:12,border:`1px solid ${P.border}`,background:P.surface,marginBottom:20}}>{draft.content}</div>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
+                <button type="button" onClick={()=>navigate('/create')} style={{padding:'10px 18px',borderRadius:12,background:'transparent',border:`1.5px solid ${P.border}`,cursor:'pointer',fontFamily:P.fB,fontWeight:600,color:P.muted}}>Continue Writing</button>
+                <button type="button" onClick={handleDelete} style={{padding:'10px 18px',borderRadius:12,background:P.rosePale,border:`1.5px solid rgba(192,57,43,0.2)`,cursor:'pointer',fontFamily:P.fB,fontWeight:700,color:P.rose}}>Delete Draft</button>
               </div>
             </div>
-          )}
+          </div>}
         </main>
-
-        <RightSidebar />
+        <RightSidebarDrafts />
       </div>
     </div>
-  )
+  );
 }
 
-function RightSidebar() {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const isGuest = !user
-  const trending = [
-    { name: 'Morning Routine', count: '142 thoughts today' },
-    { name: 'Gratitude Journal', count: '98 thoughts today' },
-    { name: 'Mindfulness', count: '76 thoughts today' },
-    { name: 'Self Reflection', count: '61 thoughts today' },
-  ]
-
-  const suggested = [
-    { name: 'Karla Manalo', sub: '34 thoughts this week' },
-    { name: 'Ben Cruz', sub: 'Philosophy · Stoicism' },
-    { name: 'Lena Park', sub: 'Mindfulness · Wellness' },
-  ]
-
-  const [followed, setFollowed] = useState({})
-  const [query, setQuery] = useState('')
-  const [userResults, setUserResults] = useState([])
-  const [userLoading, setUserLoading] = useState(false)
-  const [userError, setUserError] = useState('')
-
-  const q = query.trim().toLowerCase()
-  const filteredTrending = q
-    ? trending.filter(t => String(t.name).toLowerCase().includes(q))
-    : trending
-
-  useEffect(() => {
-    const text = query.trim()
-    let ignore = false
-    const t = setTimeout(() => {
-      if (!text) return
-      setUserLoading(true)
-      setUserError('')
-      userApi.search(text, { limit: 25 })
-        .then((list) => {
-          if (ignore) return
-          setUserResults(list)
-        })
-        .catch((e) => {
-          if (ignore) return
-          setUserError(e?.message || 'Failed to search users.')
-          setUserResults([])
-        })
-        .finally(() => {
-          if (ignore) return
-          setUserLoading(false)
-        })
-    }, 250)
-
-    return () => {
-      ignore = true
-      clearTimeout(t)
-    }
-  }, [query])
-
-  const listUsers = q ? userResults : suggested
-
-  return (
-    <aside style={styles.rightBar}>
-      <div style={styles.searchBox}>
-        <span style={styles.searchIcon}>🔎</span>
-        <input
-          value={query}
-          onChange={(e) => {
-            const next = e.target.value
-            setQuery(next)
-            if (!next.trim()) {
-              setUserResults([])
-              setUserLoading(false)
-              setUserError('')
-            }
-          }}
-          placeholder="Search trending or users"
-          style={styles.searchInput}
-        />
+function RightSidebarDrafts(){
+  const navigate=useNavigate();const{user}=useAuth();const isGuest=!user;
+  const trending=[{name:'Morning Routine',count:'142 thoughts today'},{name:'Gratitude Journal',count:'98 thoughts today'},{name:'Mindfulness',count:'76 thoughts today'}];
+  const suggested=[{name:'Karla Manalo',sub:'34 thoughts'},{name:'Ben Cruz',sub:'Philosophy'},{name:'Lena Park',sub:'Mindfulness'}];
+  const[followed,setFollowed]=useState({});const[query,setQuery]=useState('');const[ur,setUr]=useState([]);const[uL,setUL]=useState(false);const[uE,setUE]=useState('');
+  const q=query.trim().toLowerCase();
+  useEffect(()=>{const t=query.trim();let ig=false;const id=setTimeout(()=>{if(!t)return;setUL(true);setUE('');userApi.search(t,{limit:25}).then(l=>{if(!ig)setUr(l);}).catch(e=>{if(!ig){setUE(e?.message||'Failed.');setUr([]);}}).finally(()=>{if(!ig)setUL(false);});},250);return()=>{ig=true;clearTimeout(id);};},[query]);
+  const lu=q?ur:suggested;
+  return(
+    <aside style={{width:280,flexShrink:0,position:'sticky',top:24,maxHeight:'calc(100vh - 48px)',overflowY:'auto',display:'flex',flexDirection:'column',gap:12}}>
+      <div style={{background:P.card,borderRadius:50,border:`1px solid ${P.border}`,padding:'10px 14px',display:'flex',alignItems:'center',gap:10,boxShadow:'0 1px 8px rgba(61,38,0,0.04)'}}>
+        <span style={{fontSize:13,opacity:0.4}}>🔎</span>
+        <input value={query} onChange={e=>{setQuery(e.target.value);if(!e.target.value.trim()){setUr([]);setUL(false);setUE('');}}} placeholder="Search" style={{width:'100%',border:'none',outline:'none',fontFamily:P.fB,fontSize:13,color:P.ink,background:'transparent'}} />
       </div>
-      <div style={styles.widget}>
-        <div style={styles.widgetTitle}>📈 Trending Topics</div>
-        {filteredTrending.length === 0 ? (
-          <div style={styles.searchEmpty}>No trending results.</div>
-        ) : filteredTrending.map((t, i) => (
-          <div key={t.name} style={styles.trendRow}>
-            <span style={styles.trendNum}>{i + 1}</span>
-            <div>
-              <div style={styles.trendName}>{t.name}</div>
-              <div style={styles.trendCount}>{t.count}</div>
-            </div>
-          </div>
-        ))}
+      <div style={{background:P.card,border:`1px solid ${P.border}`,borderRadius:18,padding:16,boxShadow:'0 2px 12px rgba(61,38,0,0.05)'}}>
+        <p style={{fontFamily:P.fM,fontSize:11,fontWeight:700,color:P.muted,textTransform:'uppercase',letterSpacing:1.5,marginBottom:12}}>📈 Trending Topics</p>
+        {trending.map((t,i)=><div key={t.name} style={{display:'flex',gap:10,padding:'9px 0',borderTop:`1px solid ${P.border}`}}><span style={{fontFamily:P.fH,color:P.amberDark,width:18,fontWeight:700}}>{i+1}</span><div><p style={{fontFamily:P.fB,fontWeight:600,color:P.ink,fontSize:13}}>{t.name}</p><p style={{fontFamily:P.fB,color:P.muted,fontSize:11.5}}>{t.count}</p></div></div>)}
       </div>
-
-      <div style={styles.widget}>
-        <div style={styles.widgetTitle}>👥 People to Follow</div>
-        {userLoading ? (
-          <div style={styles.searchEmpty}>Searching…</div>
-        ) : userError ? (
-          <div style={styles.searchEmpty}>{userError}</div>
-        ) : listUsers.length === 0 ? (
-          <div style={styles.searchEmpty}>No user results.</div>
-        ) : listUsers.map((u) => {
-          const id = u?.id
-          const name = u?.firstName || u?.lastName
-            ? `${u?.firstName || ''} ${u?.lastName || ''}`.trim()
-            : (u?.name || u?.email || 'Unknown')
-          const sub = u?.sub || u?.email || ''
-          const key = id != null ? `u:${id}` : `s:${name}`
-          const followKey = id != null ? String(id) : name
-          return (
-            <div key={key} style={styles.suggestRow}>
-              <div onClick={() => { if (id != null) navigate(`/profile/${id}`) }} style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0, cursor: id != null ? 'pointer' : 'default' }}>
-                <Avatar name={name} src={u?.avatarUrl} size="sm" />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={styles.suggestName}>{name}</div>
-                  <div style={styles.suggestSub}>{sub}</div>
-                </div>
-              </div>
-              <button
-                onClick={async () => {
-                  if (id == null) return
-                  if (isGuest) { navigate('/login'); return }
-                  try {
-                    const res = await userApi.toggleFollow(id, user?.id ?? null)
-                    setFollowed(f => ({ ...f, [followKey]: !!res.following }))
-                  } catch (e) {
-                    alert(e?.message || 'Failed to follow user.')
-                  }
-                }}
-                style={{
-                  ...styles.followBtn,
-                  background: followed[followKey] ? theme.colors.amberPale : 'transparent',
-                  color: followed[followKey] ? theme.colors.amberDark : theme.colors.amber,
-                }}
-              >
-                {followed[followKey] ? '✓ Following' : 'Follow'}
-              </button>
-            </div>
-          )
-        })}
+      <div style={{background:P.card,border:`1px solid ${P.border}`,borderRadius:18,padding:16,boxShadow:'0 2px 12px rgba(61,38,0,0.05)'}}>
+        <p style={{fontFamily:P.fM,fontSize:11,fontWeight:700,color:P.muted,textTransform:'uppercase',letterSpacing:1.5,marginBottom:12}}>👥 People to Follow</p>
+        {uL?<p style={{color:P.muted,fontSize:12,fontFamily:P.fB}}>Searching…</p>:uE?<p style={{color:P.muted,fontSize:12,fontFamily:P.fB}}>{uE}</p>:lu.length===0?<p style={{color:P.muted,fontSize:12,fontFamily:P.fB}}>No results.</p>:lu.map(u=>{const id=u?.id;const name=u?.firstName||u?.lastName?`${u?.firstName||''} ${u?.lastName||''}`.trim():(u?.name||u?.email||'Unknown');const sub=u?.sub||u?.email||'';const key=id!=null?`u:${id}`:`s:${name}`;const fk=id!=null?String(id):name;return(<div key={key} style={{display:'flex',gap:10,alignItems:'center',padding:'9px 0',borderTop:`1px solid ${P.border}`}}><div onClick={()=>id!=null&&navigate(`/profile/${id}`)} style={{display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0,cursor:id!=null?'pointer':'default'}}><Avatar name={name} src={u?.avatarUrl} size="sm" /><div><p style={{fontFamily:P.fH,fontSize:13,color:P.ink,fontWeight:700}}>{name}</p><p style={{fontFamily:P.fB,color:P.muted,fontSize:11.5}}>{sub}</p></div></div><button onClick={async()=>{if(id==null)return;if(isGuest){navigate('/login');return;}try{const r=await userApi.toggleFollow(id,user?.id??null);setFollowed(f=>({...f,[fk]:!!r.following}));}catch(e){alert(e?.message||'Failed.');}}} style={{border:`1.5px solid ${P.amber}`,borderRadius:50,padding:'5px 12px',fontFamily:P.fB,fontSize:12,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap',background:followed[fk]?P.amberPale:'transparent',color:P.amberDark}}>{followed[fk]?'✓ Following':'Follow'}</button></div>);})}
       </div>
     </aside>
-  )
-}
-
-const styles = {
-  shell: { minHeight: '100vh', background: theme.colors.cream },
-  layout: {
-    width: '100%',
-    maxWidth: '1240px',
-    margin: '0 auto',
-    padding: '24px 16px',
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    gap: '18px',
-  },
-  main: { flex: '0 1 640px', minWidth: 0 },
-  headerRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '14px' },
-  title: { fontFamily: theme.fonts.display, fontSize: '22px', fontWeight: 800, color: theme.colors.ink, margin: 0 },
-  loading: { padding: '22px 0', color: theme.colors.inkMuted, fontFamily: theme.fonts.body },
-  errorBox: {
-    background: theme.colors.rosePale,
-    border: `1px solid ${theme.colors.rose}40`,
-    color: theme.colors.ink,
-    padding: '10px 12px',
-    borderRadius: theme.radius.md,
-    fontFamily: theme.fonts.body,
-    fontSize: '13px',
-    marginBottom: '12px',
-  },
-  empty: {
-    background: theme.colors.warmWhite,
-    borderRadius: theme.radius.xl,
-    padding: '28px',
-    border: `1px solid ${theme.colors.border}`,
-    boxShadow: theme.shadows.md,
-    textAlign: 'center',
-  },
-  emptyIcon: { fontSize: '44px', marginBottom: '8px' },
-  emptyTitle: { fontFamily: theme.fonts.display, fontSize: '16px', fontWeight: 800, color: theme.colors.ink, marginBottom: '6px' },
-  emptySub: { fontFamily: theme.fonts.body, fontSize: '13px', color: theme.colors.inkMuted, marginBottom: '14px' },
-  card: {
-    background: theme.colors.warmWhite,
-    borderRadius: theme.radius.xl,
-    padding: '22px',
-    border: `1px solid ${theme.colors.border}`,
-    boxShadow: theme.shadows.md,
-  },
-  cardTop: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px' },
-  cardTitle: { fontFamily: theme.fonts.display, fontSize: '16px', fontWeight: 800, color: theme.colors.ink },
-  cardSub: { fontFamily: theme.fonts.mono, fontSize: '11px', color: theme.colors.inkMuted, marginTop: '6px' },
-  moodChip: {
-    padding: '6px 10px',
-    borderRadius: theme.radius.full,
-    border: `1px solid ${theme.colors.border}`,
-    fontFamily: theme.fonts.body,
-    fontSize: '12px',
-    color: theme.colors.inkMuted,
-    background: theme.colors.cream,
-    whiteSpace: 'nowrap',
-  },
-  contentBox: {
-    whiteSpace: 'pre-wrap',
-    fontFamily: theme.fonts.body,
-    fontSize: '14px',
-    color: theme.colors.ink,
-    lineHeight: 1.7,
-    padding: '12px',
-    borderRadius: theme.radius.lg,
-    border: `1px solid ${theme.colors.border}`,
-    background: theme.colors.cream,
-    marginBottom: '16px',
-  },
-  actions: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' },
-  primaryBtn: {
-    padding: '10px 14px',
-    borderRadius: theme.radius.md,
-    background: theme.colors.amber,
-    border: 'none',
-    cursor: 'pointer',
-    fontFamily: theme.fonts.body,
-    fontWeight: 800,
-    color: theme.colors.ink,
-  },
-  secondaryBtn: {
-    padding: '10px 14px',
-    borderRadius: theme.radius.md,
-    background: 'transparent',
-    border: `1.5px solid ${theme.colors.border}`,
-    cursor: 'pointer',
-    fontFamily: theme.fonts.body,
-    fontWeight: 700,
-    color: theme.colors.inkMuted,
-  },
-  dangerBtn: {
-    padding: '10px 14px',
-    borderRadius: theme.radius.md,
-    background: theme.colors.rosePale,
-    border: `1.5px solid ${theme.colors.rose}40`,
-    cursor: 'pointer',
-    fontFamily: theme.fonts.body,
-    fontWeight: 800,
-    color: theme.colors.ink,
-  },
-  rightBar: {
-    width: '280px',
-    flexShrink: 0,
-    position: 'sticky',
-    top: '24px',
-    maxHeight: 'calc(100vh - 48px)',
-    overflowY: 'auto',
-    '@media(max-width:900px)': { display: 'none' },
-  },
-  searchBox: {
-    background: theme.colors.warmWhite,
-    borderRadius: theme.radius.full,
-    border: `1px solid ${theme.colors.border}`,
-    padding: '10px 12px',
-    marginBottom: '14px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-  },
-  searchIcon: { color: theme.colors.inkMuted, fontSize: '14px' },
-  searchInput: {
-    width: '100%',
-    border: 'none',
-    outline: 'none',
-    fontFamily: theme.fonts.body,
-    fontSize: '13px',
-    color: theme.colors.ink,
-    background: 'transparent',
-  },
-  searchEmpty: { color: theme.colors.inkMuted, fontFamily: theme.fonts.body, fontSize: '12px' },
-  widget: {
-    background: theme.colors.warmWhite,
-    borderRadius: theme.radius.xl,
-    padding: '16px',
-    marginBottom: '14px',
-    border: `1px solid ${theme.colors.border}`,
-  },
-  widgetTitle: {
-    fontSize: '12px',
-    fontWeight: '700',
-    color: theme.colors.inkMuted,
-    textTransform: 'uppercase',
-    letterSpacing: '1px',
-    marginBottom: '14px',
-    fontFamily: theme.fonts.mono,
-  },
-  trendRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '8px 0',
-    borderBottom: `1px solid ${theme.colors.border}`,
-    cursor: 'pointer',
-  },
-  trendNum: { fontFamily: theme.fonts.display, fontSize: '20px', fontWeight: '900', color: theme.colors.border, width: '24px' },
-  trendName: { fontSize: '13px', fontWeight: '600', color: theme.colors.ink, fontFamily: theme.fonts.body },
-  trendCount: { fontSize: '11px', color: theme.colors.inkMuted, fontFamily: theme.fonts.body },
-  suggestRow: { display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0' },
-  suggestName: { fontSize: '13px', fontWeight: '600', color: theme.colors.ink, fontFamily: theme.fonts.body },
-  suggestSub: { fontSize: '11px', color: theme.colors.inkMuted, fontFamily: theme.fonts.body },
-  followBtn: {
-    padding: '5px 14px',
-    border: `1.5px solid ${theme.colors.amber}`,
-    borderRadius: theme.radius.full,
-    fontSize: '12px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: theme.transition,
-    fontFamily: theme.fonts.body,
-    whiteSpace: 'nowrap',
-  },
+  );
 }

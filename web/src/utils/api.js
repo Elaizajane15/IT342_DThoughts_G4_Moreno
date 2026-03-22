@@ -183,6 +183,7 @@ function normalizePost(post) {
     updatedAt: post.updatedAt ?? null,
     imagePath: post.imagePath ?? post.imageUrl ?? null,
     text: post.content ?? post.text ?? '',
+    mood: post.mood ?? null,
     likeCount: typeof post.likeCount === 'number' ? post.likeCount : Number(post.likeCount) || 0,
     commentCount: typeof post.commentCount === 'number' ? post.commentCount : Number(post.commentCount) || 0,
   }
@@ -226,12 +227,12 @@ export const postsApi = {
       size: typeof data.size === 'number' ? data.size : size,
     }
   },
-  async create({ userId, content }) {
+  async create({ userId, content, mood = null }) {
     const res = await fetch(`${BASE_URL}/api/posts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ userId, content }),
+      body: JSON.stringify({ userId, content, mood }),
     })
     const data = await res.json().catch(() => ({}))
     if (!res.ok) throw new Error(data.message || 'Failed to publish.')

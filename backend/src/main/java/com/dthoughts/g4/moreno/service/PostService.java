@@ -52,6 +52,7 @@ public class PostService {
 	@PostConstruct
 	public void initSchema() {
 		ensureImageColumn();
+		ensureMoodColumn();
 	}
 
 	@Transactional
@@ -62,12 +63,22 @@ public class PostService {
 		if (content.isEmpty()) throw new RuntimeException("content is required.");
 		if (content.length() > 500) throw new RuntimeException("content must be 500 characters or less.");
 
+		String mood = request.getMood();
+		if (mood != null) {
+			mood = mood.trim();
+			if (mood.isEmpty()) mood = null;
+			if (mood != null && mood.length() > 50) mood = mood.substring(0, 50);
+		}
+
 		Optional<User> userOpt = userRepository.findById(request.getUserId());
 		if (userOpt.isEmpty()) throw new RuntimeException("User not found.");
 
 		ensureImageColumn();
+		ensureMoodColumn();
 
-		Post saved = postRepository.save(new Post(userOpt.get(), content));
+		Post p = new Post(userOpt.get(), content);
+		p.setMood(mood);
+		Post saved = postRepository.save(p);
 		Long postId = saved.getId();
 		if (postId != null) {
 			for (Follow f : followRepository.findByFollowingId(request.getUserId())) {
@@ -177,6 +188,28 @@ public class PostService {
 		}
 	}
 
+	private void ensureMoodColumn() {
+		if (jdbcTemplate == null) return;
+		try {
+			Integer exists =
+					jdbcTemplate.queryForObject(
+							"SELECT COUNT(*) FROM information_schema.columns WHERE LOWER(table_name) = 'posts' AND LOWER(column_name) = 'mood'",
+							Integer.class
+					);
+			if (exists != null && exists > 0) return;
+		} catch (Exception ignored) {
+		}
+
+		try {
+			jdbcTemplate.execute("ALTER TABLE posts ADD COLUMN mood VARCHAR(50)");
+		} catch (Exception e) {
+			throw new RuntimeException(
+					"Database schema error: missing posts.mood and cannot create it. Run: ALTER TABLE posts ADD COLUMN mood VARCHAR(50);",
+					e
+			);
+		}
+	}
+
 	private PostDto toDto(Post p) {
 		Long userId = p.getUser() == null ? null : p.getUser().getId();
 		String userName = null;
@@ -190,6 +223,6 @@ public class PostService {
 			userName = joined.isEmpty() ? p.getUser().getEmail() : joined;
 			userAvatarUrl = p.getUser().getAvatarUrl();
 		}
-		return new PostDto(p.getId(), userId, userName, userAvatarUrl, p.getContent(), p.getImagePath(), likeCount, commentCount, p.getCreatedAt(), p.getUpdatedAt());
+		return new PostDto(p.getId(), userId, userName, userAvatarUrl, p.getContent(), p.getMood(), p.getImagePath(), likeCount, commentCount, p.getCreatedAt(), p.getUpdatedAt());
 	}
 }
