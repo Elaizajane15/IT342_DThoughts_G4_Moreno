@@ -1,0 +1,7 @@
+com.example.dthoughts.app-pngs-0 C:\IT342_DThoughts_G4_Moreno\Mobile\app\build\generated\res\pngs\debug
+com.example.dthoughts.app-updated_navigation_xml-1 C:\IT342_DThoughts_G4_Moreno\Mobile\app\build\generated\updated_navigation_xml\debug
+com.example.dthoughts.app-packageDebugResources-2 C:\IT342_DThoughts_G4_Moreno\Mobile\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.example.dthoughts.app-packageDebugResources-3 C:\IT342_DThoughts_G4_Moreno\Mobile\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.example.dthoughts.app-debug-4 C:\IT342_DThoughts_G4_Moreno\Mobile\app\build\intermediates\merged_res\debug\mergeDebugResources
+com.example.dthoughts.app-debug-5 C:\IT342_DThoughts_G4_Moreno\Mobile\app\src\debug\res
+com.example.dthoughts.app-main-6 C:\IT342_DThoughts_G4_Moreno\Mobile\app\src\main\res
