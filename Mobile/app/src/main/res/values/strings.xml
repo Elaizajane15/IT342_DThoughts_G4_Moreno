@@ -1,3 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">dthoughts</string>
+
+    <string name="app_name">Daily</string>
+    <string name="logo_emoji">📓</string>
+    <string name="logo_part_1">Daily</string>
+    <string name="logo_part_2">Thoughts</string>
+    <string name="action_back_to_login">← Back to Login</string>
+    <string name="reg_title">Create your account</string>
+    <string name="reg_subtitle">Join the DailyThoughts community today</string>
+    <string name="step_one">1</string>
+    <string name="step_two">2</string>
+    <string name="step_three">3</string>
+    <string name="close_icon">X</string>
+    <string name="label_account">ACCOUNT</string>
+    <string name="label_password">PASSWORD</string>
+    <string name="label_confirm">CONFIRM PASSWORD</string>
+    <string name="label_re">Re enter your password</string>
+    <string name="label_personal">PERSONAL</string>
+    <string name="label_email">EMAIL ADDRESS</string>
+    <string name="hint_email_example">you@example.com</string>
+    <string name="label_done">DONE</string>
+    <string name="symbol_warning"> ⚠ </string>
+    <string name="action_close">✕</string>
+    <string name="hint_password_requirement">At least 8 characters</string>
+    <string name="status_weak">Weak</string>
+    <string name="char_count">%1$d chars</string>
+    <string name="msg_password_match">✓ Passwords match</string>
+    <string name="btn_continue">Continue →</string>
+    <string name="label_first_name">FIRST NAME</string>
+    <string name="hint_first_name">Juan</string>
+    <string name="label_last_name">LAST NAME</string>
+    <string name="hint_last_name">Dela Cruz</string>
+    <string name="label_agree">I agree to the </string>
+    <string name="terms_of_service">Terms of Service</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="and_text"> and </string>
+    <string name="btn_back">← Back</string>
+    <string name="btn_create_account">Create Account ✓</string>
+    <string name="label_or_register">or register with</string>
+    <string name="btn_google">Register with Google</string>
+    <string name="label_already_account">Already have an account? </string>
+    <string name="label_sign_in">Sign in</string>
+    <string name="tagline">Your thoughts, beautifully captured.</string>
+
+    <string name="hero_line_1">Where your</string>
+    <string name="hero_line_2">thoughts</string>
+    <string name="hero_line_3">come alive.</string>
+    <string name="hero_description">A space to journal, reflect, and share your daily thoughts with a community that truly listens.</string>
+
+    <string name="feature_journaling">✍️  Daily journaling</string>
+    <string name="feature_community">💬  Community</string>
+    <string name="feature_security">🔒  Private &amp; secure</string>
+    <string name="feature_quotes">✨  Daily quotes</string>
+
+    <string name="label_daily_quote">✦ DAILY QUOTE</string>
+    <string name="default_quote">Loading quote</string>
+    <string name="quote_author_placeholder">— DailyThoughts</string>
+
+    <string name="welcome_back">Welcome back</string>
+    <string name="welcome_subtitle">Sign in to continue your journey</string>
+
+    <string name="hint_email">you@example.com</string>
+    <string name="hint_password">Enter your password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="remember_me">Keep me signed in</string>
+
+    <string name="btn_sign_in">Sign In</string>
+    <string name="divider_text">or continue with</string>
+
+    <string name="btn_google1">Continue with Google</string>
+    <string name="no_account">Don\'t have an account?</string>
+    <string name="create_account">Create one free</string>
+    <string name="guest_prefix">Just browsing? </string>
+    <string name="guest_continue">Continue as Guest</string>
+    <string name="guest_suffix"> · read-only</string>
+
+    <string name="copyright">© 2024 DailyThoughts</string>
+    <string name="footer_privacy">Privacy</string>
+    <string name="footer_terms">Terms</string>
+    <string name="dot_separator"> · </string>
+
+    <!-- ==================== GUEST FEED STRINGS ==================== -->
+
+    <!-- Feed Header -->
+    <string name="your_feed">Your Feed</string>
+    <string name="feed_subtitle">Whats on peoples minds today</string>
+    <string name="guest_badge">Guest</string>
+
+    <!-- Daily Quote -->
+    <string name="daily_thought_title">✨ Daily Thought</string>
+    <string name="daily_thought_quote">Every day is a new page in your story.</string>
+    <string name="daily_thought_author">— DailyThoughts</string>
+
+    <!-- Tab Titles -->
+    <string name="tab_for_you">For You</string>
+    <string name="tab_following">Following</string>
+
+    <!-- Guest Login Card -->
+    <string name="guest_view_title">Viewing as Guest</string>
+    <string name="guest_view_message">Sign in to like, comment, and share your own thoughts.</string>
+    <string name="btn_login">Login</string>
+    <string name="btn_sign_up">Sign Up</string>
+
+    <!-- Post Card Actions -->
+    <string name="share">Share</string>
+    <string name="login_prompt">Please login to interact with posts</string>
+
+    <!-- Loading & Empty States -->
+    <string name="loading">Loading...</string>
+    <string name="no_posts">No thoughts yet. Be the first to share!</string>
+    <string name="load_more">Load more thoughts ↓</string>
+
+    <!-- Error Messages -->
+    <string name="error_loading_posts">Failed to load posts</string>
+    <string name="btn_retry">Retry</string>
+
+    <!-- Post Card Default Values -->
+    <string name="default_avatar">KM</string>
+    <string name="default_username">user</string>
+    <string name="default_time">· 2h</string>
+    <string name="default_post_content">Post content here...</string>
+
+    <!-- Profile Drawer Menu Items -->
+    <string name="menu_profile">Profile</string>
+    <string name="menu_premium">Premium</string>
+    <string name="menu_chat">Chat</string>
+    <string name="menu_communities">Communities</string>
+    <string name="menu_bookmarks">Bookmarks</string>
+    <string name="menu_lists">Lists</string>
+    <string name="menu_spaces">Spaces</string>
+    <string name="menu_download">Download Grok</string>
+    <string name="menu_settings">Settings and privacy</string>
+    <string name="menu_help">Help Center</string>
+    <string name="menu_logout">Logout</string>
+
+    <!-- Profile Stats -->
+    <string name="following">Following</string>
+    <string name="followers">Followers</string>
+    <string name="thoughts">THOUGHTS</string>
+    <string name="likes">LIKES</string>
+
+    <!-- Compose Box -->
+    <string name="compose_hint">Whats on your mind today?</string>
+    <string name="add_image">📷 Add Image</string>
+    <string name="post_thought">Post</string>
+    <string name="new_thought">✏️ New Thought</string>
+
+    <item name="ic_launcher" type="mipmap">@mipmap/ic_launcher_round</item>
 </resources>

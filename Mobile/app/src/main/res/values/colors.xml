@@ -1,5 +1,168 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="warm_ivory">#FFF8EE</color>
+    <color name="deep_parchment">#F5ECD4</color>
+    <color name="amber">#E8C97A</color>
+    <color name="amber_deep">#A67C28</color>
+    <color name="espresso">#3D2600</color>
+    <color name="muted">#7A6040</color>
+    <color name="muted_soft">#6B4C1E</color>
+    <color name="white">#FFFFFF</color>
+    <color name="border_amber_hover">#D6C6A5</color>
+    <color name="bg_ivory">#FFFFF0</color>
+    <color name="card_white">#FFFFFF</color>
+    <color name="surface">#FDFDFD</color>
+    <color name="amber_dark">#D4A373</color>
+    <color name="border_amber">#E2D1B3</color>
+
+    <color name="rose_red">#BC6C25</color>
+    <color name="muted_light">#E0E0E0</color>
+    <color name="muted_ivory">#F2EAD3</color>
+    <color name="success_light">#D8F3DC</color>
+    <color name="ink">#1A1A1A</color>
+    <color name="mid">#6B4C1E</color>
+
+    <color name="parchment">#F5ECD4</color>
+    <color name="golden_amber">#E8C97A</color>
+    <color name="warm_brown">#7A6040</color>
+    <color name="rose">#E74C3C</color>
+
+    <!-- Basic colors -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+
+    <!-- Password strength colors -->
+    <color name="strength_weak">#E53935</color>
+    <color name="strength_fair">#FFC107</color>
+    <color name="strength_good">#4CAF50</color>
+    <color name="strength_strong">#2E7D32</color>
+    <color name="strength_inactive">#E0E0E0</color>
+    <color name="success_green">#4CAF50</color>
+
+    <!-- ==================== GUEST FEED & PROFILE COLORS ==================== -->
+
+    <!-- Feed Colors -->
+    <color name="feed_bg">#FFF8EE</color>
+    <color name="feed_card_bg">#FFFFFF</color>
+    <color name="feed_surface">#F5ECD4</color>
+    <color name="feed_surface_hi">#EDE0C4</color>
+    <color name="feed_border">#EDE0C4</color>
+    <color name="feed_border_hov">#D6C6A5</color>
+    <color name="feed_amber">#E8C97A</color>
+    <color name="feed_amber_dark">#C9A84C</color>
+    <color name="feed_amber_pale">#F5ECD4</color>
+    <color name="feed_ink">#3D2600</color>
+    <color name="feed_muted">#7A6040</color>
+    <color name="feed_muted_soft">#A18B6B</color>
+
+    <!-- Post Card Colors -->
+    <color name="post_card_bg">#FFFFFF</color>
+    <color name="post_avatar_bg">#F5ECD4</color>
+    <color name="post_avatar_text">#C9A84C</color>
+    <color name="post_name">#3D2600</color>
+    <color name="post_username">#7A6040</color>
+    <color name="post_time">#7A6040</color>
+    <color name="post_content">#3D2600</color>
+    <color name="post_action_icon">#7A6040</color>
+    <color name="post_action_text">#7A6040</color>
+
+    <!-- Like Button Colors -->
+    <color name="like_icon_default">#7A6040</color>
+    <color name="like_icon_liked">#E74C3C</color>
+
+    <!-- Guest Banner Colors -->
+    <color name="guest_banner_bg">#F5ECD4</color>
+    <color name="guest_banner_border">#EDE0C4</color>
+    <color name="guest_banner_icon_bg">#FFF8EE</color>
+    <color name="guest_banner_title">#3D2600</color>
+    <color name="guest_banner_subtitle">#7A6040</color>
+    <color name="guest_banner_button_bg">#E8C97A</color>
+    <color name="guest_banner_button_text">#3D2600</color>
+
+    <!-- Tab Colors -->
+    <color name="tab_bg">#F5ECD4</color>
+    <color name="tab_selected_bg">#FFFFFF</color>
+    <color name="tab_selected_text">#3D2600</color>
+    <color name="tab_unselected_text">#7A6040</color>
+    <color name="tab_indicator">#E8C97A</color>
+
+    <!-- Compose Box Colors -->
+    <color name="compose_bg">#FFFFFF</color>
+    <color name="compose_border">#EDE0C4</color>
+    <color name="compose_hint">#A18B6B</color>
+    <color name="compose_text">#3D2600</color>
+    <color name="compose_button_bg">#E8C97A</color>
+    <color name="compose_button_text">#3D2600</color>
+
+    <!-- Daily Quote Card Colors -->
+    <color name="quote_card_bg">#F5ECD4</color>
+    <color name="quote_card_border">#EDE0C4</color>
+    <color name="quote_title">#C9A84C</color>
+    <color name="quote_text">#3D2600</color>
+    <color name="quote_author">#7A6040</color>
+
+    <!-- Error Banner Colors -->
+    <color name="error_banner_bg">#FFFFFF</color>
+    <color name="error_banner_border">#E2D1B3</color>
+    <color name="error_banner_text">#3D2600</color>
+    <color name="error_banner_button">#7A6040</color>
+
+    <!-- Profile Drawer Colors -->
+    <color name="drawer_bg">#FFF8EE</color>
+    <color name="drawer_cover_gradient_start">#E8C97A</color>
+    <color name="drawer_cover_gradient_end">#F5ECD4</color>
+    <color name="drawer_avatar_border">#E8C97A</color>
+    <color name="drawer_name">#3D2600</color>
+    <color name="drawer_username">#7A6040</color>
+    <color name="drawer_stat_number">#3D2600</color>
+    <color name="drawer_stat_label">#7A6040</color>
+    <color name="drawer_menu_icon">#7A6040</color>
+    <color name="drawer_menu_text">#3D2600</color>
+    <color name="drawer_menu_divider">#EDE0C4</color>
+    <color name="drawer_logout_text">#E74C3C</color>
+
+    <!-- Empty State Colors -->
+    <color name="empty_state_icon">#7A6040</color>
+    <color name="empty_state_text">#7A6040</color>
+    <color name="empty_state_button_bg">#E8C97A</color>
+    <color name="empty_state_button_text">#3D2600</color>
+
+    <!-- Loading Shimmer Colors -->
+    <color name="shimmer_base">#F5ECD4</color>
+    <color name="shimmer_highlight">#EDE0C4</color>
+
+    <!-- Button Colors -->
+    <color name="button_primary_bg">#E8C97A</color>
+    <color name="button_primary_text">#3D2600</color>
+    <color name="button_outline_border">#E8C97A</color>
+    <color name="button_outline_text">#C9A84C</color>
+    <color name="button_danger_bg">#E74C3C</color>
+    <color name="button_danger_text">#FFFFFF</color>
+
+    <!-- Modal/Overlay Colors -->
+    <color name="modal_overlay">#80000000</color>
+    <color name="modal_bg">#FFFFFF</color>
+    <color name="modal_border">#EDE0C4</color>
+    <color name="modal_title">#3D2600</color>
+    <color name="modal_body">#7A6040</color>
+
+    <!-- Divider Colors -->
+    <color name="divider_light">#EDE0C4</color>
+    <color name="divider_dark">#D6C6A5</color>
+
+    <!-- Status Colors -->
+    <color name="status_success">#4CAF50</color>
+    <color name="status_error">#E74C3C</color>
+    <color name="status_warning">#FFC107</color>
+    <color name="status_info">#2196F3</color>
+
+    <!-- Shadow Colors -->
+    <color name="shadow_light">#0A000000</color>
+    <color name="shadow_medium">#1A000000</color>
+    <color name="shadow_dark">#33000000</color>
+
 </resources>

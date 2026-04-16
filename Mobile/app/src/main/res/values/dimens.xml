@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <unit name="text_size_label">12sp</unit>
-    <dimen name="text_size_label">12sp</dimen>
+    <dimen name="text_size_step_label">9sp</dimen>
+    <dimen name="text_size_step_number">12sp</dimen>
+    <dimen name="text_size_title">22sp</dimen>
+    <dimen name="text_size_subtitle">13sp</dimen>
+    <dimen name="text_size_label">11sp</dimen>
+
 </resources>

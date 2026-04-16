@@ -773,9 +773,10 @@
                         android:textColor="@color/mid"
                         android:textSize="13sp"
                         app:cornerRadius="50dp"
-                        app:strokeColor="@color/border_amber"
-                        android:drawableStart="@drawable/ic_google"
-                        android:drawablePadding="10dp"/>
+                        app:icon="@drawable/ic_google"
+                        app:iconGravity="textStart"
+                        app:iconPadding="10dp"
+                        app:strokeColor="@color/border_amber" />
 
                     <!-- ── SIGN IN LINK ────────────────────────── -->
                     <LinearLayout
