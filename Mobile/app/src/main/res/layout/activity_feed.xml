@@ -343,11 +343,11 @@
                 </LinearLayout>
 
                 <!-- Posts Container -->
-                <LinearLayout
-                    android:id="@+id/postsContainer"
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvPosts"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical" />
+                    android:nestedScrollingEnabled="false" />
 
                 <!-- Empty State -->
                 <LinearLayout
@@ -416,5 +416,13 @@
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Sidebar / Drawer Content -->
+    <include
+        android:id="@+id/drawerProfile"
+        layout="@layout/drawer_profile"
+        android:layout_width="280dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

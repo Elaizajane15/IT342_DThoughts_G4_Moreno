@@ -26,20 +26,24 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        binding.btnLogin.setOnClickListener {
+        binding.btnSignIn.setOnClickListener {
             handleLogin()
         }
 
-        binding.tvRegisterLink.setOnClickListener {
+        binding.tvForgotPassword.setOnClickListener {
+            startActivity(Intent(this, ForgotPasswordActivity::class.java))
+        }
+
+        binding.tvGoRegister.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
         }
 
-        binding.btnGuestMode.setOnClickListener {
+        binding.tvGuestContinue.setOnClickListener {
             startActivity(Intent(this, GuestFeedActivity::class.java))
             finish()
         }
 
-        binding.layoutGoogleLogin.setOnClickListener {
+        binding.btnGoogle.setOnClickListener {
             Toast.makeText(this, "Google Login not implemented yet", Toast.LENGTH_SHORT).show()
         }
     }
@@ -62,8 +66,8 @@ class LoginActivity : AppCompatActivity() {
 
             result.onSuccess {
                 Toast.makeText(this@LoginActivity, "Login successful!", Toast.LENGTH_SHORT).show()
-                // Navigate to main feed (placeholder for now)
-                startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                // Navigate to feed activity
+                startActivity(Intent(this@LoginActivity, FeedActivity::class.java))
                 finish()
             }.onFailure {
                 showError(it.message ?: "Login failed")
@@ -72,16 +76,16 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setLoading(isLoading: Boolean) {
-        binding.btnLogin.isEnabled = !isLoading
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.btnSignIn.isEnabled = !isLoading
+        // binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     private fun showError(message: String) {
-        binding.layoutErrorBanner.visibility = View.VISIBLE
-        binding.tvErrorMessage.text = message
+        binding.bannerError.visibility = View.VISIBLE
+        binding.tvErrorMsg.text = message
     }
 
     private fun hideError() {
-        binding.layoutErrorBanner.visibility = View.GONE
+        binding.bannerError.visibility = View.GONE
     }
 }

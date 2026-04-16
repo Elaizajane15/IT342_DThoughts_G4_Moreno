@@ -1,7 +1,11 @@
 package com.example.dthoughts.network
 
 import com.example.dthoughts.models.AuthResponse
+import com.example.dthoughts.models.Comment
+import com.example.dthoughts.models.CreateCommentRequest
+import com.example.dthoughts.models.CreatePostRequest
 import com.example.dthoughts.models.LoginRequest
+import com.example.dthoughts.models.Post
 import com.example.dthoughts.models.RegisterRequest
 import com.example.dthoughts.models.UpdateUserRequest
 import com.example.dthoughts.models.User
@@ -68,6 +72,55 @@ interface ApiService {
         @Path("id") id: Long,
         @Body request: ToggleFollowRequest
     ): Response<FollowStatus>
+
+    // Post endpoints
+    @GET("/api/posts")
+    suspend fun getPosts(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20
+    ): Response<List<Post>>
+
+    @GET("/api/posts/following")
+    suspend fun getFollowingPosts(
+        @Query("email") email: String,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20
+    ): Response<List<Post>>
+
+    @GET("/api/posts/user/{userId}")
+    suspend fun getUserPosts(
+        @Path("userId") userId: Long,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20
+    ): Response<List<Post>>
+
+    @POST("/api/posts")
+    suspend fun createPost(@Body request: CreatePostRequest): Response<Post>
+
+    @Multipart
+    @POST("/api/posts/with-image")
+    suspend fun createPostWithImage(
+        @Part("email") email: RequestBody,
+        @Part("content") content: RequestBody,
+        @Part("mood") mood: RequestBody?,
+        @Part file: MultipartBody.Part
+    ): Response<Post>
+
+    @POST("/api/posts/{id}/like")
+    suspend fun toggleLike(
+        @Path("id") id: Long,
+        @Query("email") email: String
+    ): Response<Post>
+
+    // Comment endpoints
+    @GET("/api/posts/{postId}/comments")
+    suspend fun getComments(@Path("postId") postId: Long): Response<List<Comment>>
+
+    @POST("/api/posts/{postId}/comments")
+    suspend fun addComment(
+        @Path("postId") postId: Long,
+        @Body request: CreateCommentRequest
+    ): Response<Comment>
 }
 
 data class FollowStatus(

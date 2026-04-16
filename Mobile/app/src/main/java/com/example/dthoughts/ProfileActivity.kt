@@ -1,5 +1,6 @@
 package com.example.dthoughts
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -10,6 +11,7 @@ import com.example.dthoughts.adapters.PostAdapter
 import com.example.dthoughts.databinding.ActivityProfileBinding
 import com.example.dthoughts.models.User
 import com.example.dthoughts.network.RetrofitClient
+import com.example.dthoughts.network.ToggleFollowRequest
 import com.example.dthoughts.repository.PostRepository
 import com.example.dthoughts.utils.UserPrefs
 import kotlinx.coroutines.launch
@@ -20,20 +22,27 @@ class ProfileActivity : AppCompatActivity() {
     private val postRepository = PostRepository()
     private val apiService = RetrofitClient.apiService
     private var userId: Long = -1
-    private var userEmail: String? = null
+    private var isFollowing: Boolean = false
     private lateinit var postAdapter: PostAdapter
+
+    companion object {
+        const val EXTRA_USER_ID = "USER_ID"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        userId = intent.getLongExtra("user_id", -1)
-        userEmail = intent.getStringExtra("user_email")
+        userId = intent.getLongExtra(EXTRA_USER_ID, -1)
 
         setupToolbar()
         setupRecyclerView()
         loadUserProfile()
+        
+        binding.btnFollow.setOnClickListener {
+            toggleFollow()
+        }
     }
 
     private fun setupToolbar() {
@@ -44,11 +53,21 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
+        val currentUser = UserPrefs.getUser()
         postAdapter = PostAdapter(
             emptyList(),
-            onLikeClick = { /* TODO */ },
-            onCommentClick = { /* TODO */ },
-            onShareClick = { /* TODO */ }
+            onLikeClick = { post -> 
+                currentUser?.let { user ->
+                    lifecycleScope.launch {
+                        val result = postRepository.toggleLike(post.id ?: 0, user.email)
+                        if (result.isSuccess) {
+                            loadUserPosts(userId)
+                        }
+                    }
+                }
+            },
+            onCommentClick = { /* TODO: Navigate to PostDetails */ },
+            onShareClick = { /* TODO: Share intent */ }
         )
         binding.rvUserPosts.layoutManager = LinearLayoutManager(this)
         binding.rvUserPosts.adapter = postAdapter
@@ -60,8 +79,6 @@ class ProfileActivity : AppCompatActivity() {
             try {
                 val response = if (userId != -1L) {
                     apiService.getUserById(userId)
-                } else if (userEmail != null) {
-                    apiService.getCurrentUser(userEmail!!)
                 } else {
                     val currentUser = UserPrefs.getUser()
                     if (currentUser != null) {
@@ -73,8 +90,10 @@ class ProfileActivity : AppCompatActivity() {
 
                 if (response?.isSuccessful == true && response.body() != null) {
                     val user = response.body()!!
+                    userId = user.id
                     updateUI(user)
-                    loadUserPosts(user.email)
+                    loadUserPosts(user.id)
+                    checkFollowStatus(user.id)
                 } else {
                     Toast.makeText(this@ProfileActivity, "Failed to load profile", Toast.LENGTH_SHORT).show()
                 }
@@ -100,20 +119,56 @@ class ProfileActivity : AppCompatActivity() {
         } else {
             binding.btnEditProfile.visibility = View.GONE
             binding.btnFollow.visibility = View.VISIBLE
-            // TODO: Check follow status and update button text
         }
     }
 
-    private fun loadUserPosts(email: String) {
+    private fun checkFollowStatus(targetUserId: Long) {
+        val currentUser = UserPrefs.getUser() ?: return
+        if (currentUser.id == targetUserId) return
+
         lifecycleScope.launch {
-            // Need a getPostsByUser endpoint or filter existing getPosts
-            // For now, let's assume we might need a new endpoint in ApiService
-            // Or use getPosts and filter (not efficient but works for now)
-            val result = postRepository.getPosts()
+            try {
+                val response = apiService.getFollowStatus(targetUserId, currentUser.id)
+                if (response.isSuccessful && response.body() != null) {
+                    isFollowing = response.body()!!.isFollowing
+                    updateFollowButton()
+                }
+            } catch (e: Exception) {
+                // Silent fail
+            }
+        }
+    }
+
+    private fun toggleFollow() {
+        val currentUser = UserPrefs.getUser() ?: return
+        binding.btnFollow.isEnabled = false
+        
+        lifecycleScope.launch {
+            try {
+                val response = apiService.toggleFollow(userId, ToggleFollowRequest(currentUser.id))
+                if (response.isSuccessful && response.body() != null) {
+                    val status = response.body()!!
+                    isFollowing = status.isFollowing
+                    binding.tvFollowerCount.text = status.followerCount.toString()
+                    updateFollowButton()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@ProfileActivity, "Follow action failed", Toast.LENGTH_SHORT).show()
+            } finally {
+                binding.btnFollow.isEnabled = true
+            }
+        }
+    }
+
+    private fun updateFollowButton() {
+        binding.btnFollow.text = if (isFollowing) "Unfollow" else "Follow"
+    }
+
+    private fun loadUserPosts(userId: Long) {
+        lifecycleScope.launch {
+            val result = postRepository.getUserPosts(userId)
             if (result.isSuccess) {
-                val allPosts = result.getOrDefault(emptyList())
-                val userPosts = allPosts.filter { it.author.email == email }
-                postAdapter.updatePosts(userPosts)
+                postAdapter.updatePosts(result.getOrDefault(emptyList()))
             }
         }
     }

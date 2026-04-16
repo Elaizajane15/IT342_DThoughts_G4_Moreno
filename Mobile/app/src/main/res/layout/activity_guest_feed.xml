@@ -237,8 +237,19 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- RecyclerView for Posts -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvPosts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/post_card" />
+
             <!-- Empty State Placeholder -->
-            <include layout="@layout/empty_state" />
+            <include
+                android:id="@+id/emptyState"
+                layout="@layout/empty_state" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

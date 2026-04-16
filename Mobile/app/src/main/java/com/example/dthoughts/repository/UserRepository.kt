@@ -5,22 +5,22 @@ import android.content.SharedPreferences
 import com.example.dthoughts.models.*
 import com.example.dthoughts.network.ApiService
 import com.example.dthoughts.network.RetrofitClient
+import com.example.dthoughts.utils.UserPrefs
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
 class UserRepository(private val context: Context) {
 
     private val apiService: ApiService = RetrofitClient.apiService
-    private val sharedPrefs: SharedPreferences =
-        context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
 
     suspend fun login(email: String, password: String): Result<AuthResponse> {
         return try {
             val response = apiService.login(LoginRequest(email, password))
             if (response.isSuccessful && response.body() != null) {
                 val authResponse = response.body()!!
-                authResponse.token?.let { saveToken(it) }
-                authResponse.user?.let { saveUserInfo(it) }
+                authResponse.token?.let { UserPrefs.saveToken(it) }
+                authResponse.user?.let { UserPrefs.saveUser(it) }
                 Result.success(authResponse)
             } else {
                 Result.failure(Exception(response.message() ?: "Login failed"))
@@ -60,7 +60,7 @@ class UserRepository(private val context: Context) {
         return try {
             val response = apiService.updateUser(updateRequest)
             if (response.isSuccessful && response.body() != null) {
-                saveUserInfo(response.body()!!)
+                UserPrefs.saveUser(response.body()!!)
                 Result.success(response.body()!!)
             } else {
                 Result.failure(Exception("Update failed"))
@@ -72,11 +72,11 @@ class UserRepository(private val context: Context) {
 
     suspend fun uploadAvatar(email: String, fileData: ByteArray, fileName: String): Result<User> {
         return try {
-            val emailPart = email.toRequestBody(MultipartBody.FORM)
+            val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
             val filePart = MultipartBody.Part.createFormData(
                 "file",
                 fileName,
-                fileData.toRequestBody(MultipartBody.FORM)
+                fileData.toRequestBody("image/*".toMediaTypeOrNull())
             )
             val response = apiService.uploadAvatar(emailPart, filePart)
             if (response.isSuccessful && response.body() != null) {
@@ -89,25 +89,40 @@ class UserRepository(private val context: Context) {
         }
     }
 
-    private fun saveToken(token: String) {
-        sharedPrefs.edit().putString("auth_token", token).apply()
-    }
-
-    private fun saveUserInfo(user: User) {
-        sharedPrefs.edit().apply {
-            putLong("user_id", user.id)
-            putString("user_email", user.email)
-            putString("user_name", "${user.firstName} ${user.lastName}")
-            putBoolean("is_logged_in", true)
-            apply()
+    suspend fun forgotPassword(email: String): Result<Map<String, Any>> {
+        return try {
+            val response = apiService.forgotPassword(mapOf("email" to email))
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to send reset email"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
-    fun getAuthToken(): String? = sharedPrefs.getString("auth_token", null)
+    suspend fun resetPassword(token: String, newPassword: String): Result<Map<String, Any>> {
+        return try {
+            val response = apiService.resetPassword(mapOf(
+                "token" to token,
+                "newPassword" to newPassword
+            ))
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to reset password"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
-    fun isLoggedIn(): Boolean = sharedPrefs.getBoolean("is_logged_in", false)
+    fun getAuthToken(): String? = UserPrefs.getToken()
+
+    fun isLoggedIn(): Boolean = UserPrefs.isLoggedIn()
 
     fun clearSession() {
-        sharedPrefs.edit().clear().apply()
+        UserPrefs.clear()
     }
 }

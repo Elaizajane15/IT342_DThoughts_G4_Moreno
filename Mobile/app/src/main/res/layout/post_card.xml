@@ -60,6 +60,16 @@
                     android:fontFamily="sans-serif" />
 
                 <TextView
+                    android:id="@+id/tvMood"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="is feeling 😊"
+                    android:textSize="13sp"
+                    android:textColor="#7A6040"
+                    android:layout_marginStart="6dp"
+                    android:visibility="gone" />
+
+                <TextView
                     android:id="@+id/tvUsername"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -89,6 +99,17 @@
                 android:lineSpacingExtra="4dp"
                 android:layout_marginBottom="12dp"
                 android:fontFamily="sans-serif" />
+
+            <!-- Post Image -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ivPostImage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="centerCrop"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/RoundedImageView" />
 
             <!-- Action Buttons (No Retweet) -->
             <LinearLayout

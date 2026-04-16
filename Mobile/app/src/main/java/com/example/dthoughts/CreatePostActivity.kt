@@ -138,8 +138,16 @@ class CreatePostActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             binding.btnPublish.isEnabled = false
-            // Note: image upload is not yet implemented in PostRepository based on current structure
-            val result = postRepository.createPost(user.email, content, selectedMood)
+            
+            val result = if (imageUri != null) {
+                val inputStream = contentResolver.openInputStream(imageUri!!)
+                val fileData = inputStream?.readBytes() ?: byteArrayOf()
+                inputStream?.close()
+                val fileName = "post_image_${System.currentTimeMillis()}.jpg"
+                postRepository.createPostWithImage(user.email, content, selectedMood, fileData, fileName)
+            } else {
+                postRepository.createPost(user.email, content, selectedMood)
+            }
             
             if (result.isSuccess) {
                 Toast.makeText(this@CreatePostActivity, "Thought published!", Toast.LENGTH_SHORT).show()
