@@ -6,6 +6,7 @@ import com.example.dthoughts.models.CreateCommentRequest
 import com.example.dthoughts.models.CreatePostRequest
 import com.example.dthoughts.models.LoginRequest
 import com.example.dthoughts.models.Post
+import com.example.dthoughts.models.PostResponse
 import com.example.dthoughts.models.RegisterRequest
 import com.example.dthoughts.models.UpdateUserRequest
 import com.example.dthoughts.models.User
@@ -78,21 +79,21 @@ interface ApiService {
     suspend fun getPosts(
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20
-    ): Response<List<Post>>
+    ): Response<PostResponse>
 
     @GET("/api/posts/following")
     suspend fun getFollowingPosts(
-        @Query("email") email: String,
+        @Query("userId") userId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20
-    ): Response<List<Post>>
+    ): Response<PostResponse>
 
-    @GET("/api/posts/user/{userId}")
+    @GET("/api/posts/users/{userId}")
     suspend fun getUserPosts(
         @Path("userId") userId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20
-    ): Response<List<Post>>
+    ): Response<PostResponse>
 
     @POST("/api/posts")
     suspend fun createPost(@Body request: CreatePostRequest): Response<Post>
@@ -100,17 +101,17 @@ interface ApiService {
     @Multipart
     @POST("/api/posts/with-image")
     suspend fun createPostWithImage(
-        @Part("email") email: RequestBody,
+        @Part("userId") userId: RequestBody,
         @Part("content") content: RequestBody,
         @Part("mood") mood: RequestBody?,
         @Part file: MultipartBody.Part
     ): Response<Post>
 
-    @POST("/api/posts/{id}/like")
+    @POST("/api/posts/{id}/likes/toggle")
     suspend fun toggleLike(
         @Path("id") id: Long,
-        @Query("email") email: String
-    ): Response<Post>
+        @Body request: Map<String, Long>
+    ): Response<LikeStatus>
 
     // Comment endpoints
     @GET("/api/posts/{postId}/comments")
@@ -122,6 +123,11 @@ interface ApiService {
         @Body request: CreateCommentRequest
     ): Response<Comment>
 }
+
+data class LikeStatus(
+    val liked: Boolean,
+    val likeCount: Long
+)
 
 data class FollowStatus(
     val isFollowing: Boolean,

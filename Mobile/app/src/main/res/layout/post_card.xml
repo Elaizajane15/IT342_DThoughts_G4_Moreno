@@ -6,8 +6,8 @@
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
-    app:cardBackgroundColor="#FFFFFF"
-    app:strokeColor="#EDE0C4"
+    app:cardBackgroundColor="@color/post_card_bg"
+    app:strokeColor="@color/feed_border"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -17,22 +17,31 @@
         android:padding="12dp">
 
         <!-- Avatar -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <FrameLayout
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginEnd="12dp">
 
             <TextView
                 android:id="@+id/tvAvatarInitial"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="KM"
+                android:text="U"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#C9A84C"
+                android:textColor="@color/post_avatar_text"
                 android:background="@drawable/avatar_circle" />
-        </LinearLayout>
+
+            <ImageView
+                android:id="@+id/ivAvatar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/avatar_circle"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                android:contentDescription="User Avatar" />
+        </FrameLayout>
 
         <!-- Content -->
         <LinearLayout
@@ -53,10 +62,10 @@
                     android:id="@+id/tvUserName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Karla Manalo"
+                    android:text="Name"
                     android:textSize="15sp"
                     android:textStyle="bold"
-                    android:textColor="#3D2600"
+                    android:textColor="@color/post_name"
                     android:fontFamily="sans-serif" />
 
                 <TextView
@@ -65,7 +74,7 @@
                     android:layout_height="wrap_content"
                     android:text="is feeling 😊"
                     android:textSize="13sp"
-                    android:textColor="#7A6040"
+                    android:textColor="@color/post_username"
                     android:layout_marginStart="6dp"
                     android:visibility="gone" />
 
@@ -73,10 +82,11 @@
                     android:id="@+id/tvUsername"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="user"
+                    android:text=""
                     android:textSize="13sp"
-                    android:textColor="#7A6040"
-                    android:layout_marginStart="6dp" />
+                    android:textColor="@color/post_username"
+                    android:layout_marginStart="6dp"
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/tvTimeAgo"
@@ -84,7 +94,7 @@
                     android:layout_height="wrap_content"
                     android:text="· 2h"
                     android:textSize="13sp"
-                    android:textColor="#7A6040"
+                    android:textColor="@color/post_time"
                     android:layout_marginStart="6dp" />
             </LinearLayout>
 
@@ -95,7 +105,7 @@
                 android:layout_height="wrap_content"
                 android:text="Post content here..."
                 android:textSize="15sp"
-                android:textColor="#3D2600"
+                android:textColor="@color/post_content"
                 android:lineSpacingExtra="4dp"
                 android:layout_marginBottom="12dp"
                 android:fontFamily="sans-serif" />
@@ -111,7 +121,7 @@
                 android:visibility="gone"
                 app:shapeAppearanceOverlay="@style/RoundedImageView" />
 
-            <!-- Action Buttons (No Retweet) -->
+            <!-- Action Buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -129,13 +139,13 @@
                     android:gravity="center"
                     android:padding="8dp"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:alpha="0.6">
+                    android:focusable="true">
 
                     <ImageView
                         android:layout_width="18dp"
                         android:layout_height="18dp"
-                        android:src="@drawable/ic_comment" />
+                        android:src="@drawable/ic_comment"
+                        app:tint="@color/post_action_icon" />
 
                     <TextView
                         android:id="@+id/tvCommentCount"
@@ -143,7 +153,7 @@
                         android:layout_height="wrap_content"
                         android:text="0"
                         android:textSize="13sp"
-                        android:textColor="#7A6040"
+                        android:textColor="@color/post_action_text"
                         android:layout_marginStart="6dp" />
                 </LinearLayout>
 
@@ -157,14 +167,14 @@
                     android:gravity="center"
                     android:padding="8dp"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:alpha="0.6">
+                    android:focusable="true">
 
                     <ImageView
                         android:id="@+id/ivLike"
                         android:layout_width="18dp"
                         android:layout_height="18dp"
-                        android:src="@drawable/ic_heart" />
+                        android:src="@drawable/ic_heart"
+                        app:tint="@color/like_icon_default" />
 
                     <TextView
                         android:id="@+id/tvLikeCount"
@@ -172,7 +182,7 @@
                         android:layout_height="wrap_content"
                         android:text="0"
                         android:textSize="13sp"
-                        android:textColor="#7A6040"
+                        android:textColor="@color/post_action_text"
                         android:layout_marginStart="6dp" />
                 </LinearLayout>
 
@@ -186,20 +196,20 @@
                     android:gravity="center"
                     android:padding="8dp"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:alpha="0.6">
+                    android:focusable="true">
 
                     <ImageView
                         android:layout_width="18dp"
                         android:layout_height="18dp"
-                        android:src="@drawable/ic_share" />
+                        android:src="@drawable/ic_share"
+                        app:tint="@color/post_action_icon" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Share"
                         android:textSize="13sp"
-                        android:textColor="#7A6040"
+                        android:textColor="@color/post_action_text"
                         android:layout_marginStart="6dp" />
                 </LinearLayout>
             </LinearLayout>

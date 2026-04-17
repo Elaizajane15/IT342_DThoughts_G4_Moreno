@@ -60,7 +60,12 @@ class CreatePostActivity : AppCompatActivity() {
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        binding.toolbar.setNavigationOnClickListener { finish() }
+        binding.toolbar.setNavigationOnClickListener { 
+            val intent = Intent(this, FeedActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
+            finish() 
+        }
     }
 
     private fun setupMoods() {
@@ -105,7 +110,12 @@ class CreatePostActivity : AppCompatActivity() {
             binding.dropZone.visibility = View.VISIBLE
         }
 
-        binding.btnCancel.setOnClickListener { finish() }
+        binding.btnCancel.setOnClickListener { 
+            val intent = Intent(this, FeedActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
+            finish() 
+        }
 
         binding.btnPublish.setOnClickListener { publishPost() }
 
@@ -144,9 +154,9 @@ class CreatePostActivity : AppCompatActivity() {
                 val fileData = inputStream?.readBytes() ?: byteArrayOf()
                 inputStream?.close()
                 val fileName = "post_image_${System.currentTimeMillis()}.jpg"
-                postRepository.createPostWithImage(user.email, content, selectedMood, fileData, fileName)
+                postRepository.createPostWithImage(user.id, content, selectedMood, fileData, fileName)
             } else {
-                postRepository.createPost(user.email, content, selectedMood)
+                postRepository.createPost(user.id, content, selectedMood)
             }
             
             if (result.isSuccess) {
