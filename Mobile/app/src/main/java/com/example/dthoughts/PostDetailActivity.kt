@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.example.dthoughts.adapters.CommentAdapter
 import com.example.dthoughts.databinding.ActivityPostDetailBinding
 import com.example.dthoughts.models.Post
@@ -47,13 +48,34 @@ class PostDetailActivity : AppCompatActivity() {
         // Populate post content
         val postItem = post!!
         with(binding.postContent) {
-            tvUserName.text = "${postItem.author.firstName} ${postItem.author.lastName}"
-            tvUsername.text = "@${postItem.author.email.split("@")[0]}"
+            tvUserName.text = postItem.userName ?: "Anonymous"
+            tvUsername.text = "@${postItem.userName?.lowercase()?.replace(" ", "") ?: "unknown"}"
             tvPostContent.text = postItem.content
             tvLikeCount.text = postItem.likeCount.toString()
             tvCommentCount.text = postItem.commentCount.toString()
-            tvAvatarInitial.text = postItem.author.firstName.take(1).uppercase()
+            tvAvatarInitial.text = postItem.userName?.take(1)?.uppercase() ?: "D"
             
+            if (postItem.mood != null) {
+                tvMood.visibility = View.VISIBLE
+                tvMood.text = "is feeling ${postItem.mood}"
+            } else {
+                tvMood.visibility = View.GONE
+            }
+
+            if (!postItem.imagePath.isNullOrEmpty()) {
+                ivPostImage.visibility = View.VISIBLE
+                val imageUrl = if (postItem.imagePath.startsWith("http")) {
+                    postItem.imagePath
+                } else {
+                    "${RetrofitClient.BASE_URL.removeSuffix("/")}${postItem.imagePath}"
+                }
+                Glide.with(this@PostDetailActivity)
+                    .load(imageUrl)
+                    .into(ivPostImage)
+            } else {
+                ivPostImage.visibility = View.GONE
+            }
+
             ivLike.alpha = if (postItem.isLiked) 1.0f else 0.6f
             ivLike.setColorFilter(if (postItem.isLiked) android.graphics.Color.RED else android.graphics.Color.GRAY)
 
@@ -76,9 +98,10 @@ class PostDetailActivity : AppCompatActivity() {
     }
 
     private fun loadComments() {
+        val postId = post?.id ?: return
         binding.commentProgress.visibility = View.VISIBLE
         lifecycleScope.launch {
-            val result = postRepository.getComments(post!!.id!!)
+            val result = postRepository.getComments(postId)
             binding.commentProgress.visibility = View.GONE
             if (result.isSuccess) {
                 commentAdapter.updateComments(result.getOrDefault(emptyList()))
@@ -88,14 +111,15 @@ class PostDetailActivity : AppCompatActivity() {
 
     private fun addComment(content: String) {
         val user = UserPrefs.getUser()
-        if (user == null) {
-            Toast.makeText(this, "Login to comment", Toast.LENGTH_SHORT).show()
+        val postId = post?.id
+        if (user == null || postId == null) {
+            if (user == null) Toast.makeText(this, "Login to comment", Toast.LENGTH_SHORT).show()
             return
         }
 
         binding.btnSendComment.isEnabled = false
         lifecycleScope.launch {
-            val result = postRepository.addComment(post!!.id!!, user.email, content)
+            val result = postRepository.addComment(postId, user.id, content)
             binding.btnSendComment.isEnabled = true
             if (result.isSuccess) {
                 binding.etComment.text.clear()
@@ -111,19 +135,20 @@ class PostDetailActivity : AppCompatActivity() {
 
     private fun toggleLike() {
         val user = UserPrefs.getUser()
-        if (user == null) {
-            Toast.makeText(this, "Login to like posts", Toast.LENGTH_SHORT).show()
+        val postId = post?.id
+        if (user == null || postId == null) {
+            if (user == null) Toast.makeText(this, "Login to like posts", Toast.LENGTH_SHORT).show()
             return
         }
 
         lifecycleScope.launch {
-            val result = postRepository.toggleLike(post!!.id!!, user.email)
+            val result = postRepository.toggleLike(postId, user.id)
             if (result.isSuccess) {
-                post = result.getOrNull()
-                post?.let {
+                val likeStatus = result.getOrNull()
+                likeStatus?.let {
                     binding.postContent.tvLikeCount.text = it.likeCount.toString()
-                    binding.postContent.ivLike.alpha = if (it.isLiked) 1.0f else 0.6f
-                    binding.postContent.ivLike.setColorFilter(if (it.isLiked) android.graphics.Color.RED else android.graphics.Color.GRAY)
+                    binding.postContent.ivLike.alpha = if (it.liked) 1.0f else 0.6f
+                    binding.postContent.ivLike.setColorFilter(if (it.liked) android.graphics.Color.RED else android.graphics.Color.GRAY)
                 }
             }
         }
@@ -132,7 +157,7 @@ class PostDetailActivity : AppCompatActivity() {
     private fun sharePost() {
         val shareIntent = android.content.Intent().apply {
             action = android.content.Intent.ACTION_SEND
-            putExtra(android.content.Intent.EXTRA_TEXT, "${post?.author?.firstName} shared on DThoughts: ${post?.content}")
+            putExtra(android.content.Intent.EXTRA_TEXT, "${post?.userName} shared on DThoughts: ${post?.content}")
             type = "text/plain"
         }
         startActivity(android.content.Intent.createChooser(shareIntent, "Share post via"))

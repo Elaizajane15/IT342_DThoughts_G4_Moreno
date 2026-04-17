@@ -1,9 +1,11 @@
 package com.example.dthoughts
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -29,6 +31,12 @@ class FeedActivity : AppCompatActivity() {
     private var currentPage = 0
     private val allPosts = mutableListOf<Post>()
 
+    private val createPostLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            loadPosts(true)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityFeedBinding.inflate(layoutInflater)
@@ -39,6 +47,23 @@ class FeedActivity : AppCompatActivity() {
         setupUI()
         setupRecyclerView()
         loadPosts(true)
+
+        // Optimized back handling for Android 13+ Predictive Back
+        val backCallback = object : androidx.activity.OnBackPressedCallback(false) {
+            override fun handleOnBackPressed() {
+                binding.drawerLayout.closeDrawer(androidx.core.view.GravityCompat.START)
+            }
+        }
+        onBackPressedDispatcher.addCallback(this, backCallback)
+
+        binding.drawerLayout.addDrawerListener(object : androidx.drawerlayout.widget.DrawerLayout.SimpleDrawerListener() {
+            override fun onDrawerOpened(drawerView: android.view.View) {
+                backCallback.isEnabled = true
+            }
+            override fun onDrawerClosed(drawerView: android.view.View) {
+                backCallback.isEnabled = false
+            }
+        })
     }
 
     private fun setupUI() {
@@ -61,7 +86,7 @@ class FeedActivity : AppCompatActivity() {
 
         binding.ivCreatePost.setOnClickListener {
             if (currentUser != null) {
-                startActivity(Intent(this, CreatePostActivity::class.java))
+                createPostLauncher.launch(Intent(this, CreatePostActivity::class.java))
             } else {
                 Toast.makeText(this, "Please login to create a post", Toast.LENGTH_SHORT).show()
                 startActivity(Intent(this, LoginActivity::class.java))
@@ -107,7 +132,7 @@ class FeedActivity : AppCompatActivity() {
         }
         
         binding.etCompose.setOnClickListener {
-            startActivity(Intent(this, CreatePostActivity::class.java))
+            createPostLauncher.launch(Intent(this, CreatePostActivity::class.java))
         }
     }
 
@@ -128,6 +153,7 @@ class FeedActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         postAdapter = PostAdapter(
             posts = allPosts,
+            isLoggedIn = currentUser != null,
             onLikeClick = { post -> toggleLike(post) },
             onCommentClick = { post -> openPostDetail(post) },
             onShareClick = { post -> sharePost(post) }
@@ -147,7 +173,7 @@ class FeedActivity : AppCompatActivity() {
             val result = if (isForYouTab) {
                 postRepository.getPosts(currentPage)
             } else {
-                postRepository.getFollowingPosts(currentUser?.email ?: "", currentPage)
+                postRepository.getFollowingPosts(currentUser?.id ?: -1, currentPage)
             }
 
             binding.progressBar.visibility = View.GONE
@@ -188,13 +214,17 @@ class FeedActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            val result = postRepository.toggleLike(post.id!!, currentUser!!.email)
+            val result = postRepository.toggleLike(post.id!!, currentUser!!.id)
             if (result.isSuccess) {
-                val updatedPost = result.getOrNull()
-                updatedPost?.let { newPost ->
-                    val index = allPosts.indexOfFirst { it.id == newPost.id }
+                val likeStatus = result.getOrNull()
+                likeStatus?.let { status ->
+                    val index = allPosts.indexOfFirst { it.id == post.id }
                     if (index != -1) {
-                        allPosts[index] = newPost
+                        val updatedPost = allPosts[index].copy(
+                            isLiked = status.liked,
+                            likeCount = status.likeCount
+                        )
+                        allPosts[index] = updatedPost
                         postAdapter.notifyItemChanged(index)
                     }
                 }
@@ -205,15 +235,20 @@ class FeedActivity : AppCompatActivity() {
     }
 
     private fun openPostDetail(post: Post) {
+        if (currentUser == null) {
+            Toast.makeText(this, "Please login to view details and comments", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, LoginActivity::class.java))
+            return
+        }
         val intent = Intent(this, PostDetailActivity::class.java)
-        intent.putExtra("POST_JSON", Gson().toJson(post))
+        intent.putExtra("POST_JSON", com.google.gson.Gson().toJson(post))
         startActivity(intent)
     }
 
     private fun sharePost(post: Post) {
         val shareIntent = Intent().apply {
             action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, "${post.author.firstName} shared on DThoughts: ${post.content}")
+            putExtra(Intent.EXTRA_TEXT, "${post.userName ?: "Someone"} shared on DThoughts: ${post.content}")
             type = "text/plain"
         }
         startActivity(Intent.createChooser(shareIntent, "Share post via"))
@@ -223,14 +258,19 @@ class FeedActivity : AppCompatActivity() {
         currentUser?.let { user ->
             binding.drawerProfile.tvDrawerName.text = "${user.firstName} ${user.lastName}"
             binding.drawerProfile.tvDrawerUsername.text = user.email
-            
-            binding.drawerProfile.menuProfile.setOnClickListener {
+            binding.drawerProfile.tvFollowersCount.text = (user.followerCount ?: 0).toString()
+            binding.drawerProfile.tvFollowingCount.text = (user.followingCount ?: 0).toString()
+
+            val openProfile = {
                 val intent = Intent(this, ProfileActivity::class.java)
                 intent.putExtra("USER_ID", user.id)
                 startActivity(intent)
                 binding.drawerLayout.closeDrawers()
             }
-            
+
+            binding.drawerProfile.headerProfile.setOnClickListener { openProfile() }
+            binding.drawerProfile.menuProfile.setOnClickListener { openProfile() }
+
             binding.drawerProfile.menuLogout.setOnClickListener {
                 UserPrefs.clear()
                 startActivity(Intent(this, LoginActivity::class.java))

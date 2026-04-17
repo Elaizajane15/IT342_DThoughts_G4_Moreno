@@ -5,6 +5,7 @@ import com.example.dthoughts.models.CreateCommentRequest
 import com.example.dthoughts.models.CreatePostRequest
 import com.example.dthoughts.models.Post
 import com.example.dthoughts.network.ApiService
+import com.example.dthoughts.network.LikeStatus
 import com.example.dthoughts.network.RetrofitClient
 
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -17,7 +18,7 @@ class PostRepository(private val apiService: ApiService = RetrofitClient.apiServ
         return try {
             val response = apiService.getPosts(page)
             if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
+                Result.success(response.body()!!.content)
             } else {
                 Result.failure(Exception("Failed to load posts"))
             }
@@ -26,11 +27,11 @@ class PostRepository(private val apiService: ApiService = RetrofitClient.apiServ
         }
     }
 
-    suspend fun getFollowingPosts(email: String, page: Int = 0): Result<List<Post>> {
+    suspend fun getFollowingPosts(userId: Long, page: Int = 0): Result<List<Post>> {
         return try {
-            val response = apiService.getFollowingPosts(email, page)
+            val response = apiService.getFollowingPosts(userId, page)
             if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
+                Result.success(response.body()!!.content)
             } else {
                 Result.failure(Exception("Failed to load following posts"))
             }
@@ -43,7 +44,7 @@ class PostRepository(private val apiService: ApiService = RetrofitClient.apiServ
         return try {
             val response = apiService.getUserPosts(userId, page)
             if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
+                Result.success(response.body()!!.content)
             } else {
                 Result.failure(Exception("Failed to load user posts"))
             }
@@ -52,9 +53,9 @@ class PostRepository(private val apiService: ApiService = RetrofitClient.apiServ
         }
     }
 
-    suspend fun createPost(email: String, content: String, mood: String? = null, imageUrl: String? = null): Result<Post> {
+    suspend fun createPost(userId: Long, content: String, mood: String? = null): Result<Post> {
         return try {
-            val response = apiService.createPost(CreatePostRequest(email, content, imageUrl, mood))
+            val response = apiService.createPost(CreatePostRequest(userId, content, mood))
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
@@ -65,9 +66,9 @@ class PostRepository(private val apiService: ApiService = RetrofitClient.apiServ
         }
     }
 
-    suspend fun createPostWithImage(email: String, content: String, mood: String?, fileData: ByteArray, fileName: String): Result<Post> {
+    suspend fun createPostWithImage(userId: Long, content: String, mood: String?, fileData: ByteArray, fileName: String): Result<Post> {
         return try {
-            val emailBody = email.toRequestBody("text/plain".toMediaTypeOrNull())
+            val userIdBody = userId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
             val contentBody = content.toRequestBody("text/plain".toMediaTypeOrNull())
             val moodBody = mood?.toRequestBody("text/plain".toMediaTypeOrNull())
             val filePart = MultipartBody.Part.createFormData(
@@ -76,7 +77,7 @@ class PostRepository(private val apiService: ApiService = RetrofitClient.apiServ
                 fileData.toRequestBody("image/*".toMediaTypeOrNull())
             )
             
-            val response = apiService.createPostWithImage(emailBody, contentBody, moodBody, filePart)
+            val response = apiService.createPostWithImage(userIdBody, contentBody, moodBody, filePart)
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
@@ -87,9 +88,9 @@ class PostRepository(private val apiService: ApiService = RetrofitClient.apiServ
         }
     }
 
-    suspend fun toggleLike(postId: Long, email: String): Result<Post> {
+    suspend fun toggleLike(postId: Long, userId: Long): Result<LikeStatus> {
         return try {
-            val response = apiService.toggleLike(postId, email)
+            val response = apiService.toggleLike(postId, mapOf("userId" to userId))
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
@@ -113,9 +114,9 @@ class PostRepository(private val apiService: ApiService = RetrofitClient.apiServ
         }
     }
 
-    suspend fun addComment(postId: Long, email: String, content: String): Result<Comment> {
+    suspend fun addComment(postId: Long, userId: Long, content: String): Result<Comment> {
         return try {
-            val response = apiService.addComment(postId, CreateCommentRequest(email, content))
+            val response = apiService.addComment(postId, CreateCommentRequest(userId, content))
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {

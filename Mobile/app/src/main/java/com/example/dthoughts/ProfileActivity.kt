@@ -40,8 +40,19 @@ class ProfileActivity : AppCompatActivity() {
         setupRecyclerView()
         loadUserProfile()
         
+        binding.btnEditProfile.setOnClickListener {
+            startActivity(Intent(this, EditProfileActivity::class.java))
+        }
+
         binding.btnFollow.setOnClickListener {
             toggleFollow()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (userId != -1L) {
+            loadUserProfile()
         }
     }
 
@@ -49,7 +60,12 @@ class ProfileActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowTitleEnabled(false)
-        binding.toolbar.setNavigationOnClickListener { finish() }
+        binding.toolbar.setNavigationOnClickListener {
+            val intent = Intent(this, FeedActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
+            finish()
+        }
     }
 
     private fun setupRecyclerView() {
@@ -59,7 +75,7 @@ class ProfileActivity : AppCompatActivity() {
             onLikeClick = { post -> 
                 currentUser?.let { user ->
                     lifecycleScope.launch {
-                        val result = postRepository.toggleLike(post.id ?: 0, user.email)
+                        val result = postRepository.toggleLike(post.id ?: 0, user.id)
                         if (result.isSuccess) {
                             loadUserPosts(userId)
                         }

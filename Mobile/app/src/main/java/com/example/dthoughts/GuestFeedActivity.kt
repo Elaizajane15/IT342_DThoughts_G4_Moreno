@@ -82,7 +82,7 @@ class GuestFeedActivity : AppCompatActivity() {
     private fun sharePost(post: Post) {
         val shareIntent = Intent().apply {
             action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, "${post.author.firstName} shared on DThoughts: ${post.content}")
+            putExtra(Intent.EXTRA_TEXT, "${post.userName ?: "Someone"} shared on DThoughts: ${post.content}")
             type = "text/plain"
         }
         startActivity(Intent.createChooser(shareIntent, "Share post via"))
