@@ -72,17 +72,38 @@ class UserRepository(private val context: Context) {
 
     suspend fun uploadAvatar(email: String, fileData: ByteArray, fileName: String): Result<User> {
         return try {
-            val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
             val filePart = MultipartBody.Part.createFormData(
                 "file",
                 fileName,
                 fileData.toRequestBody("image/*".toMediaTypeOrNull())
             )
-            val response = apiService.uploadAvatar(emailPart, filePart)
+            val response = apiService.uploadAvatar(email, filePart)
             if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
+                val updatedUser = response.body()!!
+                UserPrefs.saveUser(updatedUser)
+                Result.success(updatedUser)
             } else {
-                Result.failure(Exception("Upload failed"))
+                Result.failure(Exception("Upload failed: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun uploadCover(email: String, fileData: ByteArray, fileName: String): Result<User> {
+        return try {
+            val filePart = MultipartBody.Part.createFormData(
+                "file",
+                fileName,
+                fileData.toRequestBody("image/*".toMediaTypeOrNull())
+            )
+            val response = apiService.uploadCover(email, filePart)
+            if (response.isSuccessful && response.body() != null) {
+                val updatedUser = response.body()!!
+                UserPrefs.saveUser(updatedUser)
+                Result.success(updatedUser)
+            } else {
+                Result.failure(Exception("Cover upload failed: ${response.code()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)

@@ -169,6 +169,49 @@ public class PostInteractionService {
 		return toDto(saved);
 	}
 
+	@Transactional
+	public CommentDto updateCommentOnly(Long commentId, Long userId, String content) {
+		if (commentId == null) throw new RuntimeException("commentId is required.");
+		if (userId == null) throw new RuntimeException("userId is required.");
+		String text = content == null ? "" : content.trim();
+		if (text.isEmpty()) throw new RuntimeException("content is required.");
+		if (text.length() > 500) throw new RuntimeException("content must be 500 characters or less.");
+
+		Optional<PostComment> commentOpt = postCommentRepository.findById(commentId);
+		if (commentOpt.isEmpty()) throw new RuntimeException("Comment not found.");
+
+		PostComment comment = commentOpt.get();
+		Long commentUserId = comment.getUser() == null ? null : comment.getUser().getId();
+		if (commentUserId == null || !commentUserId.equals(userId)) throw new RuntimeException("Not allowed.");
+
+		comment.setContent(text);
+		PostComment saved = postCommentRepository.save(comment);
+		return toDto(saved);
+	}
+
+	@Transactional
+	public void deleteComment(Long commentId, Long userId) {
+		if (commentId == null) throw new RuntimeException("commentId is required.");
+		if (userId == null) throw new RuntimeException("userId is required.");
+
+		Optional<PostComment> commentOpt = postCommentRepository.findById(commentId);
+		if (commentOpt.isEmpty()) throw new RuntimeException("Comment not found.");
+
+		PostComment comment = commentOpt.get();
+		Long commentUserId = comment.getUser() == null ? null : comment.getUser().getId();
+		
+		Long postUserId = null;
+		if (comment.getPost() != null && comment.getPost().getUser() != null) {
+		    postUserId = comment.getPost().getUser().getId();
+		}
+		
+		if ((commentUserId == null || !commentUserId.equals(userId)) && (postUserId == null || !postUserId.equals(userId))) {
+		    throw new RuntimeException("Not allowed.");
+		}
+
+		postCommentRepository.delete(comment);
+	}
+
 	private CommentDto toDto(PostComment c) {
 		Long userId = c.getUser() == null ? null : c.getUser().getId();
 		String userName = null;

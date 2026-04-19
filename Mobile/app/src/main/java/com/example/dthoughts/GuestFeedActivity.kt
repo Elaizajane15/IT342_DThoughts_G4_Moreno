@@ -2,12 +2,20 @@ package com.example.dthoughts
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.dthoughts.databinding.ActivityGuestFeedBinding
+import com.example.dthoughts.models.Post
+import kotlinx.coroutines.launch
 
 class GuestFeedActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityGuestFeedBinding
+    private val postRepository = com.example.dthoughts.repository.PostRepository()
+    private val allPosts = mutableListOf<Post>()
+    private lateinit var postAdapter: com.example.dthoughts.adapters.PostAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -15,6 +23,22 @@ class GuestFeedActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupListeners()
+        setupRecyclerView()
+        loadPosts()
+    }
+
+    private fun setupRecyclerView() {
+        postAdapter = com.example.dthoughts.adapters.PostAdapter(
+            posts = allPosts,
+            isLoggedIn = false,
+            onLikeClick = { showLoginPrompt() },
+            onCommentClick = { showLoginPrompt() },
+            onShareClick = { post -> sharePost(post) },
+            onPostClick = { showLoginPrompt() },
+            onUserClick = { showLoginPrompt() }
+        )
+        binding.rvPosts.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
+        binding.rvPosts.adapter = postAdapter
     }
 
     private fun setupListeners() {

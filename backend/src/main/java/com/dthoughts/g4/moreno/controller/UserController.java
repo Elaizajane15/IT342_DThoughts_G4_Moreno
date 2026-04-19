@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 @CrossOrigin(originPatterns = {"http://localhost:*", "http://127.0.0.1:*"})
 public class UserController {
     @Autowired
@@ -56,6 +56,9 @@ public class UserController {
     private PostLikeRepository postLikeRepository;
 
     @Autowired
+    private com.dthoughts.g4.moreno.repository.PostRepository postRepository;
+
+    @Autowired
     private PostInteractionService postInteractionService;
 
     @Autowired(required = false)
@@ -67,7 +70,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
+    public ResponseEntity<?> getById(@PathVariable("id") Long id) {
         if (id == null) return ResponseEntity.badRequest().body(error("User id is required"));
         Optional<User> u = userRepository.findById(id);
         if (u.isEmpty()) return ResponseEntity.status(404).body(error("User not found"));
@@ -75,7 +78,7 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<?> search(@RequestParam(required = false) String q, @RequestParam(defaultValue = "25") int limit) {
+    public ResponseEntity<?> search(@RequestParam(name = "q", required = false) String q, @RequestParam(name = "limit", defaultValue = "25") int limit) {
         int size = Math.max(1, Math.min(limit, 50));
         String query = q == null ? "" : q.trim();
 
@@ -102,7 +105,7 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> me(@RequestParam String email) {
+    public ResponseEntity<?> me(@RequestParam("email") String email) {
         String e = email == null ? null : email.trim();
         Optional<User> u = e == null || e.isBlank() ? Optional.empty() : userRepository.findByEmailIgnoreCase(e);
         if (u.isEmpty()) {
@@ -114,7 +117,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/follow")
-    public ResponseEntity<?> followStatus(@PathVariable Long id, @RequestParam(required = false) Long followerId) {
+    public ResponseEntity<?> followStatus(@PathVariable("id") Long id, @RequestParam(name = "followerId", required = false) Long followerId) {
         try {
             FollowStatusDto dto = followService.getFollowStatus(followerId, id);
             return ResponseEntity.ok(dto);
@@ -124,7 +127,7 @@ public class UserController {
     }
 
     @PostMapping("/{id}/follow/toggle")
-    public ResponseEntity<?> toggleFollow(@PathVariable Long id, @RequestBody ToggleFollowRequest request) {
+    public ResponseEntity<?> toggleFollow(@PathVariable("id") Long id, @RequestBody ToggleFollowRequest request) {
         try {
             FollowStatusDto dto = followService.toggleFollow(request == null ? null : request.getFollowerId(), id);
             return ResponseEntity.ok(dto);
@@ -134,7 +137,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/liked-posts")
-    public ResponseEntity<?> likedPosts(@PathVariable Long id) {
+    public ResponseEntity<?> likedPosts(@PathVariable("id") Long id) {
         try {
             List<PostDto> posts = postInteractionService.listLikedPosts(id);
             return ResponseEntity.ok(posts);
@@ -144,7 +147,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/saved-posts")
-    public ResponseEntity<?> savedPosts(@PathVariable Long id) {
+    public ResponseEntity<?> savedPosts(@PathVariable("id") Long id) {
         try {
             List<PostDto> posts = postInteractionService.listSavedPosts(id);
             return ResponseEntity.ok(posts);
@@ -154,7 +157,7 @@ public class UserController {
     }
 
     @PostMapping("/me/avatar")
-    public ResponseEntity<?> uploadAvatar(@RequestParam String email, @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadAvatar(@RequestParam("email") String email, @RequestParam("file") MultipartFile file) {
         try {
             if (email == null || email.isBlank()) throw new RuntimeException("Email is required");
             if (file == null || file.isEmpty()) throw new RuntimeException("file is required.");
@@ -175,7 +178,7 @@ public class UserController {
     }
 
     @PostMapping("/me/cover")
-    public ResponseEntity<?> uploadCover(@RequestParam String email, @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadCover(@RequestParam("email") String email, @RequestParam("file") MultipartFile file) {
         try {
             if (email == null || email.isBlank()) throw new RuntimeException("Email is required");
             if (file == null || file.isEmpty()) throw new RuntimeException("file is required.");
@@ -229,9 +232,11 @@ public class UserController {
         long followerCount = id == null ? 0 : followRepository.countByFollowingId(id);
         long followingCount = id == null ? 0 : followRepository.countByFollowerId(id);
         long totalLikes = id == null ? 0 : postLikeRepository.countByPostUserId(id);
+        long totalPosts = id == null ? 0 : postRepository.countByUserId(id);
         dto.setFollowerCount(followerCount);
         dto.setFollowingCount(followingCount);
         dto.setTotalLikes(totalLikes);
+        dto.setTotalPosts(totalPosts);
         return dto;
     }
 

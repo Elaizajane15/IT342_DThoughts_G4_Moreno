@@ -13,6 +13,7 @@ public class UserDto {
     private long followerCount;
     private long followingCount;
     private long totalLikes;
+    private long totalPosts;
 
     public UserDto() {}
     public UserDto(Long id, String email, String firstName, String lastName, String bio, String avatarUrl, String coverImageUrl, String birthDate, String joinedAt) {
@@ -27,7 +28,7 @@ public class UserDto {
         this.joinedAt = joinedAt;
     }
 
-    public UserDto(Long id, String email, String firstName, String lastName, String bio, String avatarUrl, String coverImageUrl, String birthDate, String joinedAt, long followerCount, long followingCount, long totalLikes) {
+    public UserDto(Long id, String email, String firstName, String lastName, String bio, String avatarUrl, String coverImageUrl, String birthDate, String joinedAt, long followerCount, long followingCount, long totalLikes, long totalPosts) {
         this.id = id;
         this.email = email;
         this.firstName = firstName;
@@ -40,6 +41,7 @@ public class UserDto {
         this.followerCount = followerCount;
         this.followingCount = followingCount;
         this.totalLikes = totalLikes;
+        this.totalPosts = totalPosts;
     }
 
     public static UserDto fromEntity(com.dthoughts.g4.moreno.entity.User user) {
@@ -107,5 +109,13 @@ public class UserDto {
 
     public void setTotalLikes(long totalLikes) {
         this.totalLikes = totalLikes;
+    }
+
+    public long getTotalPosts() {
+        return totalPosts;
+    }
+
+    public void setTotalPosts(long totalPosts) {
+        this.totalPosts = totalPosts;
     }
 }

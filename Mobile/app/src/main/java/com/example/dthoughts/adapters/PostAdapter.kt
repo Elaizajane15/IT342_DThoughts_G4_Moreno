@@ -18,7 +18,8 @@ class PostAdapter(
     private val onPostClick: (Post) -> Unit,
     private val onSaveClick: (Post) -> Unit = {},
     private val onEditClick: (Post) -> Unit = {},
-    private val onDeleteClick: (Post) -> Unit = {}
+    private val onDeleteClick: (Post) -> Unit = {},
+    private val onUserClick: ((Post) -> Unit)? = null
 ) : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
 
     private val moodsMap = mapOf(
@@ -68,7 +69,6 @@ class PostAdapter(
             val avatarUrl = post.userAvatarUrl
             if (!avatarUrl.isNullOrEmpty()) {
                 val fullUrl = if (avatarUrl.startsWith("http")) avatarUrl else "${com.example.dthoughts.network.RetrofitClient.BASE_URL.removeSuffix("/")}$avatarUrl"
-                val fullUrl = if (avatarUrl.startsWith("http")) avatarUrl else "http://10.0.2.2:8080$avatarUrl"
                 Glide.with(root.context)
                     .load(fullUrl)
                     .placeholder(com.example.dthoughts.R.drawable.ic_profile_holder)
@@ -86,7 +86,6 @@ class PostAdapter(
             if (!imageUrl.isNullOrEmpty()) {
                 ivPostImage.visibility = View.VISIBLE
                 val fullImageUrl = if (imageUrl.startsWith("http")) imageUrl else "${com.example.dthoughts.network.RetrofitClient.BASE_URL.removeSuffix("/")}$imageUrl"
-                val fullImageUrl = if (imageUrl.startsWith("http")) imageUrl else "http://10.0.2.2:8080$imageUrl"
                 Glide.with(root.context).load(fullImageUrl).into(ivPostImage)
             } else {
                 ivPostImage.visibility = View.GONE
@@ -116,13 +115,6 @@ class PostAdapter(
                 llLike.isClickable = true // We still want the click to trigger the "Please login" toast in Activity
                 llComment.isClickable = true
                 llSave.isClickable = true
-                llLike.isClickable = true
-                llComment.isClickable = true
-            } else {
-                llLike.alpha = 0.5f
-                llComment.alpha = 0.5f
-                llLike.isClickable = true // We still want the click to trigger the "Please login" toast in Activity
-                llComment.isClickable = true
             }
 
             llLike.setOnClickListener { onLikeClick(post) }
@@ -130,6 +122,11 @@ class PostAdapter(
             llShare.setOnClickListener { onShareClick(post) }
             llSave.setOnClickListener { onSaveClick(post) }
             root.setOnClickListener { onPostClick(post) }
+            
+            val userClickListener = View.OnClickListener { onUserClick?.invoke(post) }
+            ivAvatar.setOnClickListener(userClickListener)
+            tvAvatarInitial.setOnClickListener(userClickListener)
+            tvUserName.setOnClickListener(userClickListener)
         }
     }
 

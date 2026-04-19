@@ -9,8 +9,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.signature.ObjectKey
 import com.example.dthoughts.databinding.ActivityEditProfileBinding
 import com.example.dthoughts.models.UpdateUserRequest
 import com.example.dthoughts.network.RetrofitClient
@@ -113,11 +111,9 @@ class EditProfileActivity : AppCompatActivity() {
                         if (bytes != null) {
                             val body = bytes.toRequestBody("image/*".toMediaTypeOrNull())
                             val part = MultipartBody.Part.createFormData("file", "avatar.jpg", body)
-                            val emailBody = user.email.toRequestBody("text/plain".toMediaTypeOrNull())
-                            val avatarResponse = apiService.uploadAvatar(emailBody, part)
+                            val avatarResponse = apiService.uploadAvatar(user.email, part)
                             if (avatarResponse.isSuccessful && avatarResponse.body() != null) {
                                 updatedUser = avatarResponse.body()!!
-                                UserPrefs.saveUser(updatedUser) // Save immediately
                             }
                         }
                     }
@@ -130,21 +126,16 @@ class EditProfileActivity : AppCompatActivity() {
                         if (bytes != null) {
                             val body = bytes.toRequestBody("image/*".toMediaTypeOrNull())
                             val part = MultipartBody.Part.createFormData("file", "cover.jpg", body)
-                            val emailBody = user.email.toRequestBody("text/plain".toMediaTypeOrNull())
-                            val coverResponse = apiService.uploadCover(emailBody, part)
+                            val coverResponse = apiService.uploadCover(user.email, part)
                             if (coverResponse.isSuccessful && coverResponse.body() != null) {
                                 updatedUser = coverResponse.body()!!
-                                UserPrefs.saveUser(updatedUser) // Save immediately
                             }
                         }
                     }
 
-                val request = UpdateUserRequest(user.email, firstName, lastName, bio)
-                val response = apiService.updateUser(request)
-                if (response.isSuccessful && response.body() != null) {
-                    val updatedUser = response.body()!!
                     UserPrefs.saveUser(updatedUser)
                     Toast.makeText(this@EditProfileActivity, "Profile updated", Toast.LENGTH_SHORT).show()
+                    setResult(RESULT_OK)
                     finish()
                 } else {
                     Toast.makeText(this@EditProfileActivity, "Update failed", Toast.LENGTH_SHORT).show()

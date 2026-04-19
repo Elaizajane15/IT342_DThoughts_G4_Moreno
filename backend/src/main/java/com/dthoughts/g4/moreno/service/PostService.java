@@ -110,6 +110,12 @@ public class PostService {
 		return postRepository.findByUserIdInOrderByCreatedAtDesc(ids, pageable).map(this::toDto);
 	}
 
+	@Transactional(readOnly = true)
+	public Page<PostDto> listByUser(Long userId, Pageable pageable) {
+		if (userId == null) throw new RuntimeException("userId is required.");
+		return postRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable).map(this::toDto);
+	}
+
 	@Transactional
 	public void delete(Long id) {
 		if (id == null) throw new RuntimeException("id is required.");

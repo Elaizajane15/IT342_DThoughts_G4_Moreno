@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Avatar from './Avatar'
 import { useAuth } from '../hooks/useAuth'
@@ -235,7 +236,7 @@ export default function Sidebar({ notifCount }) {
       </div>
 
       {/* ════ LOGOUT MODAL ════ */}
-      {logoutOpen && (
+      {logoutOpen && createPortal(
         <div style={S.overlay} onMouseDown={e => { if (e.target === e.currentTarget) setLogoutOpen(false) }}>
           <div role="dialog" aria-modal="true" style={S.modal}>
             <div style={S.modalLogoBox}>
@@ -258,11 +259,12 @@ export default function Sidebar({ notifCount }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ════ ADD ACCOUNT MODAL ════ */}
-      {addAccountOpen && (
+      {addAccountOpen && createPortal(
         <div style={S.overlay} onMouseDown={e => { if (e.target === e.currentTarget) setAddAccountOpen(false) }}>
           <div role="dialog" aria-modal="true" style={S.modal}>
             {/* Close */}
@@ -363,7 +365,8 @@ export default function Sidebar({ notifCount }) {
               </button>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </aside>
   )

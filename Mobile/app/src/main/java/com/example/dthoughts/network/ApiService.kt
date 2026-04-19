@@ -30,51 +30,51 @@ interface ApiService {
     suspend fun resetPassword(@Body request: Map<String, String>): Response<Map<String, Any>>
 
     // User endpoints
-    @GET("/api/user/me")
+    @GET("/api/users/me")
     suspend fun getCurrentUser(@Query("email") email: String): Response<User>
 
-    @GET("/api/user/{id}")
+    @GET("/api/users/{id}")
     suspend fun getUserById(@Path("id") id: Long): Response<User>
 
-    @GET("/api/user/search")
+    @GET("/api/users/search")
     suspend fun searchUsers(
         @Query("q") query: String?,
         @Query("limit") limit: Int = 25
     ): Response<List<User>>
 
-    @PUT("/api/user/me")
+    @PUT("/api/users/me")
     suspend fun updateUser(@Body request: UpdateUserRequest): Response<User>
 
-    @GET("/api/user/{id}/liked-posts")
+    @GET("/api/users/{id}/liked-posts")
     suspend fun getLikedPosts(@Path("id") id: Long): Response<List<Post>>
 
-    @GET("/api/user/{id}/saved-posts")
+    @GET("/api/users/{id}/saved-posts")
     suspend fun getSavedPosts(@Path("id") id: Long): Response<List<Post>>
 
     // Avatar upload
     @Multipart
-    @POST("/api/user/me/avatar")
+    @POST("/api/users/me/avatar")
     suspend fun uploadAvatar(
-        @Part("email") email: RequestBody,
+        @Part("email") email: String,
         @Part file: MultipartBody.Part
     ): Response<User>
 
     // Cover upload
     @Multipart
-    @POST("/api/user/me/cover")
+    @POST("/api/users/me/cover")
     suspend fun uploadCover(
-        @Part("email") email: RequestBody,
+        @Part("email") email: String,
         @Part file: MultipartBody.Part
     ): Response<User>
 
     // Follow endpoints
-    @GET("/api/user/{id}/follow")
+    @GET("/api/users/{id}/follow")
     suspend fun getFollowStatus(
         @Path("id") id: Long,
         @Query("followerId") followerId: Long?
     ): Response<FollowStatus>
 
-    @POST("/api/user/{id}/follow/toggle")
+    @POST("/api/users/{id}/follow/toggle")
     suspend fun toggleFollow(
         @Path("id") id: Long,
         @Body request: ToggleFollowRequest
