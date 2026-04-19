@@ -1,5 +1,6 @@
 package com.example.dthoughts
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -123,6 +124,17 @@ class PostDetailActivity : AppCompatActivity() {
             llLike.setOnClickListener { toggleLike() }
             // Share in detail activity too
             llShare.setOnClickListener { sharePost() }
+            
+            val userClickListener = View.OnClickListener {
+                postItem.userId?.let { uid ->
+                    val profileIntent = Intent(this@PostDetailActivity, ProfileActivity::class.java)
+                    profileIntent.putExtra("USER_ID", uid)
+                    startActivity(profileIntent)
+                }
+            }
+            ivAvatar.setOnClickListener(userClickListener)
+            tvAvatarInitial.setOnClickListener(userClickListener)
+            tvUserName.setOnClickListener(userClickListener)
         }
 
         // Setup comments recycler
@@ -327,11 +339,11 @@ class PostDetailActivity : AppCompatActivity() {
     }
     
     private fun sharePost() {
-        val shareIntent = android.content.Intent().apply {
-            action = android.content.Intent.ACTION_SEND
-            putExtra(android.content.Intent.EXTRA_TEXT, "${post?.userName} shared on DThoughts: ${post?.content}")
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, "${post?.userName} shared on DThoughts: ${post?.content}")
             type = "text/plain"
         }
-        startActivity(android.content.Intent.createChooser(shareIntent, "Share post via"))
+        startActivity(Intent.createChooser(shareIntent, "Share post via"))
     }
 }

@@ -228,7 +228,14 @@ class FeedActivity : AppCompatActivity() {
             onShareClick = { post -> sharePost(post) },
             onPostClick = { post -> openPostDetail(post) },
             onEditClick = { post -> showEditPostDialog(post) },
-            onDeleteClick = { post -> showDeleteConfirmation(post) }
+            onDeleteClick = { post -> showDeleteConfirmation(post) },
+            onUserClick = { post ->
+                post.userId?.let { uid ->
+                    val intent = Intent(this@FeedActivity, ProfileActivity::class.java)
+                    intent.putExtra("USER_ID", uid)
+                    startActivity(intent)
+                }
+            }
         )
         binding.rvPosts.layoutManager = LinearLayoutManager(this)
         binding.rvPosts.adapter = postAdapter

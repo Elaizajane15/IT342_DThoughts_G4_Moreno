@@ -102,6 +102,28 @@ public class PostController {
 		}
 	}
 
+	@GetMapping("/users/{userId}")
+	public ResponseEntity<?> listByUser(
+			@PathVariable Long userId,
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size
+	) {
+		try {
+			Page<PostDto> res = postService.listByUser(userId, PageRequest.of(Math.max(0, page), Math.max(1, size)));
+			Map<String, Object> body = new HashMap<>();
+			body.put("content", res.getContent());
+			body.put("totalPages", res.getTotalPages());
+			body.put("totalElements", res.getTotalElements());
+			body.put("page", res.getNumber());
+			body.put("size", res.getSize());
+			return ResponseEntity.ok(body);
+		} catch (RuntimeException e) {
+			Map<String, String> error = new HashMap<>();
+			error.put("message", e.getMessage());
+			return ResponseEntity.badRequest().body(error);
+		}
+	}
+
 	@GetMapping("/_debug")
 	public ResponseEntity<?> debug() {
 		Map<String, Object> body = new HashMap<>();

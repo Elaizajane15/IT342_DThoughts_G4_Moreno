@@ -113,8 +113,7 @@ class EditProfileActivity : AppCompatActivity() {
                         if (bytes != null) {
                             val body = bytes.toRequestBody("image/*".toMediaTypeOrNull())
                             val part = MultipartBody.Part.createFormData("file", "avatar.jpg", body)
-                            val emailBody = user.email.toRequestBody("text/plain".toMediaTypeOrNull())
-                            val avatarResponse = apiService.uploadAvatar(emailBody, part)
+                            val avatarResponse = apiService.uploadAvatar(user.email, part)
                             if (avatarResponse.isSuccessful && avatarResponse.body() != null) {
                                 updatedUser = avatarResponse.body()!!
                                 UserPrefs.saveUser(updatedUser) // Save immediately
@@ -130,8 +129,7 @@ class EditProfileActivity : AppCompatActivity() {
                         if (bytes != null) {
                             val body = bytes.toRequestBody("image/*".toMediaTypeOrNull())
                             val part = MultipartBody.Part.createFormData("file", "cover.jpg", body)
-                            val emailBody = user.email.toRequestBody("text/plain".toMediaTypeOrNull())
-                            val coverResponse = apiService.uploadCover(emailBody, part)
+                            val coverResponse = apiService.uploadCover(user.email, part)
                             if (coverResponse.isSuccessful && coverResponse.body() != null) {
                                 updatedUser = coverResponse.body()!!
                                 UserPrefs.saveUser(updatedUser) // Save immediately

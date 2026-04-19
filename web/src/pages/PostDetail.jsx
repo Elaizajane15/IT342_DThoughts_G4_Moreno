@@ -95,7 +95,18 @@ export default function PostDetailPage() {
   const toggleLike = async()=>{ if(isGuest){navigate('/login');return} try{const r=await postsApi.toggleLike(postId,user?.id??null);setLiked(!!r.liked);setLikeCount(r.likeCount)}catch{alert('Failed')} };
   const toggleSave = async()=>{ if(isGuest){navigate('/login');return} try{const r=await postsApi.toggleSave(postId,user?.id??null);setIsSaved(!!r.saved)}catch{alert('Failed')} };
   const toggleFollow = async()=>{ if(isGuest){navigate('/login');return} try{const r=await userApi.toggleFollow(post.userId,user?.id??null);setIsFollowing(!!r.following)}catch{alert('Failed')} };
-  const submitComment = async()=>{ if(isGuest){navigate('/login');return} const t=comment.trim(); if(!t) return; try{const c=await postsApi.addComment(postId,{userId:user?.id??null,content:t});setComments(p=>[c,...p]);setComment('')}catch{alert('Failed')} };
+  const submitComment = async()=>{
+    if(isGuest){navigate('/login');return}
+    const t = comment.trim(); if(!t) return;
+    try{
+      const c = await postsApi.addComment(postId, { userId: user?.id ?? null, content: t });
+      setComments(p => [c, ...p]);
+      setComment('');
+    } catch (e) {
+      console.error('addComment failed', e);
+      setToast({ message: e?.message || 'Failed to post comment.', type: 'error' });
+    }
+  };
   const confirmDelete = async()=>{ try{await postsApi.delete(postId);sessionStorage.setItem('dt_toast',JSON.stringify({message:'Post deleted.',type:'success'}));navigate('/feed',{replace:true})}catch(e){setToast({message:e?.message||'Failed.',type:'error'})}finally{setDelOpen(false)} };
 
   const name=post?.userName||'Daily User';

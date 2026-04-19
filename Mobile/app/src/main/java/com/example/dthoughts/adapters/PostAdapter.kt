@@ -18,7 +18,8 @@ class PostAdapter(
     private val onPostClick: (Post) -> Unit,
     private val onSaveClick: (Post) -> Unit = {},
     private val onEditClick: (Post) -> Unit = {},
-    private val onDeleteClick: (Post) -> Unit = {}
+    private val onDeleteClick: (Post) -> Unit = {},
+    private val onUserClick: ((Post) -> Unit)? = null
 ) : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
 
     private val moodsMap = mapOf(
@@ -121,6 +122,11 @@ class PostAdapter(
             llShare.setOnClickListener { onShareClick(post) }
             llSave.setOnClickListener { onSaveClick(post) }
             root.setOnClickListener { onPostClick(post) }
+            
+            val userClickListener = View.OnClickListener { onUserClick?.invoke(post) }
+            ivAvatar.setOnClickListener(userClickListener)
+            tvAvatarInitial.setOnClickListener(userClickListener)
+            tvUserName.setOnClickListener(userClickListener)
         }
     }
 

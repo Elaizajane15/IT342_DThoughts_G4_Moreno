@@ -27,6 +27,13 @@ class ProfileActivity : AppCompatActivity() {
     private var isFollowing: Boolean = false
     private lateinit var postAdapter: PostAdapter
 
+    private val createPostLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            binding.tabLayout.getTabAt(0)?.select()
+            loadUserProfile()
+        }
+    }
+
     companion object {
         const val EXTRA_USER_ID = "USER_ID"
     }
@@ -42,6 +49,7 @@ class ProfileActivity : AppCompatActivity() {
         setupRecyclerView()
         setupTabs()
         loadUserProfile()
+        setupStatsClickListeners()
         
         binding.btnEditProfile.setOnClickListener {
             startActivity(Intent(this, EditProfileActivity::class.java))
@@ -52,7 +60,7 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         binding.fabCreate.setOnClickListener {
-            startActivity(Intent(this, CreatePostActivity::class.java))
+            createPostLauncher.launch(Intent(this, CreatePostActivity::class.java))
         }
 
         setupBottomNavigation()
@@ -117,28 +125,6 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadLikedPosts(userId: Long) {
-        lifecycleScope.launch {
-            val result = postRepository.getLikedPosts(userId)
-            if (result.isSuccess) {
-                postAdapter.updatePosts(result.getOrDefault(emptyList()))
-            } else {
-                postAdapter.updatePosts(emptyList())
-            }
-        }
-    }
-
-    private fun loadSavedPosts(userId: Long) {
-        lifecycleScope.launch {
-            val result = postRepository.getSavedPosts(userId)
-            if (result.isSuccess) {
-                postAdapter.updatePosts(result.getOrDefault(emptyList()))
-            } else {
-                postAdapter.updatePosts(emptyList())
-            }
-        }
-    }
-
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -180,7 +166,16 @@ class ProfileActivity : AppCompatActivity() {
                 }
             },
             onEditClick = { post -> showEditPostDialog(post) },
-            onDeleteClick = { post -> showDeleteConfirmation(post) }
+            onDeleteClick = { post -> showDeleteConfirmation(post) },
+            onUserClick = { post ->
+                post.userId?.let { uid ->
+                    if (uid != this@ProfileActivity.userId) {
+                        val intent = Intent(this@ProfileActivity, ProfileActivity::class.java)
+                        intent.putExtra("USER_ID", uid)
+                        startActivity(intent)
+                    }
+                }
+            }
         )
         binding.rvUserPosts.layoutManager = LinearLayoutManager(this)
         binding.rvUserPosts.adapter = postAdapter
@@ -208,7 +203,7 @@ class ProfileActivity : AppCompatActivity() {
             if (result.isSuccess) {
                 reloadCurrentTab()
             } else {
-                android.widget.Toast.makeText(this@ProfileActivity, "Failed to update post", android.widget.Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ProfileActivity, "Failed to update post", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -230,7 +225,7 @@ class ProfileActivity : AppCompatActivity() {
             if (result.isSuccess) {
                 reloadCurrentTab()
             } else {
-                android.widget.Toast.makeText(this@ProfileActivity, "Failed to delete post", android.widget.Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ProfileActivity, "Failed to delete post", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -254,49 +249,51 @@ class ProfileActivity : AppCompatActivity() {
         binding.progressBar.visibility = View.VISIBLE
         lifecycleScope.launch {
             try {
-                val response = if (userId != -1L) {
-                    apiService.getUserById(userId)
-                } else {
-                    val currentUser = UserPrefs.getUser()
-                    if (currentUser != null) {
-                        apiService.getCurrentUser(currentUser.email)
-                    } else {
-                        null
-                    }
+                val currentUser = UserPrefs.getUser()
+                
+                // If we don't have a userId from intent (-1), use our logged-in ID
+                val targetId = if (userId != -1L) userId else currentUser?.id ?: -1L
+                
+                // First attempt: Load by ID (Recommended)
+                var response = if (targetId != -1L) apiService.getUserById(targetId) else null
+                
+                // Second attempt fallback: Load by email if ID fails or targetId was -1
+                if ((response == null || !response.isSuccessful) && currentUser != null) {
+                    response = apiService.getCurrentUser(currentUser.email)
                 }
 
                 if (response?.isSuccessful == true && response.body() != null) {
                     val user = response.body()!!
-                    userId = user.id
+                    userId = user.id // Ensure we have the correct ID for tab loading
                     updateUI(user)
                     reloadCurrentTab()
                     checkFollowStatus(user.id)
                 } else {
-                    Toast.makeText(this@ProfileActivity, "Failed to load profile", Toast.LENGTH_SHORT).show()
+                    val errorCode = response?.code() ?: "No Response"
+                    val errorMessage = response?.errorBody()?.string() ?: "Unknown error"
+                    Toast.makeText(this@ProfileActivity, "Profile Error ($errorCode): $errorMessage", Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@ProfileActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ProfileActivity, "Connection error: ${e.message}", Toast.LENGTH_LONG).show()
             } finally {
                 binding.progressBar.visibility = View.GONE
             }
         }
     }
 
-    private fun updateUI(user: User) {
+    private fun updateUI(user: com.example.dthoughts.models.User) {
         binding.tvFullName.text = "${user.firstName} ${user.lastName}"
         binding.tvEmail.text = "@${user.email.split("@")[0]}"
         binding.tvBio.text = user.bio ?: "No bio yet."
         binding.tvFollowerCountCard.text = (user.followerCount ?: 0).toString()
         binding.tvFollowingCountCard.text = (user.followingCount ?: 0).toString()
         binding.tvLikesCount.text = (user.totalLikes ?: 0).toString()
-        // thoughts count - placeholder or fetch actual
         binding.tvThoughtsCount.text = (user.totalPosts ?: 0).toString()
 
         binding.tvRole.text = "✦ ROLE: USER"
-        binding.tvBornDate.text = "🎂 Born August 24, 2003" // Placeholder
-        binding.tvJoinedDate.text = "📅 Joined June 2024" // Placeholder
+        binding.tvBornDate.text = "🎂 Born August 24, 2003"
+        binding.tvJoinedDate.text = "📅 Joined June 2024"
 
-        // Load Avatar
         if (!user.avatarUrl.isNullOrEmpty()) {
             val fullUrl = if (user.avatarUrl.startsWith("http")) user.avatarUrl else "${RetrofitClient.BASE_URL.removeSuffix("/")}${user.avatarUrl}"
             Glide.with(this)
@@ -308,7 +305,6 @@ class ProfileActivity : AppCompatActivity() {
             binding.ivAvatar.setImageResource(R.drawable.ic_profile_holder)
         }
 
-        // Load Cover Image
         if (!user.coverImageUrl.isNullOrEmpty()) {
             val fullUrl = if (user.coverImageUrl.startsWith("http")) user.coverImageUrl else "${RetrofitClient.BASE_URL.removeSuffix("/")}${user.coverImageUrl}"
             Glide.with(this)
@@ -342,9 +338,7 @@ class ProfileActivity : AppCompatActivity() {
                     isFollowing = response.body()!!.isFollowing
                     updateFollowButton()
                 }
-            } catch (e: Exception) {
-                // Silent fail
-            }
+            } catch (e: Exception) {}
         }
     }
 
@@ -373,11 +367,61 @@ class ProfileActivity : AppCompatActivity() {
         binding.btnFollow.text = if (isFollowing) "Unfollow" else "Follow"
     }
 
+    private fun setupStatsClickListeners() {
+        binding.tvThoughtsCount.parent.let { it as? View }?.setOnClickListener {
+            binding.tabLayout.getTabAt(0)?.select()
+        }
+        binding.tvLikesCount.parent.let { it as? View }?.setOnClickListener {
+            binding.tabLayout.getTabAt(1)?.select()
+        }
+    }
+
     private fun loadUserPosts(userId: Long) {
+        if (userId == -1L) return
         lifecycleScope.launch {
-            val result = postRepository.getUserPosts(userId)
-            if (result.isSuccess) {
-                postAdapter.updatePosts(result.getOrDefault(emptyList()))
+            try {
+                val response = apiService.getUserPosts(userId)
+                if (response.isSuccessful && response.body() != null) {
+                    postAdapter.updatePosts(response.body()!!.content)
+                } else {
+                    postAdapter.updatePosts(emptyList())
+                }
+            } catch (e: Exception) {
+                postAdapter.updatePosts(emptyList())
+            }
+        }
+    }
+
+    private fun loadLikedPosts(userId: Long) {
+        if (userId == -1L) return
+        lifecycleScope.launch {
+            try {
+                val response = apiService.getLikedPosts(userId)
+                if (response.isSuccessful && response.body() != null) {
+                    val posts = response.body()!!.map { it.copy(isLiked = true) }
+                    postAdapter.updatePosts(posts)
+                } else {
+                    postAdapter.updatePosts(emptyList())
+                }
+            } catch (e: Exception) {
+                postAdapter.updatePosts(emptyList())
+            }
+        }
+    }
+
+    private fun loadSavedPosts(userId: Long) {
+        if (userId == -1L) return
+        lifecycleScope.launch {
+            try {
+                val response = apiService.getSavedPosts(userId)
+                if (response.isSuccessful && response.body() != null) {
+                    val posts = response.body()!!.map { it.copy(isSaved = true) }
+                    postAdapter.updatePosts(posts)
+                } else {
+                    postAdapter.updatePosts(emptyList())
+                }
+            } catch (e: Exception) {
+                postAdapter.updatePosts(emptyList())
             }
         }
     }

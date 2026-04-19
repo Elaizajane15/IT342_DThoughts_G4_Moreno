@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface PostRepository extends JpaRepository<Post, Long> {
 	Page<Post> findAllByOrderByCreatedAtDesc(Pageable pageable);
 	Page<Post> findByUserIdInOrderByCreatedAtDesc(List<Long> userIds, Pageable pageable);
+	Page<Post> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
 	long countByUserId(Long userId);
 }
 
