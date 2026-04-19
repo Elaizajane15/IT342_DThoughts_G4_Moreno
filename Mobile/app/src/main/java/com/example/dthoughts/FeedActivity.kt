@@ -47,6 +47,7 @@ class FeedActivity : AppCompatActivity() {
         setupUI()
         setupBottomNavigation()
         setupDrawerListeners()
+        loadPosts(true)
 
         // Optimized back handling for Android 13+ Predictive Back
         val backCallback = object : androidx.activity.OnBackPressedCallback(false) {
@@ -57,10 +58,10 @@ class FeedActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, backCallback)
 
         binding.drawerLayout.addDrawerListener(object : androidx.drawerlayout.widget.DrawerLayout.SimpleDrawerListener() {
-            override fun onDrawerOpened(drawerView: android.view.View) {
+            override fun onDrawerOpened(drawerView: View) {
                 backCallback.isEnabled = true
             }
-            override fun onDrawerClosed(drawerView: android.view.View) {
+            override fun onDrawerClosed(drawerView: View) {
                 backCallback.isEnabled = false
             }
         })
@@ -76,7 +77,6 @@ class FeedActivity : AppCompatActivity() {
         } else {
             updateUserUI()
         }
-        loadPosts(true)
     }
 
     private fun setupUI() {
@@ -128,6 +128,7 @@ class FeedActivity : AppCompatActivity() {
         binding.btnLoadMore.setOnClickListener {
             loadPosts(false)
         }
+
     }
 
     private fun setupBottomNavigation() {
@@ -140,7 +141,11 @@ class FeedActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_create -> {
-                    startActivity(Intent(this, CreatePostActivity::class.java))
+                    if (currentUser == null) {
+                        startActivity(Intent(this, LoginActivity::class.java))
+                    } else {
+                        createPostLauncher.launch(Intent(this, CreatePostActivity::class.java))
+                    }
                     true
                 }
                 R.id.nav_saved -> {
@@ -148,10 +153,9 @@ class FeedActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_profile -> {
-                    val user = UserPrefs.getUser()
-                    if (user != null) {
+                    if (currentUser != null) {
                         val intent = Intent(this, ProfileActivity::class.java)
-                        intent.putExtra("USER_ID", user.id)
+                        intent.putExtra("USER_ID", currentUser!!.id)
                         startActivity(intent)
                     } else {
                         startActivity(Intent(this, LoginActivity::class.java))
@@ -171,9 +175,9 @@ class FeedActivity : AppCompatActivity() {
             binding.drawerProfile.tvFollowersCount.text = (user.followerCount ?: 0).toString()
             binding.drawerProfile.tvFollowingCount.text = (user.followingCount ?: 0).toString()
 
-            // Update Feed Header Avatar
+            val baseUrl = RetrofitClient.BASE_URL.removeSuffix("/")
             if (!user.avatarUrl.isNullOrEmpty()) {
-                val fullUrl = if (user.avatarUrl.startsWith("http")) user.avatarUrl else "${RetrofitClient.BASE_URL.removeSuffix("/")}${user.avatarUrl}"
+                val fullUrl = if (user.avatarUrl.startsWith("http")) user.avatarUrl else "$baseUrl${user.avatarUrl}"
                 com.bumptech.glide.Glide.with(this)
                     .load(fullUrl)
                     .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
@@ -181,7 +185,6 @@ class FeedActivity : AppCompatActivity() {
                     .placeholder(R.drawable.ic_profile_holder)
                     .into(binding.ivProfile)
                 
-                // Also update drawer avatar
                 com.bumptech.glide.Glide.with(this)
                     .load(fullUrl)
                     .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
@@ -193,6 +196,8 @@ class FeedActivity : AppCompatActivity() {
                 binding.ivProfile.setImageResource(R.drawable.ic_profile_holder)
                 binding.drawerProfile.ivDrawerAvatar.setImageResource(R.drawable.ic_profile_holder)
             }
+        } else {
+            binding.ivProfile.setImageResource(R.drawable.ic_profile_holder)
         }
     }
 
@@ -381,5 +386,4 @@ class FeedActivity : AppCompatActivity() {
         }
         startActivity(Intent.createChooser(shareIntent, "Share post via"))
     }
-
 }
