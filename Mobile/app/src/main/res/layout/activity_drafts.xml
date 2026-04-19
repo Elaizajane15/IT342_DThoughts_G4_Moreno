@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/activity_drafts.xml -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/warm_ivory">
+
+    <!-- ══ APP BAR ══ -->
+    <LinearLayout
+        android:id="@+id/layout_appbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@color/warm_ivory"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="14dp"
+        android:elevation="2dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/drafts_title"
+            android:textSize="22sp"
+            android:textColor="@color/espresso"
+            android:textStyle="bold" />
+
+        <!-- New Thought button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_new_thought"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="@string/new_thought"
+            android:textSize="12sp"
+            android:textColor="@color/espresso"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            app:icon="@drawable/ic_edit"
+            app:iconSize="14dp"
+            app:iconTint="@color/espresso"
+            app:iconPadding="6dp"
+            app:backgroundTint="@color/amber"
+            app:cornerRadius="24dp"
+            app:elevation="2dp" />
+
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:id="@+id/divider_header"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/border_amber"
+        app:layout_constraintTop_toBottomOf="@id/layout_appbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ══ LOADING ══ -->
+    <TextView
+        android:id="@+id/tv_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/loading"
+        android:textSize="14sp"
+        android:textColor="@color/muted"
+        android:padding="32dp"
+        android:visibility="gone"
+        tools:visibility="visible"
+        app:layout_constraintTop_toBottomOf="@id/divider_header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ══ EMPTY STATE ══ -->
+    <LinearLayout
+        android:id="@+id/layout_empty"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingTop="64dp"
+        android:paddingBottom="64dp"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:visibility="gone"
+        tools:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/divider_header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📄"
+            android:textSize="44sp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="14dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/drafts_empty_title"
+            android:textSize="17sp"
+            android:textColor="@color/espresso"
+            android:textStyle="bold"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/drafts_empty_sub"
+            android:textSize="14sp"
+            android:textColor="@color/muted"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_continue_writing_empty"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:text="@string/continue_writing"
+            android:textSize="13sp"
+            android:textColor="@color/muted"
+            app:strokeColor="@color/border_amber"
+            app:strokeWidth="2dp"
+            app:cornerRadius="24dp" />
+
+    </LinearLayout>
+
+    <!-- ══ DRAFT LIST ══ -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_drafts"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="80dp"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/item_draft"
+        app:layout_constraintTop_toBottomOf="@id/divider_header"
+        app:layout_constraintBottom_toTopOf="@id/bottom_nav"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ══ BOTTOM NAVIGATION ══ -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_nav"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        app:menu="@menu/bottom_nav_menu"
+        app:itemIconTint="@color/nav_icon_selector"
+        app:itemTextColor="@color/nav_text_selector"
+        app:labelVisibilityMode="labeled"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

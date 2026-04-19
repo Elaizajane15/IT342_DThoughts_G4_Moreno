@@ -144,7 +144,67 @@
     <string name="compose_hint">Whats on your mind today?</string>
     <string name="add_image">📷 Add Image</string>
     <string name="post_thought">Post</string>
-    <string name="new_thought">✏️ New Thought</string>
+    <string name="new_thought">New Thought</string>
 
     <item name="ic_launcher" type="mipmap">@mipmap/ic_launcher_round</item>
+    <string name="desc_profile_picture">User profile picture</string>
+    <string name="desc_create_post">Create post</string>
+    <string name="desc_nav_home">Home</string>
+    <string name="desc_nav_notifications">Notifications</string>
+    <string name="desc_nav_new_post">New Post</string>
+    <string name="desc_nav_saved">Saved</string>
+    <string name="desc_nav_profile">Profile</string>
+    <string name="daily_thoughts_title">DailyThoughts</string>
+    <string name="feed_subtitle_main">What\'s on people\'s minds</string>
+    <string name="daily_thought_label">✨ Daily Thought</string>
+    <string name="locked_icon">🔒</string>
+    <string name="guest_view_msg">Sign in to like, comment, and share your own thoughts.</string>
+    <string name="user_emoji">👤</string>
+    <string name="compose_hint_main">What\'s on your mind today?</string>
+    <string name="add_image_label">📷 Add Image</string>
+    <string name="post_label">Post</string>
+    <string name="error_loading">Error loading posts</string>
+    <string name="retry_label">Retry</string>
+    <string name="journal_emoji">📓</string>
+    <string name="empty_message">No thoughts yet. Be the first to share!</string>
+    <string name="share_thought_label">Share a Thought</string>
+    <string name="load_more_label">Load more thoughts ↓</string>
+
+    <!-- Profile Screen -->
+    <string name="edit_profile">Edit profile</string>
+    <string name="follow">Follow</string>
+    <string name="stat_following">Following</string>
+    <string name="stat_followers">Followers</string>
+    <string name="label_change_cover">Change cover photo</string>
+    <string name="action_create_post">Create new post</string>
+    <string name="error">An error occurred. Please try again.</string>
+    <!-- Notifications -->
+    <string name="notif_title">Notifications</string>
+    <string name="mark_all_read">✓ Mark all read</string>
+    <string name="filter_all">All</string>
+    <string name="filter_unread">Unread</string>
+    <string name="loading_notifications">Loading notifications…</string>
+    <string name="notif_empty_all">No notifications yet.</string>
+    <string name="notif_empty_unread">All caught up! No unread notifications.</string>
+
+    <!-- Notification type labels (append after actor name) -->
+    <string name="notif_liked">liked your thought</string>
+    <string name="notif_commented">commented on your thought</string>
+    <string name="notif_followed">started following you</string>
+    <string name="notif_posted">posted a new thought</string>
+
+    <!-- Group date labels -->
+    <string name="group_just_now">Just Now</string>
+    <string name="group_today">Today</string>
+    <string name="group_yesterday">Yesterday</string>
+
+    <!-- Drafts -->
+    <string name="drafts_title">Your Drafts</string>
+    <string name="drafts_empty_title">No saved drafts yet</string>
+    <string name="drafts_empty_sub">Save a draft from Feed or New Thought — it will show here.</string>
+    <string name="continue_writing">Continue Writing</string>
+    <string name="delete_draft">Delete Draft</string>
+    <string name="draft_last_saved">Last saved: </string>
+    <string name="draft_untitled">Untitled draft</string>
+
 </resources>

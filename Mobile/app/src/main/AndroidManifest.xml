@@ -15,9 +15,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Dthoughts"
-        android:networkSecurityConfig="@xml/network_security_config">
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".LoginActivity"
+            android:exported="true" />
+        <activity
+            android:name=".FeedActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,8 +29,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".CreatePostActivity" />
+        <activity android:name=".PostDetailActivity" />
+        <activity android:name=".GuestFeedActivity" />
         <activity android:name=".RegisterActivity" />
-
         <activity android:name=".ForgotPasswordActivity" />
         <activity
             android:name=".ResetPasswordActivity"
@@ -46,11 +52,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".ProfileActivity" />
-        <activity android:name=".FeedActivity" />
-        <activity android:name=".CreatePostActivity" />
-        <activity android:name=".PostDetailActivity" />
-        <activity android:name=".GuestFeedActivity" />
-        <activity android:name=".MainActivity" />
+        <activity android:name=".EditProfileActivity" />
+        <activity android:name=".NotificationsActivity" />
+        <activity android:name=".DraftsActivity" />
     </application>
 
 </manifest>

@@ -18,6 +18,7 @@ import com.example.dthoughts.repository.PostRepository
 import com.example.dthoughts.utils.UserPrefs
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
+import kotlin.jvm.java
 
 class CreatePostActivity : AppCompatActivity() {
 
@@ -55,12 +56,40 @@ class CreatePostActivity : AppCompatActivity() {
         setupMoods()
         setupListeners()
         updateCharCount(0)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        val draftId = intent?.getLongExtra("DRAFT_ID", -1) ?: -1
+        if (draftId != -1L) {
+            val content = intent?.getStringExtra("DRAFT_CONTENT")
+            val title = intent?.getStringExtra("DRAFT_TITLE")
+            val mood = intent?.getStringExtra("DRAFT_MOOD")
+            
+            binding.etPostContent.setText(content)
+            // If you have a title field, set it here
+            // If mood is provided, select the corresponding chip
+            if (mood != null) {
+                for (i in 0 until binding.moodChipGroup.childCount) {
+                    val chip = binding.moodChipGroup.getChildAt(i) as Chip
+                    if (chip.text.toString().contains(mood, ignoreCase = true)) {
+                        chip.isChecked = true
+                        break
+                    }
+                }
+            }
+        }
     }
 
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        binding.toolbar.setNavigationOnClickListener { finish() }
+        binding.toolbar.setNavigationOnClickListener { 
+            val intent = Intent(this, FeedActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
+            finish()
+        }
     }
 
     private fun setupMoods() {
@@ -105,7 +134,12 @@ class CreatePostActivity : AppCompatActivity() {
             binding.dropZone.visibility = View.VISIBLE
         }
 
-        binding.btnCancel.setOnClickListener { finish() }
+        binding.btnCancel.setOnClickListener { 
+            val intent = Intent(this, FeedActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
+            finish()
+        }
 
         binding.btnPublish.setOnClickListener { publishPost() }
 
@@ -144,9 +178,9 @@ class CreatePostActivity : AppCompatActivity() {
                 val fileData = inputStream?.readBytes() ?: byteArrayOf()
                 inputStream?.close()
                 val fileName = "post_image_${System.currentTimeMillis()}.jpg"
-                postRepository.createPostWithImage(user.email, content, selectedMood, fileData, fileName)
+                postRepository.createPostWithImage(user.id, content, selectedMood, fileData, fileName)
             } else {
-                postRepository.createPost(user.email, content, selectedMood)
+                postRepository.createPost(user.id, content, selectedMood)
             }
             
             if (result.isSuccess) {

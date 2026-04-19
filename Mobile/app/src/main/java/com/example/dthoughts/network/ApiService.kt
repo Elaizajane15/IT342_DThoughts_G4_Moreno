@@ -6,6 +6,7 @@ import com.example.dthoughts.models.CreateCommentRequest
 import com.example.dthoughts.models.CreatePostRequest
 import com.example.dthoughts.models.LoginRequest
 import com.example.dthoughts.models.Post
+import com.example.dthoughts.models.PostResponse
 import com.example.dthoughts.models.RegisterRequest
 import com.example.dthoughts.models.UpdateUserRequest
 import com.example.dthoughts.models.User
@@ -44,6 +45,12 @@ interface ApiService {
     @PUT("/api/user/me")
     suspend fun updateUser(@Body request: UpdateUserRequest): Response<User>
 
+    @GET("/api/user/{id}/liked-posts")
+    suspend fun getLikedPosts(@Path("id") id: Long): Response<List<Post>>
+
+    @GET("/api/user/{id}/saved-posts")
+    suspend fun getSavedPosts(@Path("id") id: Long): Response<List<Post>>
+
     // Avatar upload
     @Multipart
     @POST("/api/user/me/avatar")
@@ -78,21 +85,21 @@ interface ApiService {
     suspend fun getPosts(
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20
-    ): Response<List<Post>>
+    ): Response<PostResponse>
 
     @GET("/api/posts/following")
     suspend fun getFollowingPosts(
-        @Query("email") email: String,
+        @Query("userId") userId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20
-    ): Response<List<Post>>
+    ): Response<PostResponse>
 
-    @GET("/api/posts/user/{userId}")
+    @GET("/api/posts/users/{userId}")
     suspend fun getUserPosts(
         @Path("userId") userId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20
-    ): Response<List<Post>>
+    ): Response<PostResponse>
 
     @POST("/api/posts")
     suspend fun createPost(@Body request: CreatePostRequest): Response<Post>
@@ -100,16 +107,25 @@ interface ApiService {
     @Multipart
     @POST("/api/posts/with-image")
     suspend fun createPostWithImage(
-        @Part("email") email: RequestBody,
+        @Part("userId") userId: RequestBody,
         @Part("content") content: RequestBody,
         @Part("mood") mood: RequestBody?,
         @Part file: MultipartBody.Part
     ): Response<Post>
 
-    @POST("/api/posts/{id}/like")
+    @POST("/api/posts/{id}/likes/toggle")
     suspend fun toggleLike(
         @Path("id") id: Long,
-        @Query("email") email: String
+        @Body request: Map<String, Long>
+    ): Response<LikeStatus>
+
+    @DELETE("/api/posts/{id}")
+    suspend fun deletePost(@Path("id") id: Long): Response<Unit>
+
+    @PUT("/api/posts/{id}")
+    suspend fun updatePost(
+        @Path("id") id: Long,
+        @Body request: Map<String, String>
     ): Response<Post>
 
     // Comment endpoints
@@ -121,7 +137,30 @@ interface ApiService {
         @Path("postId") postId: Long,
         @Body request: CreateCommentRequest
     ): Response<Comment>
+
+    @DELETE("/api/comments/{commentId}")
+    suspend fun deleteComment(
+        @Path("commentId") commentId: Long,
+        @Query("userId") userId: Long
+    ): Response<Unit>
+
+    @PUT("/api/comments/{commentId}")
+    suspend fun updateComment(
+        @Path("commentId") commentId: Long,
+        @Body request: CreateCommentRequest
+    ): Response<Comment>
+
+    @POST("/api/posts/{id}/saves/toggle")
+    suspend fun toggleSave(
+        @Path("id") id: Long,
+        @Body request: ToggleSaveRequest
+    ): Response<SaveStatus>
 }
+
+data class LikeStatus(
+    val liked: Boolean,
+    val likeCount: Long
+)
 
 data class FollowStatus(
     val isFollowing: Boolean,
@@ -131,4 +170,13 @@ data class FollowStatus(
 
 data class ToggleFollowRequest(
     val followerId: Long?
+)
+
+data class SaveStatus(
+    val saved: Boolean,
+    val count: Long
+)
+
+data class ToggleSaveRequest(
+    val userId: Long
 )

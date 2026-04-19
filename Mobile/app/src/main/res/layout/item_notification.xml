@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/item_notification.xml -->
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_notif"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardCornerRadius="14dp"
+    app:cardElevation="1dp"
+    app:cardBackgroundColor="@color/white"
+    app:strokeColor="@color/border_amber"
+    app:strokeWidth="1dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="13dp">
+
+        <!-- Unread dot (top-right) -->
+        <View
+            android:id="@+id/view_unread_dot"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="2dp"
+            android:background="@drawable/bg_unread_dot"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <!-- Avatar + type icon stack -->
+        <FrameLayout
+            android:id="@+id/fl_avatar"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginEnd="12dp">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/iv_actor_avatar"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:src="@drawable/avatar_border"
+                app:civ_border_width="0dp" />
+
+            <!-- Type icon badge -->
+            <TextView
+                android:id="@+id/tv_type_icon"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="bottom|end"
+                android:background="@drawable/bg_type_icon_badge"
+                android:gravity="center"
+                android:textSize="9sp"
+                tools:text="❤️" />
+
+        </FrameLayout>
+
+        <!-- Text content -->
+        <LinearLayout
+            android:id="@+id/layout_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/fl_avatar"
+            android:layout_toStartOf="@+id/btn_mark_read"
+            android:orientation="vertical">
+
+            <!-- Main text: "Karla liked your thought" -->
+            <TextView
+                android:id="@+id/tv_notif_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textColor="@color/espresso"
+                android:lineSpacingExtra="2dp"
+                android:layout_marginBottom="5dp"
+                tools:text="Karla Manalo liked your thought" />
+
+            <!-- Post preview (shown for LIKE / COMMENT types) -->
+            <TextView
+                android:id="@+id/tv_post_preview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_notif_preview"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:textSize="11.5sp"
+                android:textColor="@color/muted"
+                android:textStyle="italic"
+                android:layout_marginBottom="5dp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:visibility="gone"
+                tools:text="&quot;Sometimes the best thing you can do is sit quietly…&quot;"
+                tools:visibility="visible" />
+
+            <!-- Timestamp -->
+            <TextView
+                android:id="@+id/tv_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="10sp"
+                android:textColor="@color/muted"
+                tools:text="2m ago" />
+
+        </LinearLayout>
+
+        <!-- Mark as read button -->
+        <TextView
+            android:id="@+id/btn_mark_read"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="8dp"
+            android:gravity="center"
+            android:text="✓"
+            android:textSize="13sp"
+            android:textColor="@color/muted_soft"
+            android:background="@android:color/transparent"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>
