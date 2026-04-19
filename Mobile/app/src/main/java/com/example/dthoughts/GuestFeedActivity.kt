@@ -28,4 +28,38 @@ class GuestFeedActivity : AppCompatActivity() {
             finish()
         }
     }
+
+    private fun loadPosts() {
+        lifecycleScope.launch {
+            val result = postRepository.getPosts(0)
+            if (result.isSuccess) {
+                val posts = result.getOrDefault(emptyList())
+                allPosts.clear()
+                allPosts.addAll(posts)
+                postAdapter.updatePosts(allPosts)
+                
+                if (allPosts.isEmpty()) {
+                    binding.emptyState.root.visibility = View.VISIBLE
+                } else {
+                    binding.emptyState.root.visibility = View.GONE
+                }
+            } else {
+                Toast.makeText(this@GuestFeedActivity, "Failed to load posts", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showLoginPrompt() {
+        Toast.makeText(this, getString(R.string.login_prompt), Toast.LENGTH_SHORT).show()
+        startActivity(Intent(this, LoginActivity::class.java))
+    }
+
+    private fun sharePost(post: Post) {
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, "${post.userName ?: "Someone"} shared on DThoughts: ${post.content}")
+            type = "text/plain"
+        }
+        startActivity(Intent.createChooser(shareIntent, "Share post via"))
+    }
 }

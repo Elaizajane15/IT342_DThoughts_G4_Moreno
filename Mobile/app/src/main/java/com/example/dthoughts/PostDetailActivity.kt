@@ -96,6 +96,8 @@ class PostDetailActivity : AppCompatActivity() {
                 ivAvatar.visibility = View.GONE
             }
             
+            tvAvatarInitial.text = postItem.userName?.take(1)?.uppercase() ?: "D"
+            
             if (postItem.mood != null) {
                 tvMood.visibility = View.VISIBLE
                 tvMood.text = "is feeling ${postItem.mood}"

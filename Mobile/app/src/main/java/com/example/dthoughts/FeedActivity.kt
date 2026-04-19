@@ -47,6 +47,25 @@ class FeedActivity : AppCompatActivity() {
         setupUI()
         setupBottomNavigation()
         setupDrawerListeners()
+        loadPosts(true)
+
+        // Optimized back handling for Android 13+ Predictive Back
+        val backCallback = object : androidx.activity.OnBackPressedCallback(false) {
+            override fun handleOnBackPressed() {
+                binding.drawerLayout.closeDrawer(androidx.core.view.GravityCompat.START)
+            }
+        }
+        onBackPressedDispatcher.addCallback(this, backCallback)
+
+        binding.drawerLayout.addDrawerListener(object : androidx.drawerlayout.widget.DrawerLayout.SimpleDrawerListener() {
+            override fun onDrawerOpened(drawerView: android.view.View) {
+                backCallback.isEnabled = true
+            }
+            override fun onDrawerClosed(drawerView: android.view.View) {
+                backCallback.isEnabled = false
+            }
+        })
+    }
 
         // Optimized back handling for Android 13+ Predictive Back
         val backCallback = object : androidx.activity.OnBackPressedCallback(false) {
@@ -83,6 +102,7 @@ class FeedActivity : AppCompatActivity() {
         binding.ivProfile.setOnClickListener {
             if (currentUser != null) {
                 binding.drawerLayout.openDrawer(GravityCompat.START)
+                createPostLauncher.launch(Intent(this, CreatePostActivity::class.java))
             } else {
                 startActivity(Intent(this, LoginActivity::class.java))
             }
@@ -160,6 +180,9 @@ class FeedActivity : AppCompatActivity() {
                 }
                 else -> false
             }
+        
+        binding.etCompose.setOnClickListener {
+            createPostLauncher.launch(Intent(this, CreatePostActivity::class.java))
         }
     }
 
@@ -375,4 +398,28 @@ class FeedActivity : AppCompatActivity() {
         startActivity(Intent.createChooser(shareIntent, "Share post via"))
     }
 
+    private fun setupDrawer() {
+        currentUser?.let { user ->
+            binding.drawerProfile.tvDrawerName.text = "${user.firstName} ${user.lastName}"
+            binding.drawerProfile.tvDrawerUsername.text = user.email
+            binding.drawerProfile.tvFollowersCount.text = (user.followerCount ?: 0).toString()
+            binding.drawerProfile.tvFollowingCount.text = (user.followingCount ?: 0).toString()
+
+            val openProfile = {
+                val intent = Intent(this, ProfileActivity::class.java)
+                intent.putExtra("USER_ID", user.id)
+                startActivity(intent)
+                binding.drawerLayout.closeDrawers()
+            }
+
+            binding.drawerProfile.headerProfile.setOnClickListener { openProfile() }
+            binding.drawerProfile.menuProfile.setOnClickListener { openProfile() }
+
+            binding.drawerProfile.menuLogout.setOnClickListener {
+                UserPrefs.clear()
+                startActivity(Intent(this, LoginActivity::class.java))
+                finish()
+            }
+        }
+    }
 }

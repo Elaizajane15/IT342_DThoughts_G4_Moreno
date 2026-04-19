@@ -4,12 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/warm_ivory"
+    android:background="@color/feed_bg"
     android:orientation="vertical">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/warm_ivory"
+        android:background="@color/feed_bg"
         app:elevation="0dp">
 
         <androidx.appcompat.widget.Toolbar
@@ -18,6 +20,7 @@
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_back"
             app:navigationIconTint="@color/espresso">
+            app:navigationIcon="@drawable/ic_back">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -25,6 +28,7 @@
                 android:fontFamily="sans-serif-medium"
                 android:text="Edit Profile"
                 android:textColor="@color/espresso"
+                android:textColor="@color/feed_ink"
                 android:textSize="18sp" />
 
         </androidx.appcompat.widget.Toolbar>
@@ -121,6 +125,8 @@
                 android:hint="First Name"
                 app:boxStrokeColor="@color/amber"
                 app:hintTextColor="@color/amber">
+                app:boxStrokeColor="@color/feed_amber"
+                app:hintTextColor="@color/feed_amber">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etFirstName"
@@ -128,6 +134,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPersonName"
                     android:textColor="@color/espresso"/>
+                    android:inputType="textPersonName" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -138,6 +145,8 @@
                 android:hint="Last Name"
                 app:boxStrokeColor="@color/amber"
                 app:hintTextColor="@color/amber">
+                app:boxStrokeColor="@color/feed_amber"
+                app:hintTextColor="@color/feed_amber">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etLastName"
@@ -145,6 +154,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPersonName"
                     android:textColor="@color/espresso"/>
+                    android:inputType="textPersonName" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -155,6 +165,8 @@
                 android:hint="Bio"
                 app:boxStrokeColor="@color/amber"
                 app:hintTextColor="@color/amber">
+                app:boxStrokeColor="@color/feed_amber"
+                app:hintTextColor="@color/feed_amber">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etBio"
@@ -164,6 +176,7 @@
                     android:inputType="textMultiLine"
                     android:minLines="3"
                     android:textColor="@color/espresso"/>
+                    android:minLines="3" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.button.MaterialButton
@@ -174,6 +187,8 @@
                 android:text="Save Changes"
                 android:textColor="@color/espresso"
                 app:backgroundTint="@color/amber"
+                android:textColor="@color/feed_ink"
+                app:backgroundTint="@color/feed_amber"
                 app:cornerRadius="12dp" />
 
         </LinearLayout>

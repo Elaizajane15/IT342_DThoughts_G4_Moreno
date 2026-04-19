@@ -139,6 +139,10 @@ class EditProfileActivity : AppCompatActivity() {
                         }
                     }
 
+                val request = UpdateUserRequest(user.email, firstName, lastName, bio)
+                val response = apiService.updateUser(request)
+                if (response.isSuccessful && response.body() != null) {
+                    val updatedUser = response.body()!!
                     UserPrefs.saveUser(updatedUser)
                     Toast.makeText(this@EditProfileActivity, "Profile updated", Toast.LENGTH_SHORT).show()
                     finish()

@@ -30,6 +30,7 @@ class CommentAdapter(
             val avatarUrl = comment.userAvatarUrl
             if (!avatarUrl.isNullOrEmpty()) {
                 val fullUrl = if (avatarUrl.startsWith("http")) avatarUrl else "${com.example.dthoughts.network.RetrofitClient.BASE_URL.removeSuffix("/")}$avatarUrl"
+                val fullUrl = if (avatarUrl.startsWith("http")) avatarUrl else "${com.example.dthoughts.network.RetrofitClient.BASE_URL}$avatarUrl"
                 com.bumptech.glide.Glide.with(root.context)
                     .load(fullUrl)
                     .placeholder(com.example.dthoughts.R.drawable.ic_profile_holder)
