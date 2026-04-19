@@ -9,5 +9,7 @@ data class User(
     val bio: String? = null,
     val followerCount: Long? = null,
     val followingCount: Long? = null,
-    val totalLikes: Long? = null
+    val totalLikes: Long? = null,
+    val totalPosts: Long? = null,
+    val coverImageUrl: String? = null
 )

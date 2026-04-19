@@ -6,7 +6,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.dthoughts.databinding.ItemCommentBinding
 import com.example.dthoughts.models.Comment
 
-class CommentAdapter(private var comments: List<Comment>) : RecyclerView.Adapter<CommentAdapter.CommentViewHolder>() {
+class CommentAdapter(
+    private var comments: List<Comment>,
+    private val onEditClick: (Comment) -> Unit,
+    private val onDeleteClick: (Comment) -> Unit
+) : RecyclerView.Adapter<CommentAdapter.CommentViewHolder>() {
+
+    private val currentUser = com.example.dthoughts.utils.UserPrefs.getUser()
 
     inner class CommentViewHolder(val binding: ItemCommentBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -23,6 +29,7 @@ class CommentAdapter(private var comments: List<Comment>) : RecyclerView.Adapter
             
             val avatarUrl = comment.userAvatarUrl
             if (!avatarUrl.isNullOrEmpty()) {
+                val fullUrl = if (avatarUrl.startsWith("http")) avatarUrl else "${com.example.dthoughts.network.RetrofitClient.BASE_URL.removeSuffix("/")}$avatarUrl"
                 val fullUrl = if (avatarUrl.startsWith("http")) avatarUrl else "${com.example.dthoughts.network.RetrofitClient.BASE_URL}$avatarUrl"
                 com.bumptech.glide.Glide.with(root.context)
                     .load(fullUrl)
@@ -37,6 +44,31 @@ class CommentAdapter(private var comments: List<Comment>) : RecyclerView.Adapter
             }
             
             tvTime.text = comment.createdAt ?: "Just now"
+
+            if (currentUser != null && currentUser.id == comment.userId) {
+                btnMoreComment.visibility = android.view.View.VISIBLE
+                btnMoreComment.setOnClickListener { view ->
+                    val popup = androidx.appcompat.widget.PopupMenu(view.context, view)
+                    popup.menu.add("Edit")
+                    popup.menu.add("Delete")
+                    popup.setOnMenuItemClickListener { menuItem ->
+                        when (menuItem.title) {
+                            "Edit" -> {
+                                onEditClick(comment)
+                                true
+                            }
+                            "Delete" -> {
+                                onDeleteClick(comment)
+                                true
+                            }
+                            else -> false
+                        }
+                    }
+                    popup.show()
+                }
+            } else {
+                btnMoreComment.visibility = android.view.View.GONE
+            }
         }
     }
 

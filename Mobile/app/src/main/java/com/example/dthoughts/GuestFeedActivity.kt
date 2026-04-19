@@ -2,44 +2,19 @@ package com.example.dthoughts
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.dthoughts.adapters.PostAdapter
 import com.example.dthoughts.databinding.ActivityGuestFeedBinding
-import com.example.dthoughts.models.Post
-import com.example.dthoughts.network.RetrofitClient
-import com.example.dthoughts.repository.PostRepository
-import kotlinx.coroutines.launch
 
 class GuestFeedActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityGuestFeedBinding
-    private lateinit var postAdapter: PostAdapter
-    private val postRepository = PostRepository(RetrofitClient.apiService)
-    private val allPosts = mutableListOf<Post>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityGuestFeedBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupRecyclerView()
         setupListeners()
-        loadPosts()
-    }
-
-    private fun setupRecyclerView() {
-        postAdapter = PostAdapter(
-            posts = allPosts,
-            onLikeClick = { showLoginPrompt() },
-            onCommentClick = { showLoginPrompt() },
-            onShareClick = { sharePost(it) }
-        )
-        binding.rvPosts.layoutManager = LinearLayoutManager(this)
-        binding.rvPosts.adapter = postAdapter
     }
 
     private fun setupListeners() {

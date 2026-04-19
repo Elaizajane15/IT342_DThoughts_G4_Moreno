@@ -101,6 +101,19 @@ class PostRepository(private val apiService: ApiService = RetrofitClient.apiServ
         }
     }
 
+    suspend fun toggleSave(postId: Long, userId: Long): Result<com.example.dthoughts.network.SaveStatus> {
+        return try {
+            val response = apiService.toggleSave(postId, com.example.dthoughts.network.ToggleSaveRequest(userId))
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to save post"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun getComments(postId: Long): Result<List<Comment>> {
         return try {
             val response = apiService.getComments(postId)
@@ -121,6 +134,58 @@ class PostRepository(private val apiService: ApiService = RetrofitClient.apiServ
                 Result.success(response.body()!!)
             } else {
                 Result.failure(Exception("Failed to add comment"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deletePost(postId: Long): Result<Unit> {
+        return try {
+            val response = apiService.deletePost(postId)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Failed to delete post"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updatePost(postId: Long, content: String): Result<Post> {
+        return try {
+            val response = apiService.updatePost(postId, mapOf("content" to content))
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to update post"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getLikedPosts(userId: Long): Result<List<Post>> {
+        return try {
+            val response = apiService.getLikedPosts(userId)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to load liked posts"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getSavedPosts(userId: Long): Result<List<Post>> {
+        return try {
+            val response = apiService.getSavedPosts(userId)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to load saved posts"))
             }
         } catch (e: Exception) {
             Result.failure(e)

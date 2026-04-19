@@ -96,6 +96,20 @@
                     android:textSize="13sp"
                     android:textColor="@color/post_time"
                     android:layout_marginStart="6dp" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <ImageButton
+                    android:id="@+id/btnMorePost"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_more_vert"
+                    android:visibility="gone"
+                    app:tint="@color/post_action_icon" />
             </LinearLayout>
 
             <!-- Post Content -->
@@ -178,6 +192,35 @@
 
                     <TextView
                         android:id="@+id/tvLikeCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="13sp"
+                        android:textColor="@color/post_action_text"
+                        android:layout_marginStart="6dp" />
+                </LinearLayout>
+
+                <!-- Save Button -->
+                <LinearLayout
+                    android:id="@+id/llSave"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:padding="8dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:id="@+id/ivSave"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:src="@drawable/ic_bookmark"
+                        app:tint="@color/post_action_icon" />
+
+                    <TextView
+                        android:id="@+id/tvSaveCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0"

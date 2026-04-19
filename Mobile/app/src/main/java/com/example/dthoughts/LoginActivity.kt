@@ -42,10 +42,6 @@ class LoginActivity : AppCompatActivity() {
             startActivity(Intent(this, GuestFeedActivity::class.java))
             finish()
         }
-
-        binding.btnGoogle.setOnClickListener {
-            Toast.makeText(this, "Google Login not implemented yet", Toast.LENGTH_SHORT).show()
-        }
     }
 
     private fun handleLogin() {

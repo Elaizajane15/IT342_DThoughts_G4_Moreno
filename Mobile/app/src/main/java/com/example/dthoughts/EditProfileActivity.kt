@@ -1,20 +1,45 @@
 package com.example.dthoughts
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.signature.ObjectKey
 import com.example.dthoughts.databinding.ActivityEditProfileBinding
 import com.example.dthoughts.models.UpdateUserRequest
 import com.example.dthoughts.network.RetrofitClient
 import com.example.dthoughts.utils.UserPrefs
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class EditProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityEditProfileBinding
     private val apiService = RetrofitClient.apiService
+    private var avatarUri: Uri? = null
+    private var coverUri: Uri? = null
+
+    private val pickAvatar = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            avatarUri = it
+            binding.ivEditAvatar.setImageURI(it)
+        }
+    }
+
+    private val pickCover = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            coverUri = it
+            binding.ivEditCover.setImageURI(it)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,6 +49,8 @@ class EditProfileActivity : AppCompatActivity() {
         setupToolbar()
         loadCurrentData()
 
+        binding.cardAvatar.setOnClickListener { pickAvatar.launch("image/*") }
+        binding.cardCover.setOnClickListener { pickCover.launch("image/*") }
         binding.btnSave.setOnClickListener {
             saveProfile()
         }
@@ -41,6 +68,18 @@ class EditProfileActivity : AppCompatActivity() {
         binding.etFirstName.setText(user.firstName)
         binding.etLastName.setText(user.lastName)
         binding.etBio.setText(user.bio)
+
+        val baseUrl = RetrofitClient.BASE_URL.removeSuffix("/")
+        
+        if (!user.avatarUrl.isNullOrEmpty()) {
+            val avatarUrl = if (user.avatarUrl.startsWith("http")) user.avatarUrl else "$baseUrl${user.avatarUrl}"
+            Glide.with(this).load(avatarUrl).placeholder(R.drawable.ic_profile_holder).into(binding.ivEditAvatar)
+        }
+        
+        if (!user.coverImageUrl.isNullOrEmpty()) {
+            val coverUrl = if (user.coverImageUrl.startsWith("http")) user.coverImageUrl else "$baseUrl${user.coverImageUrl}"
+            Glide.with(this).load(coverUrl).placeholder(R.color.feed_surface).into(binding.ivEditCover)
+        }
     }
 
     private fun saveProfile() {
@@ -59,6 +98,47 @@ class EditProfileActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
+                // 1. Update basic info
+                val request = UpdateUserRequest(user.email, firstName, lastName, bio)
+                val response = apiService.updateUser(request)
+                
+                if (response.isSuccessful && response.body() != null) {
+                    var updatedUser = response.body()!!
+                    
+                    // 2. Upload avatar if selected
+                    avatarUri?.let { uri ->
+                        val inputStream = contentResolver.openInputStream(uri)
+                        val bytes = inputStream?.readBytes()
+                        inputStream?.close()
+                        if (bytes != null) {
+                            val body = bytes.toRequestBody("image/*".toMediaTypeOrNull())
+                            val part = MultipartBody.Part.createFormData("file", "avatar.jpg", body)
+                            val emailBody = user.email.toRequestBody("text/plain".toMediaTypeOrNull())
+                            val avatarResponse = apiService.uploadAvatar(emailBody, part)
+                            if (avatarResponse.isSuccessful && avatarResponse.body() != null) {
+                                updatedUser = avatarResponse.body()!!
+                                UserPrefs.saveUser(updatedUser) // Save immediately
+                            }
+                        }
+                    }
+
+                    // 3. Upload cover if selected
+                    coverUri?.let { uri ->
+                        val inputStream = contentResolver.openInputStream(uri)
+                        val bytes = inputStream?.readBytes()
+                        inputStream?.close()
+                        if (bytes != null) {
+                            val body = bytes.toRequestBody("image/*".toMediaTypeOrNull())
+                            val part = MultipartBody.Part.createFormData("file", "cover.jpg", body)
+                            val emailBody = user.email.toRequestBody("text/plain".toMediaTypeOrNull())
+                            val coverResponse = apiService.uploadCover(emailBody, part)
+                            if (coverResponse.isSuccessful && coverResponse.body() != null) {
+                                updatedUser = coverResponse.body()!!
+                                UserPrefs.saveUser(updatedUser) // Save immediately
+                            }
+                        }
+                    }
+
                 val request = UpdateUserRequest(user.email, firstName, lastName, bio)
                 val response = apiService.updateUser(request)
                 if (response.isSuccessful && response.body() != null) {

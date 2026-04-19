@@ -53,6 +53,49 @@ class PostDetailActivity : AppCompatActivity() {
             tvPostContent.text = postItem.content
             tvLikeCount.text = postItem.likeCount.toString()
             tvCommentCount.text = postItem.commentCount.toString()
+            
+            val currentUser = UserPrefs.getUser()
+            val isAuthor = currentUser != null && currentUser.id == postItem.userId
+            
+            btnMorePost.visibility = if (isAuthor) View.VISIBLE else View.GONE
+            btnMorePost.setOnClickListener { view ->
+                val popup = androidx.appcompat.widget.PopupMenu(this@PostDetailActivity, view)
+                popup.menu.add("Edit")
+                popup.menu.add("Delete")
+                popup.setOnMenuItemClickListener { menuItem ->
+                    when (menuItem.title) {
+                        "Edit" -> {
+                            showEditPostDialog(postItem)
+                            true
+                        }
+                        "Delete" -> {
+                            showDeletePostConfirmation(postItem)
+                            true
+                        }
+                        else -> false
+                    }
+                }
+                popup.show()
+            }
+
+            if (!postItem.userAvatarUrl.isNullOrEmpty()) {
+                val avatarUrl = if (postItem.userAvatarUrl.startsWith("http")) {
+                    postItem.userAvatarUrl
+                } else {
+                    "${RetrofitClient.BASE_URL.removeSuffix("/")}${postItem.userAvatarUrl}"
+                }
+                Glide.with(this@PostDetailActivity)
+                    .load(avatarUrl)
+                    .placeholder(R.drawable.ic_profile_holder)
+                    .into(ivAvatar)
+                tvAvatarInitial.visibility = View.GONE
+                ivAvatar.visibility = View.VISIBLE
+            } else {
+                tvAvatarInitial.text = postItem.userName?.take(1)?.uppercase() ?: "D"
+                tvAvatarInitial.visibility = View.VISIBLE
+                ivAvatar.visibility = View.GONE
+            }
+            
             tvAvatarInitial.text = postItem.userName?.take(1)?.uppercase() ?: "D"
             
             if (postItem.mood != null) {
@@ -85,7 +128,11 @@ class PostDetailActivity : AppCompatActivity() {
         }
 
         // Setup comments recycler
-        commentAdapter = CommentAdapter(emptyList())
+        commentAdapter = CommentAdapter(
+            comments = emptyList(),
+            onEditClick = { comment -> showEditCommentDialog(comment) },
+            onDeleteClick = { comment -> showDeleteConfirmation(comment) }
+        )
         binding.rvComments.layoutManager = LinearLayoutManager(this)
         binding.rvComments.adapter = commentAdapter
 
@@ -150,6 +197,133 @@ class PostDetailActivity : AppCompatActivity() {
                     binding.postContent.ivLike.alpha = if (it.liked) 1.0f else 0.6f
                     binding.postContent.ivLike.setColorFilter(if (it.liked) android.graphics.Color.RED else android.graphics.Color.GRAY)
                 }
+            }
+        }
+    }
+
+    private fun showEditCommentDialog(comment: com.example.dthoughts.models.Comment) {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("Edit Comment")
+        val input = android.widget.EditText(this)
+        input.setText(comment.content)
+        builder.setView(input)
+
+        builder.setPositiveButton("Save") { _, _ ->
+            val newContent = input.text.toString().trim()
+            if (newContent.isNotEmpty()) {
+                comment.id?.let { updateComment(it, newContent) }
+            }
+        }
+        builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+        builder.show()
+    }
+
+    private fun showDeleteConfirmation(comment: com.example.dthoughts.models.Comment) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Delete Comment")
+            .setMessage("Are you sure you want to delete this comment?")
+            .setPositiveButton("Delete") { _, _ ->
+                comment.id?.let { deleteComment(it) }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun updateComment(commentId: Long, content: String) {
+        val user = UserPrefs.getUser() ?: return
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.apiService.updateComment(
+                    commentId, 
+                    com.example.dthoughts.models.CreateCommentRequest(user.id, content)
+                )
+                if (response.isSuccessful) {
+                    loadComments()
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    Toast.makeText(this@PostDetailActivity, "Failed to update comment: $errorBody", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@PostDetailActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun deleteComment(commentId: Long) {
+        val user = UserPrefs.getUser() ?: return
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.apiService.deleteComment(commentId, user.id)
+                if (response.isSuccessful) {
+                    loadComments()
+                    // Update local post comment count
+                    post = post!!.copy(commentCount = post!!.commentCount - 1)
+                    binding.postContent.tvCommentCount.text = post!!.commentCount.toString()
+                } else {
+                    Toast.makeText(this@PostDetailActivity, "Failed to delete comment", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@PostDetailActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showEditPostDialog(post: Post) {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("Edit Post")
+        val input = android.widget.EditText(this)
+        input.setText(post.content)
+        builder.setView(input)
+
+        builder.setPositiveButton("Save") { _, _ ->
+            val newContent = input.text.toString().trim()
+            if (newContent.isNotEmpty()) {
+                post.id?.let { updatePost(it, newContent) }
+            }
+        }
+        builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
+        builder.show()
+    }
+
+    private fun showDeletePostConfirmation(post: Post) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Delete Post")
+            .setMessage("Are you sure you want to delete this post?")
+            .setPositiveButton("Delete") { _, _ ->
+                post.id?.let { deletePost(it) }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun updatePost(postId: Long, content: String) {
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.apiService.updatePost(postId, mapOf("content" to content))
+                if (response.isSuccessful) {
+                    binding.postContent.tvPostContent.text = content
+                    this@PostDetailActivity.post = this@PostDetailActivity.post?.copy(content = content)
+                } else {
+                    Toast.makeText(this@PostDetailActivity, "Failed to update post", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@PostDetailActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun deletePost(postId: Long) {
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.apiService.deletePost(postId)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@PostDetailActivity, "Post deleted", Toast.LENGTH_SHORT).show()
+                    finish()
+                } else {
+                    Toast.makeText(this@PostDetailActivity, "Failed to delete post", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@PostDetailActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }

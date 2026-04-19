@@ -11,6 +11,8 @@ data class Post(
     val likeCount: Long = 0,
     val commentCount: Long = 0,
     val isLiked: Boolean = false,
+    val isSaved: Boolean = false,
+    val saveCount: Long = 0,
     val createdAt: String? = null
 )
 

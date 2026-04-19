@@ -18,6 +18,7 @@ import com.example.dthoughts.repository.PostRepository
 import com.example.dthoughts.utils.UserPrefs
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
+import kotlin.jvm.java
 
 class CreatePostActivity : AppCompatActivity() {
 
@@ -55,6 +56,29 @@ class CreatePostActivity : AppCompatActivity() {
         setupMoods()
         setupListeners()
         updateCharCount(0)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        val draftId = intent?.getLongExtra("DRAFT_ID", -1) ?: -1
+        if (draftId != -1L) {
+            val content = intent?.getStringExtra("DRAFT_CONTENT")
+            val title = intent?.getStringExtra("DRAFT_TITLE")
+            val mood = intent?.getStringExtra("DRAFT_MOOD")
+            
+            binding.etPostContent.setText(content)
+            // If you have a title field, set it here
+            // If mood is provided, select the corresponding chip
+            if (mood != null) {
+                for (i in 0 until binding.moodChipGroup.childCount) {
+                    val chip = binding.moodChipGroup.getChildAt(i) as Chip
+                    if (chip.text.toString().contains(mood, ignoreCase = true)) {
+                        chip.isChecked = true
+                        break
+                    }
+                }
+            }
+        }
     }
 
     private fun setupToolbar() {
@@ -64,7 +88,7 @@ class CreatePostActivity : AppCompatActivity() {
             val intent = Intent(this, FeedActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             startActivity(intent)
-            finish() 
+            finish()
         }
     }
 
@@ -114,7 +138,7 @@ class CreatePostActivity : AppCompatActivity() {
             val intent = Intent(this, FeedActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             startActivity(intent)
-            finish() 
+            finish()
         }
 
         binding.btnPublish.setOnClickListener { publishPost() }

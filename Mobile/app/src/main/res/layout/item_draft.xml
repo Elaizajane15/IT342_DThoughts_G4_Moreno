@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/item_draft.xml -->
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/white"
+    app:strokeColor="@color/border_amber"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Amber top accent line -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:background="@drawable/bg_accent_line" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Title + mood row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="top"
+                android:layout_marginBottom="14dp">
+
+                <!-- Title + timestamp -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginEnd="10dp">
+
+                    <TextView
+                        android:id="@+id/tv_draft_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textColor="@color/espresso"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="3dp"
+                        tools:text="Sacred Mornings" />
+
+                    <TextView
+                        android:id="@+id/tv_draft_saved_at"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="10.5sp"
+                        android:textColor="@color/muted"
+                        tools:text="Last saved: Apr 18, 11:32 PM" />
+
+                </LinearLayout>
+
+                <!-- Mood chip -->
+                <TextView
+                    android:id="@+id/tv_draft_mood"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_mood_chip"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
+                    android:textSize="11.5sp"
+                    android:textColor="@color/muted"
+                    android:maxLines="1"
+                    tools:text="😌 Peaceful" />
+
+            </LinearLayout>
+
+            <!-- Draft content preview -->
+            <TextView
+                android:id="@+id/tv_draft_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_draft_content"
+                android:padding="14dp"
+                android:textSize="13.5sp"
+                android:textColor="@color/espresso"
+                android:lineSpacingExtra="4dp"
+                android:ellipsize="end"
+                android:maxLines="4"
+                android:layout_marginBottom="18dp"
+                tools:text="There's something about the quiet hours of the morning that feels sacred — before the world demands anything of you…" />
+
+            <!-- Action buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <!-- Continue Writing -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_continue_writing"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:text="@string/continue_writing"
+                    android:textSize="12.5sp"
+                    android:textColor="@color/muted"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:layout_marginEnd="10dp"
+                    app:backgroundTint="@color/modal_bg"
+                    app:strokeColor="@color/border_amber"
+                    app:strokeWidth="2dp"
+                    app:cornerRadius="12dp" />
+
+                <!-- Delete Draft -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_delete_draft"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:text="@string/delete_draft"
+                    android:textSize="12.5sp"
+                    android:textColor="@color/rose"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:backgroundTint="@color/rose_pale"
+                    app:strokeColor="@color/error_border"
+                    app:strokeWidth="2dp"
+                    app:cornerRadius="12dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

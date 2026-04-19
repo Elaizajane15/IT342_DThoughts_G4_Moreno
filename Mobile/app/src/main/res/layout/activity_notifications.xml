@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/activity_notifications.xml -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/warm_ivory">
+
+    <!-- ══ APP BAR ══ -->
+    <LinearLayout
+        android:id="@+id/layout_appbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/warm_ivory"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="10dp"
+        android:elevation="2dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Title row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="10dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/notif_title"
+                    android:textSize="22sp"
+                    android:textColor="@color/espresso"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="2dp" />
+
+                <TextView
+                    android:id="@+id/tv_unread_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textColor="@color/muted"
+                    android:visibility="gone"
+                    tools:text="3 unread notifications"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+            <!-- Mark all read -->
+            <TextView
+                android:id="@+id/tv_mark_all"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mark_all_read"
+                android:textSize="12sp"
+                android:textColor="@color/amber_dark"
+                android:padding="6dp"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
+        <!-- Filter pills row -->
+        <LinearLayout
+            android:id="@+id/layout_filter"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:background="@drawable/bg_tab_container"
+            android:padding="3dp">
+
+            <!-- All pill -->
+            <TextView
+                android:id="@+id/pill_all"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/filter_all"
+                android:gravity="center"
+                android:textSize="12.5sp"
+                android:textColor="@color/espresso"
+                android:textStyle="bold"
+                android:background="@drawable/bg_tab_item_active" />
+
+            <!-- Unread pill -->
+            <LinearLayout
+                android:id="@+id/pill_unread"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="@android:color/transparent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/filter_unread"
+                    android:textSize="12.5sp"
+                    android:textColor="@color/muted_soft"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/tv_unread_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_notif_badge"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
+                    android:paddingTop="1dp"
+                    android:paddingBottom="1dp"
+                    android:textSize="@dimen/text_size_label"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    tools:text="3"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Divider under appbar -->
+    <View
+        android:id="@+id/divider_header"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/border_amber"
+        app:layout_constraintTop_toBottomOf="@id/layout_appbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ══ EMPTY STATE ══ -->
+    <LinearLayout
+        android:id="@+id/layout_empty"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingTop="64dp"
+        android:paddingBottom="64dp"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:visibility="gone"
+        tools:visibility="visible"
+        app:layout_constraintTop_toBottomOf="@id/divider_header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔔"
+            android:textSize="44sp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="14dp" />
+
+        <TextView
+            android:id="@+id/tv_empty_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:textSize="14sp"
+            android:textColor="@color/muted"
+            android:gravity="center"
+            tools:text="No notifications yet." />
+
+    </LinearLayout>
+
+    <!-- ══ NOTIFICATION LIST ══ -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/divider_header"
+        app:layout_constraintBottom_toTopOf="@id/bottom_nav"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_notifications"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_notification"
+            tools:itemCount="5" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- ══ BOTTOM NAVIGATION ══ -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_nav"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        app:menu="@menu/bottom_nav_menu"
+        app:itemIconTint="@color/nav_icon_selector"
+        app:itemTextColor="@color/nav_text_selector"
+        app:labelVisibilityMode="labeled"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

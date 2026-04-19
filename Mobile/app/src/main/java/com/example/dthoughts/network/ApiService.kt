@@ -45,6 +45,12 @@ interface ApiService {
     @PUT("/api/user/me")
     suspend fun updateUser(@Body request: UpdateUserRequest): Response<User>
 
+    @GET("/api/user/{id}/liked-posts")
+    suspend fun getLikedPosts(@Path("id") id: Long): Response<List<Post>>
+
+    @GET("/api/user/{id}/saved-posts")
+    suspend fun getSavedPosts(@Path("id") id: Long): Response<List<Post>>
+
     // Avatar upload
     @Multipart
     @POST("/api/user/me/avatar")
@@ -113,6 +119,15 @@ interface ApiService {
         @Body request: Map<String, Long>
     ): Response<LikeStatus>
 
+    @DELETE("/api/posts/{id}")
+    suspend fun deletePost(@Path("id") id: Long): Response<Unit>
+
+    @PUT("/api/posts/{id}")
+    suspend fun updatePost(
+        @Path("id") id: Long,
+        @Body request: Map<String, String>
+    ): Response<Post>
+
     // Comment endpoints
     @GET("/api/posts/{postId}/comments")
     suspend fun getComments(@Path("postId") postId: Long): Response<List<Comment>>
@@ -122,6 +137,24 @@ interface ApiService {
         @Path("postId") postId: Long,
         @Body request: CreateCommentRequest
     ): Response<Comment>
+
+    @DELETE("/api/comments/{commentId}")
+    suspend fun deleteComment(
+        @Path("commentId") commentId: Long,
+        @Query("userId") userId: Long
+    ): Response<Unit>
+
+    @PUT("/api/comments/{commentId}")
+    suspend fun updateComment(
+        @Path("commentId") commentId: Long,
+        @Body request: CreateCommentRequest
+    ): Response<Comment>
+
+    @POST("/api/posts/{id}/saves/toggle")
+    suspend fun toggleSave(
+        @Path("id") id: Long,
+        @Body request: ToggleSaveRequest
+    ): Response<SaveStatus>
 }
 
 data class LikeStatus(
@@ -137,4 +170,13 @@ data class FollowStatus(
 
 data class ToggleFollowRequest(
     val followerId: Long?
+)
+
+data class SaveStatus(
+    val saved: Boolean,
+    val count: Long
+)
+
+data class ToggleSaveRequest(
+    val userId: Long
 )
