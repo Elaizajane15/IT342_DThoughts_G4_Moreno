@@ -32,10 +32,16 @@ class GuestFeedActivity : AppCompatActivity() {
             posts = allPosts,
             isLoggedIn = false,
             onLikeClick = { showLoginPrompt() },
-            onCommentClick = { showLoginPrompt() },
+            onCommentClick = { post -> openPostDetail(post) },
             onShareClick = { post -> sharePost(post) },
-            onPostClick = { showLoginPrompt() },
-            onUserClick = { showLoginPrompt() }
+            onPostClick = { post -> openPostDetail(post) },
+            onUserClick = { post ->
+                post.userId?.let { uid ->
+                    val intent = Intent(this@GuestFeedActivity, ProfileActivity::class.java)
+                    intent.putExtra(ProfileActivity.EXTRA_USER_ID, uid.toLong())
+                    startActivity(intent)
+                } ?: showLoginPrompt()
+            }
         )
         binding.rvPosts.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
         binding.rvPosts.adapter = postAdapter
@@ -76,6 +82,12 @@ class GuestFeedActivity : AppCompatActivity() {
     private fun showLoginPrompt() {
         Toast.makeText(this, getString(R.string.login_prompt), Toast.LENGTH_SHORT).show()
         startActivity(Intent(this, LoginActivity::class.java))
+    }
+
+    private fun openPostDetail(post: Post) {
+        val intent = Intent(this, PostDetailActivity::class.java)
+        intent.putExtra("POST_JSON", com.google.gson.Gson().toJson(post))
+        startActivity(intent)
     }
 
     private fun sharePost(post: Post) {

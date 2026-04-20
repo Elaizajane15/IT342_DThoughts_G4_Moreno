@@ -85,6 +85,7 @@ class DraftsActivity : AppCompatActivity() {
             onDeleteClick = { draft ->
                 val index = allDrafts.indexOf(draft)
                 if (index != -1) {
+                    com.example.dthoughts.utils.DraftManager.deleteDraft(draft.id)
                     allDrafts.removeAt(index)
                     draftAdapter.notifyItemRemoved(index)
                     updateEmptyState()
@@ -98,27 +99,11 @@ class DraftsActivity : AppCompatActivity() {
     private fun loadDrafts() {
         binding.tvLoading.visibility = View.VISIBLE
         
-        // Mocking drafts
-        val mockDrafts = listOf(
-            Draft(
-                id = 1,
-                title = "Sacred Mornings",
-                content = "There's something about the quiet hours of the morning that feels sacred — before the world demands anything of you...",
-                mood = "😌 Peaceful",
-                savedAt = "Apr 18, 11:32 PM"
-            ),
-            Draft(
-                id = 2,
-                title = "Metropolitan Rush",
-                content = "The city never truly sleeps, it only blinks. Watching the neon lights reflect in the puddles...",
-                mood = "🏙️ Reflective",
-                savedAt = "Apr 17, 09:15 PM"
-            )
-        )
+        val savedDrafts = com.example.dthoughts.utils.DraftManager.getDrafts()
 
         binding.tvLoading.visibility = View.GONE
         allDrafts.clear()
-        allDrafts.addAll(mockDrafts)
+        allDrafts.addAll(savedDrafts)
         draftAdapter.notifyDataSetChanged()
         updateEmptyState()
     }

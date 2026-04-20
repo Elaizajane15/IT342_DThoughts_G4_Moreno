@@ -45,7 +45,7 @@
                 android:id="@+id/iv_actor_avatar"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
-                android:src="@drawable/avatar_border"
+                android:src="@drawable/ic_profile_holder"
                 app:civ_border_width="0dp" />
 
             <!-- Type icon badge -->

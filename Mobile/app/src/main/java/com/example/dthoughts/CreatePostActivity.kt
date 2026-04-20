@@ -144,7 +144,13 @@ class CreatePostActivity : AppCompatActivity() {
         binding.btnPublish.setOnClickListener { publishPost() }
 
         binding.btnSaveDraft.setOnClickListener {
-            Toast.makeText(this, "Draft saved locally (Simulated)", Toast.LENGTH_SHORT).show()
+            val content = binding.etPostContent.text.toString().trim()
+            if (content.isNotEmpty()) {
+                // simple title extract
+                val title = if (content.length > 20) content.substring(0, 20) + "..." else content
+                com.example.dthoughts.utils.DraftManager.saveDraft(content, title, selectedMood)
+                Toast.makeText(this, "Thought saved to Drafts", Toast.LENGTH_SHORT).show()
+            }
             finish()
         }
     }

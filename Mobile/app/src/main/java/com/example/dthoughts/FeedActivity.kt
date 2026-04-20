@@ -5,6 +5,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import android.os.Build
+import android.Manifest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -30,6 +32,12 @@ class FeedActivity : AppCompatActivity() {
     private var isForYouTab = true
     private var currentPage = 0
     private val allPosts = mutableListOf<Post>()
+    private var pollJob: kotlinx.coroutines.Job? = null
+    private var lastUnreadCount = -1
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
 
     private val createPostLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -65,6 +73,10 @@ class FeedActivity : AppCompatActivity() {
                 backCallback.isEnabled = false
             }
         })
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
     }
 
     override fun onResume() {
@@ -76,6 +88,46 @@ class FeedActivity : AppCompatActivity() {
             setupRecyclerView() // Re-init adapter to update isLoggedIn status
         } else {
             updateUserUI()
+        }
+        
+        pollJob = lifecycleScope.launch {
+            while(true) {
+                updateNotificationBadge()
+                kotlinx.coroutines.delay(10000) // Poll every 10 seconds
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        pollJob?.cancel()
+    }
+
+    private fun updateNotificationBadge() {
+        val user = currentUser ?: return
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.apiService.getNotifications(user.id)
+                if (response.isSuccessful && response.body() != null) {
+                    val unreadNotifications = response.body()!!.filter { !it.isRead }
+                    val unreadCount = unreadNotifications.size
+                    
+                    if (lastUnreadCount != -1 && unreadCount > lastUnreadCount) {
+                        // Notifications are now silently synced to the Notification tab
+                    }
+                    lastUnreadCount = unreadCount
+
+                    val badge = binding.bottomNav.getOrCreateBadge(R.id.nav_notifications)
+                    if (unreadCount > 0) {
+                        badge.isVisible = true
+                        badge.number = unreadCount
+                        badge.backgroundColor = getColor(R.color.rose)
+                        badge.badgeTextColor = getColor(R.color.white)
+                    } else {
+                        badge.isVisible = false
+                    }
+                }
+            } catch (e: Exception) {}
         }
     }
 
@@ -237,7 +289,7 @@ class FeedActivity : AppCompatActivity() {
             onUserClick = { post ->
                 post.userId?.let { uid ->
                     val intent = Intent(this@FeedActivity, ProfileActivity::class.java)
-                    intent.putExtra("USER_ID", uid)
+                    intent.putExtra(ProfileActivity.EXTRA_USER_ID, uid.toLong())
                     startActivity(intent)
                 }
             }

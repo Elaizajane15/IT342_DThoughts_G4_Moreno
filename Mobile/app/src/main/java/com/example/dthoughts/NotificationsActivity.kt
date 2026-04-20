@@ -9,6 +9,10 @@ import com.example.dthoughts.adapters.NotificationAdapter
 import com.example.dthoughts.databinding.ActivityNotificationsBinding
 import com.example.dthoughts.models.Notification
 import com.example.dthoughts.utils.UserPrefs
+import androidx.lifecycle.lifecycleScope
+import com.example.dthoughts.network.RetrofitClient
+import android.widget.Toast
+import kotlinx.coroutines.launch
 
 class NotificationsActivity : AppCompatActivity() {
 
@@ -77,6 +81,11 @@ class NotificationsActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        loadNotifications()
+    }
+
     private fun filterNotifications(isAll: Boolean) {
         currentFilterIsAll = isAll
         val filteredList = if (isAll) {
@@ -95,10 +104,17 @@ class NotificationsActivity : AppCompatActivity() {
     }
 
     private fun markAllAsRead() {
+        val user = UserPrefs.getUser() ?: return
+        
         allNotifications.forEach { it.isRead = true }
         filterNotifications(currentFilterIsAll)
         updateUnreadUI()
-        // Here you would also call an API to mark all as read on the server
+        
+        lifecycleScope.launch {
+            try {
+                RetrofitClient.apiService.markAllNotificationsAsRead(user.id)
+            } catch (e: Exception) {}
+        }
     }
 
     private fun updateFilterPills(isAll: Boolean) {
@@ -134,11 +150,11 @@ class NotificationsActivity : AppCompatActivity() {
         
         when (notification.type) {
             "LIKE", "COMMENT", "POST" -> {
-                // Navigate to PostDetailActivity (if it exists)
-                // For now, let's just log or show a toast if we don't have the activity yet
-                // val intent = Intent(this, PostDetailActivity::class.java)
-                // intent.putExtra("POST_ID", notification.targetId)
-                // startActivity(intent)
+                if (notification.targetId != null) {
+                    val intent = Intent(this, PostDetailActivity::class.java)
+                    intent.putExtra("POST_ID", notification.targetId)
+                    startActivity(intent)
+                }
             }
             "FOLLOW" -> {
                 val intent = Intent(this, ProfileActivity::class.java)
@@ -149,29 +165,43 @@ class NotificationsActivity : AppCompatActivity() {
     }
 
     private fun markAsRead(notification: Notification) {
+        if (notification.isRead) return
+        
         notification.isRead = true
         filterNotifications(currentFilterIsAll)
         updateUnreadUI()
-        // API call to mark single notification as read
+        
+        lifecycleScope.launch {
+            try {
+                RetrofitClient.apiService.markNotificationAsRead(notification.id)
+            } catch (e: Exception) {}
+        }
     }
 
     private fun loadNotifications() {
+        val user = UserPrefs.getUser() ?: return
         binding.swipeRefresh.isRefreshing = true
-        // Mock data for now or API call
-        allNotifications = listOf(
-            Notification(1, "LIKE", 101, "Karla Manalo", null, 1, "Sometimes the best thing you can do is sit quietly...", "2m ago", false),
-            Notification(2, "COMMENT", 102, "John Doe", null, 1, "I totally agree with this!", "1h ago", true),
-            Notification(3, "FOLLOW", 103, "Alice Smith", null, null, null, "3h ago", false),
-            Notification(4, "POST", 104, "DThoughts Official", null, 2, "Welcome to the new version of DThoughts!", "5h ago", false)
-        )
         
-        binding.swipeRefresh.isRefreshing = false
-        filterNotifications(currentFilterIsAll)
-        updateUnreadUI()
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.apiService.getNotifications(user.id)
+                if (response.isSuccessful && response.body() != null) {
+                    allNotifications = response.body()!!
+                    filterNotifications(currentFilterIsAll)
+                    updateUnreadUI()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@NotificationsActivity, "Error loading notifications", Toast.LENGTH_SHORT).show()
+            } finally {
+                binding.swipeRefresh.isRefreshing = false
+            }
+        }
     }
 
     private fun updateUnreadUI() {
         val unreadCount = allNotifications.count { !it.isRead }
+        
+        // Update the list header text
         if (unreadCount > 0) {
             binding.tvUnreadCount.visibility = View.VISIBLE
             binding.tvUnreadCount.text = "$unreadCount unread notifications"
@@ -182,6 +212,17 @@ class NotificationsActivity : AppCompatActivity() {
             binding.tvUnreadCount.visibility = View.GONE
             binding.tvMarkAll.visibility = View.GONE
             binding.tvUnreadBadge.visibility = View.GONE
+        }
+
+        // Update the Bottom Navigation Badge
+        val badge = binding.bottomNav.getOrCreateBadge(R.id.nav_notifications)
+        if (unreadCount > 0) {
+            badge.isVisible = true
+            badge.number = unreadCount
+            badge.backgroundColor = getColor(R.color.rose)
+            badge.badgeTextColor = getColor(R.color.white)
+        } else {
+            badge.isVisible = false
         }
     }
 }

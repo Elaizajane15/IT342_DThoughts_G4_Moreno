@@ -81,6 +81,9 @@ interface ApiService {
     ): Response<FollowStatus>
 
     // Post endpoints
+    @GET("/api/posts/{id}")
+    suspend fun getPostById(@Path("id") id: Long): Response<Post>
+
     @GET("/api/posts")
     suspend fun getPosts(
         @Query("page") page: Int = 0,
@@ -155,6 +158,19 @@ interface ApiService {
         @Path("id") id: Long,
         @Body request: ToggleSaveRequest
     ): Response<SaveStatus>
+
+    // Notification endpoints
+    @GET("/api/notifications/user/{userId}")
+    suspend fun getNotifications(@Path("userId") userId: Long): Response<List<com.example.dthoughts.models.Notification>>
+
+    @PUT("/api/notifications/{id}/read")
+    suspend fun markNotificationAsRead(@Path("id") id: Long): Response<Unit>
+
+    @PUT("/api/notifications/user/{userId}/read-all")
+    suspend fun markAllNotificationsAsRead(@Path("userId") userId: Long): Response<Unit>
+
+    @POST("/api/notifications")
+    suspend fun createNotification(@Body notification: com.example.dthoughts.models.Notification): Response<com.example.dthoughts.models.Notification>
 }
 
 data class LikeStatus(

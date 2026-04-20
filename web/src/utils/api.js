@@ -70,7 +70,7 @@ export const oauthApi = {
 
 export const userApi = {
   async getById(userId) {
-    const res = await fetch(`${BASE_URL}/api/user/${encodeURIComponent(userId)}`, {
+    const res = await fetch(`${BASE_URL}/api/users/${encodeURIComponent(userId)}`, {
       method: 'GET',
       credentials: 'include',
     })
@@ -80,7 +80,7 @@ export const userApi = {
   },
   async getFollowStatus(followingId, followerId) {
     const qs = followerId != null ? `?followerId=${encodeURIComponent(followerId)}` : ''
-    const res = await fetch(`${BASE_URL}/api/user/${encodeURIComponent(followingId)}/follow${qs}`, {
+    const res = await fetch(`${BASE_URL}/api/users/${encodeURIComponent(followingId)}/follow${qs}`, {
       method: 'GET',
       credentials: 'include',
     })
@@ -93,7 +93,7 @@ export const userApi = {
     }
   },
   async toggleFollow(followingId, followerId) {
-    const res = await fetch(`${BASE_URL}/api/user/${encodeURIComponent(followingId)}/follow/toggle`, {
+    const res = await fetch(`${BASE_URL}/api/users/${encodeURIComponent(followingId)}/follow/toggle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -111,7 +111,7 @@ export const userApi = {
     const qs = new URLSearchParams()
     if (q != null) qs.set('q', String(q))
     qs.set('limit', String(limit))
-    const res = await fetch(`${BASE_URL}/api/user/search?${qs.toString()}`, {
+    const res = await fetch(`${BASE_URL}/api/users/search?${qs.toString()}`, {
       method: 'GET',
       credentials: 'include',
     })
@@ -120,7 +120,7 @@ export const userApi = {
     return Array.isArray(data) ? data : []
   },
   async getLikedPosts(userId) {
-    const res = await fetch(`${BASE_URL}/api/user/${encodeURIComponent(userId)}/liked-posts`, {
+    const res = await fetch(`${BASE_URL}/api/users/${encodeURIComponent(userId)}/liked-posts`, {
       method: 'GET',
       credentials: 'include',
     })
@@ -129,7 +129,7 @@ export const userApi = {
     return Array.isArray(data) ? data.map(normalizePost).filter(Boolean) : []
   },
   async getSavedPosts(userId) {
-    const res = await fetch(`${BASE_URL}/api/user/${encodeURIComponent(userId)}/saved-posts`, {
+    const res = await fetch(`${BASE_URL}/api/users/${encodeURIComponent(userId)}/saved-posts`, {
       method: 'GET',
       credentials: 'include',
     })
@@ -160,7 +160,7 @@ export const userApi = {
       coverImageUrl: updates.coverImageUrl,
       birthDate: updates.birthDate,
     }
-    const res = await fetch(`${BASE_URL}/api/user/me`, {
+    const res = await fetch(`${BASE_URL}/api/users/me`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -435,7 +435,7 @@ export const filesApi = {
 
     const form = new FormData()
     form.append('file', file)
-    const res = await fetch(`${BASE_URL}/api/user/me/avatar?email=${encodeURIComponent(u.email)}`, {
+    const res = await fetch(`${BASE_URL}/api/users/me/avatar?email=${encodeURIComponent(u.email)}`, {
       method: 'POST',
       credentials: 'include',
       body: form,
@@ -453,7 +453,7 @@ export const filesApi = {
 
     const form = new FormData()
     form.append('file', file)
-    const res = await fetch(`${BASE_URL}/api/user/me/cover?email=${encodeURIComponent(u.email)}`, {
+    const res = await fetch(`${BASE_URL}/api/users/me/cover?email=${encodeURIComponent(u.email)}`, {
       method: 'POST',
       credentials: 'include',
       body: form,

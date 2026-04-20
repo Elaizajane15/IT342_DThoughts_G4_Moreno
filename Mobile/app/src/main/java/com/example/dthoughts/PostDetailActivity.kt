@@ -30,15 +30,40 @@ class PostDetailActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val postJson = intent.getStringExtra("POST_JSON")
-        post = Gson().fromJson(postJson, Post::class.java)
-
-        if (post == null) {
-            finish()
-            return
+        if (!postJson.isNullOrEmpty()) {
+            post = Gson().fromJson(postJson, Post::class.java)
         }
 
-        setupUI()
-        loadComments()
+        val postId = intent.getLongExtra("POST_ID", -1L)
+        
+        if (post == null && postId != -1L) {
+            loadPostById(postId)
+        } else if (post == null) {
+            finish()
+            return
+        } else {
+            setupUI()
+            loadComments()
+        }
+    }
+
+    private fun loadPostById(postId: Long) {
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.apiService.getPostById(postId)
+                if (response.isSuccessful && response.body() != null) {
+                    post = response.body()
+                    setupUI()
+                    loadComments()
+                } else {
+                    Toast.makeText(this@PostDetailActivity, "Post not found", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@PostDetailActivity, "Error loading post", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }
     }
 
     private fun setupUI() {

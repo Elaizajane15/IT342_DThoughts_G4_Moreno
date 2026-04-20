@@ -61,7 +61,7 @@ class NotificationAdapter(
                     typeIcon = "💬"
                     typeTextSuffix = context.getString(R.string.notif_commented)
                     tvPostPreview.visibility = View.VISIBLE
-                    tvPostPreview.text = notification.previewText
+                    tvPostPreview.text = notification.message ?: notification.previewText
                 }
                 "FOLLOW" -> {
                     typeIcon = "👤"

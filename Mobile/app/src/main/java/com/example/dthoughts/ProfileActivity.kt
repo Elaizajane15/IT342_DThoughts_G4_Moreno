@@ -43,7 +43,17 @@ class ProfileActivity : AppCompatActivity() {
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        userId = intent.getLongExtra(EXTRA_USER_ID, -1)
+        // Try getting as Long first, then fallback to Int if not found
+        userId = intent.getLongExtra(EXTRA_USER_ID, -1L)
+        if (userId == -1L) {
+            userId = intent.getIntExtra(EXTRA_USER_ID, -1).toLong()
+        }
+
+        val currentUser = UserPrefs.getUser()
+        if (currentUser == null) {
+            binding.bottomNav.visibility = View.GONE
+            binding.fabCreate.visibility = View.GONE
+        }
 
         setupToolbar()
         setupRecyclerView()
@@ -56,7 +66,11 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         binding.btnFollow.setOnClickListener {
-            toggleFollow()
+            if (UserPrefs.isLoggedIn()) {
+                toggleFollow()
+            } else {
+                showLoginPrompt()
+            }
         }
 
         binding.fabCreate.setOnClickListener {
@@ -64,6 +78,11 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         setupBottomNavigation()
+    }
+
+    private fun showLoginPrompt() {
+        Toast.makeText(this, "Please login to perform this action", Toast.LENGTH_SHORT).show()
+        startActivity(Intent(this, LoginActivity::class.java))
     }
 
     private fun setupBottomNavigation() {
@@ -99,6 +118,28 @@ class ProfileActivity : AppCompatActivity() {
         super.onResume()
         if (userId != -1L) {
             loadUserProfile()
+        }
+        updateNotificationBadge()
+    }
+
+    private fun updateNotificationBadge() {
+        val user = UserPrefs.getUser() ?: return
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.apiService.getNotifications(user.id)
+                if (response.isSuccessful && response.body() != null) {
+                    val unreadCount = response.body()!!.count { !it.isRead }
+                    val badge = binding.bottomNav.getOrCreateBadge(R.id.nav_notifications)
+                    if (unreadCount > 0) {
+                        badge.isVisible = true
+                        badge.number = unreadCount
+                        badge.backgroundColor = getColor(R.color.rose)
+                        badge.badgeTextColor = getColor(R.color.white)
+                    } else {
+                        badge.isVisible = false
+                    }
+                }
+            } catch (e: Exception) {}
         }
     }
 
@@ -156,13 +197,17 @@ class ProfileActivity : AppCompatActivity() {
             onShareClick = { post -> sharePost(post) },
             onPostClick = { post -> openPostDetail(post) },
             onSaveClick = { post ->
-                currentUser?.let { user ->
-                    lifecycleScope.launch {
-                        val result = postRepository.toggleSave(post.id ?: 0, user.id)
-                        if (result.isSuccess) {
-                            reloadCurrentTab()
+                if (UserPrefs.isLoggedIn()) {
+                    currentUser?.let { user ->
+                        lifecycleScope.launch {
+                            val result = postRepository.toggleSave(post.id ?: 0, user.id)
+                            if (result.isSuccess) {
+                                reloadCurrentTab()
+                            }
                         }
                     }
+                } else {
+                    showLoginPrompt()
                 }
             },
             onEditClick = { post -> showEditPostDialog(post) },
@@ -352,8 +397,9 @@ class ProfileActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body() != null) {
                     val status = response.body()!!
                     isFollowing = status.isFollowing
-                    binding.tvFollowerCountCard.text = status.followerCount.toString()
                     updateFollowButton()
+                    // Update follower count immediately
+                    binding.tvFollowerCountCard.text = status.followerCount.toString()
                 }
             } catch (e: Exception) {
                 Toast.makeText(this@ProfileActivity, "Follow action failed", Toast.LENGTH_SHORT).show()
@@ -364,7 +410,19 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun updateFollowButton() {
-        binding.btnFollow.text = if (isFollowing) "Unfollow" else "Follow"
+        if (isFollowing) {
+            binding.btnFollow.text = "✓ Following"
+            binding.btnFollow.setBackgroundColor(getColor(R.color.amber_pale))
+            binding.btnFollow.setTextColor(getColor(R.color.espresso))
+            // Using MaterialButton's stroke methods
+            binding.btnFollow.strokeWidth = (1 * resources.displayMetrics.density).toInt()
+            binding.btnFollow.setStrokeColorResource(R.color.divider_light)
+        } else {
+            binding.btnFollow.text = "Follow"
+            binding.btnFollow.setBackgroundColor(getColor(R.color.espresso))
+            binding.btnFollow.setTextColor(getColor(R.color.white))
+            binding.btnFollow.strokeWidth = 0
+        }
     }
 
     private fun setupStatsClickListeners() {

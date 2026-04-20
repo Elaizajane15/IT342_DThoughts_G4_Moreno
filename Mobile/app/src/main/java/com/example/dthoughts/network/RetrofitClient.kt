@@ -9,7 +9,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    const val BASE_URL = "http://10.0.2.2:8080"  // For emulator
+    // const val BASE_URL = "http://10.0.2.2:8080"  // For emulator
+    // Use your computer's IP address if using a real device, e.g. "http://192.168.1.5:8080"
+    const val BASE_URL = "http://10.0.2.2:8080/"
 
     private val authInterceptor = Interceptor { chain ->
         val original = chain.request()
@@ -28,9 +30,9 @@ object RetrofitClient {
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         })
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(10, TimeUnit.SECONDS) // Reduced from 30s to 10s for faster error feedback
+        .readTimeout(10, TimeUnit.SECONDS)
+        .writeTimeout(10, TimeUnit.SECONDS)
         .build()
 
     private val retrofit = Retrofit.Builder()
