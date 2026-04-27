@@ -385,6 +385,6 @@
         app:menu="@menu/bottom_nav_menu"
         app:itemIconTint="@color/nav_icon_selector"
         app:itemTextColor="@color/nav_text_selector"
-        app:labelVisibilityMode="labeled" />
+        app:labelVisibilityMode="unlabeled" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
