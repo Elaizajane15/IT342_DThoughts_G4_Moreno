@@ -211,6 +211,9 @@ class PostDetailActivity : AppCompatActivity() {
                 // Update local post comment count
                 post = post!!.copy(commentCount = post!!.commentCount + 1)
                 binding.postContent.tvCommentCount.text = post!!.commentCount.toString()
+                
+                // Send notification to post owner
+                sendCommentNotification(post!!, user, content)
             } else {
                 Toast.makeText(this@PostDetailActivity, "Failed to add comment", Toast.LENGTH_SHORT).show()
             }
@@ -233,6 +236,9 @@ class PostDetailActivity : AppCompatActivity() {
                     binding.postContent.tvLikeCount.text = it.likeCount.toString()
                     binding.postContent.ivLike.alpha = if (it.liked) 1.0f else 0.6f
                     binding.postContent.ivLike.setColorFilter(if (it.liked) android.graphics.Color.RED else android.graphics.Color.GRAY)
+                    
+                    // Send notification to post owner
+                    sendLikeNotification(post!!, user, it.liked)
                 }
             }
         }
@@ -372,5 +378,58 @@ class PostDetailActivity : AppCompatActivity() {
             type = "text/plain"
         }
         startActivity(Intent.createChooser(shareIntent, "Share post via"))
+    }
+
+    private fun sendLikeNotification(post: Post, currentUser: com.example.dthoughts.models.User, isLiked: Boolean) {
+        if (!isLiked) return // Don't send notification for unlike
+        if (post.userId == currentUser.id) return // Don't notify yourself
+
+        lifecycleScope.launch {
+            try {
+                val notification = com.example.dthoughts.models.Notification(
+                    userId = post.userId,
+                    type = "LIKE",
+                    actorId = currentUser.id,
+                    actorName = "${currentUser.firstName} ${currentUser.lastName}",
+                    actorAvatarUrl = currentUser.avatarUrl,
+                    targetId = post.id,
+                    previewText = post.content,
+                    message = "liked your post",
+                    isRead = false
+                )
+                val response = RetrofitClient.apiService.createNotification(notification)
+                if (!response.isSuccessful) {
+                    android.util.Log.e("Notification", "Failed to send notification: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("Notification", "Error sending notification", e)
+            }
+        }
+    }
+
+    private fun sendCommentNotification(post: Post, currentUser: com.example.dthoughts.models.User, commentText: String) {
+        if (post.userId == currentUser.id) return // Don't notify yourself
+
+        lifecycleScope.launch {
+            try {
+                val notification = com.example.dthoughts.models.Notification(
+                    userId = post.userId,
+                    type = "COMMENT",
+                    actorId = currentUser.id,
+                    actorName = "${currentUser.firstName} ${currentUser.lastName}",
+                    actorAvatarUrl = currentUser.avatarUrl,
+                    targetId = post.id,
+                    previewText = post.content,
+                    message = commentText,
+                    isRead = false
+                )
+                val response = RetrofitClient.apiService.createNotification(notification)
+                if (!response.isSuccessful) {
+                    android.util.Log.e("Notification", "Failed to send notification: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("Notification", "Error sending notification", e)
+            }
+        }
     }
 }

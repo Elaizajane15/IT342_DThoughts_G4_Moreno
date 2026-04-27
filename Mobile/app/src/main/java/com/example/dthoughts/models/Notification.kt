@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class Notification(
     val id: Long = 0,
+    val userId: Long? = null, // The recipient of the notification
     val type: String = "",
     val actorId: Long? = null,
     val actorName: String? = "",

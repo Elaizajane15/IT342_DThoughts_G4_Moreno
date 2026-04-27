@@ -11,5 +11,7 @@ data class User(
     val followingCount: Long? = null,
     val totalLikes: Long? = null,
     val totalPosts: Long? = null,
-    val coverImageUrl: String? = null
+    val coverImageUrl: String? = null,
+    val birthDate: String? = null,
+    val createdAt: String? = null
 )

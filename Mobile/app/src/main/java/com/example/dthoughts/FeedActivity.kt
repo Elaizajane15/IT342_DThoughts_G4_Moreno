@@ -113,7 +113,7 @@ class FeedActivity : AppCompatActivity() {
                     val unreadCount = unreadNotifications.size
                     
                     if (lastUnreadCount != -1 && unreadCount > lastUnreadCount) {
-                        // Notifications are now silently synced to the Notification tab
+                        Toast.makeText(this@FeedActivity, "New notification received!", Toast.LENGTH_SHORT).show()
                     }
                     lastUnreadCount = unreadCount
 
@@ -271,6 +271,7 @@ class FeedActivity : AppCompatActivity() {
             currentUser = null
             updateUserUI()
             setupRecyclerView()
+            Toast.makeText(this, "Logout Successfully", Toast.LENGTH_SHORT).show()
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }

@@ -53,6 +53,8 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
 
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:1.4.0")
+    implementation("io.github.jan-tennert.supabase:realtime-kt:1.4.0")
     // Image Loading
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("de.hdodenhof:circleimageview:3.1.0")

@@ -81,9 +81,60 @@ class NotificationsActivity : AppCompatActivity() {
         }
     }
 
+    private var pollJob: kotlinx.coroutines.Job? = null
+    private var lastUnreadCount = -1
+
     override fun onResume() {
         super.onResume()
         loadNotifications()
+        
+        pollJob = lifecycleScope.launch {
+            while(true) {
+                pollForNewNotifications()
+                kotlinx.coroutines.delay(10000)
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        pollJob?.cancel()
+    }
+
+    private fun pollForNewNotifications() {
+        val user = UserPrefs.getUser() ?: return
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.apiService.getNotifications(user.id)
+                if (response.isSuccessful && response.body() != null) {
+                    val notifications = response.body()!!
+                    val unreadNotifications = notifications.filter { !it.isRead }
+                    val unreadCount = unreadNotifications.size
+                    
+                    if (lastUnreadCount != -1 && unreadCount > lastUnreadCount) {
+                        Toast.makeText(this@NotificationsActivity, "New notification received!", Toast.LENGTH_SHORT).show()
+                        allNotifications = notifications
+                        filterNotifications(currentFilterIsAll)
+                        updateUnreadUI()
+                    }
+                    lastUnreadCount = unreadCount
+                    
+                    updateBottomBadge(unreadCount)
+                }
+            } catch (e: Exception) {}
+        }
+    }
+
+    private fun updateBottomBadge(unreadCount: Int) {
+        val badge = binding.bottomNav.getOrCreateBadge(R.id.nav_notifications)
+        if (unreadCount > 0) {
+            badge.isVisible = true
+            badge.number = unreadCount
+            badge.backgroundColor = getColor(R.color.rose)
+            badge.badgeTextColor = getColor(R.color.white)
+        } else {
+            badge.isVisible = false
+        }
     }
 
     private fun filterNotifications(isAll: Boolean) {
@@ -214,15 +265,6 @@ class NotificationsActivity : AppCompatActivity() {
             binding.tvUnreadBadge.visibility = View.GONE
         }
 
-        // Update the Bottom Navigation Badge
-        val badge = binding.bottomNav.getOrCreateBadge(R.id.nav_notifications)
-        if (unreadCount > 0) {
-            badge.isVisible = true
-            badge.number = unreadCount
-            badge.backgroundColor = getColor(R.color.rose)
-            badge.badgeTextColor = getColor(R.color.white)
-        } else {
-            badge.isVisible = false
-        }
+        updateBottomBadge(unreadCount)
     }
 }

@@ -114,12 +114,26 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
+    private var pollJob: kotlinx.coroutines.Job? = null
+    private var lastUnreadCount = -1
+
     override fun onResume() {
         super.onResume()
         if (userId != -1L) {
             loadUserProfile()
         }
-        updateNotificationBadge()
+        
+        pollJob = lifecycleScope.launch {
+            while(true) {
+                updateNotificationBadge()
+                kotlinx.coroutines.delay(10000) // Poll every 10 seconds
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        pollJob?.cancel()
     }
 
     private fun updateNotificationBadge() {
@@ -128,7 +142,14 @@ class ProfileActivity : AppCompatActivity() {
             try {
                 val response = RetrofitClient.apiService.getNotifications(user.id)
                 if (response.isSuccessful && response.body() != null) {
-                    val unreadCount = response.body()!!.count { !it.isRead }
+                    val unreadNotifications = response.body()!!.filter { !it.isRead }
+                    val unreadCount = unreadNotifications.size
+                    
+                    if (lastUnreadCount != -1 && unreadCount > lastUnreadCount) {
+                        Toast.makeText(this@ProfileActivity, "New notification received!", Toast.LENGTH_SHORT).show()
+                    }
+                    lastUnreadCount = unreadCount
+
                     val badge = binding.bottomNav.getOrCreateBadge(R.id.nav_notifications)
                     if (unreadCount > 0) {
                         badge.isVisible = true
@@ -336,8 +357,21 @@ class ProfileActivity : AppCompatActivity() {
         binding.tvThoughtsCount.text = (user.totalPosts ?: 0).toString()
 
         binding.tvRole.text = "✦ ROLE: USER"
-        binding.tvBornDate.text = "🎂 Born August 24, 2003"
-        binding.tvJoinedDate.text = "📅 Joined June 2024"
+        
+        // Format and display real Birthdate
+        val birthDateStr = user.birthDate ?: "August 24, 2003" // Fallback if null
+        binding.tvBornDate.text = "🎂 Born $birthDateStr"
+
+        // Format and display real Joined date
+        val joinedDate = user.createdAt?.let { 
+            try {
+                val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault())
+                val outputFormat = java.text.SimpleDateFormat("MMMM yyyy", java.util.Locale.getDefault())
+                val date = inputFormat.parse(it)
+                outputFormat.format(date!!)
+            } catch (e: Exception) { "June 2024" } 
+        } ?: "June 2024"
+        binding.tvJoinedDate.text = "📅 Joined $joinedDate"
 
         if (!user.avatarUrl.isNullOrEmpty()) {
             val fullUrl = if (user.avatarUrl.startsWith("http")) user.avatarUrl else "${RetrofitClient.BASE_URL.removeSuffix("/")}${user.avatarUrl}"
@@ -389,6 +423,8 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun toggleFollow() {
         val currentUser = UserPrefs.getUser() ?: return
+        if (userId == -1L) return
+        
         binding.btnFollow.isEnabled = false
         
         lifecycleScope.launch {
@@ -398,11 +434,22 @@ class ProfileActivity : AppCompatActivity() {
                     val status = response.body()!!
                     isFollowing = status.isFollowing
                     updateFollowButton()
-                    // Update follower count immediately
+                    
+                    // Update the count UI immediately from the response
                     binding.tvFollowerCountCard.text = status.followerCount.toString()
+                    
+                    // Also refresh the full profile in the background to keep everything in sync
+                    loadUserProfile()
+
+                    // Send notification if we just followed
+                    if (isFollowing) {
+                        sendFollowNotification(userId, currentUser)
+                    }
+                } else {
+                    Toast.makeText(this@ProfileActivity, "Failed to update follow status", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@ProfileActivity, "Follow action failed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ProfileActivity, "Follow action failed: ${e.message}", Toast.LENGTH_SHORT).show()
             } finally {
                 binding.btnFollow.isEnabled = true
             }
@@ -414,7 +461,6 @@ class ProfileActivity : AppCompatActivity() {
             binding.btnFollow.text = "✓ Following"
             binding.btnFollow.setBackgroundColor(getColor(R.color.amber_pale))
             binding.btnFollow.setTextColor(getColor(R.color.espresso))
-            // Using MaterialButton's stroke methods
             binding.btnFollow.strokeWidth = (1 * resources.displayMetrics.density).toInt()
             binding.btnFollow.setStrokeColorResource(R.color.divider_light)
         } else {
@@ -422,6 +468,28 @@ class ProfileActivity : AppCompatActivity() {
             binding.btnFollow.setBackgroundColor(getColor(R.color.espresso))
             binding.btnFollow.setTextColor(getColor(R.color.white))
             binding.btnFollow.strokeWidth = 0
+        }
+    }
+
+    private fun sendFollowNotification(targetUserId: Long, currentUser: User) {
+        lifecycleScope.launch {
+            try {
+                val notification = com.example.dthoughts.models.Notification(
+                    userId = targetUserId,
+                    type = "FOLLOW",
+                    actorId = currentUser.id,
+                    actorName = "${currentUser.firstName} ${currentUser.lastName}",
+                    actorAvatarUrl = currentUser.avatarUrl,
+                    message = "started following you",
+                    isRead = false
+                )
+                val response = RetrofitClient.apiService.createNotification(notification)
+                if (!response.isSuccessful) {
+                    android.util.Log.e("Notification", "Failed to send follow notification: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("Notification", "Error sending follow notification", e)
+            }
         }
     }
 
