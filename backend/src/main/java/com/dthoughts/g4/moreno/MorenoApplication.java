@@ -1,11 +1,11 @@
 package com.dthoughts.g4.moreno;
 
-import com.dthoughts.g4.moreno.entity.Post;
-import com.dthoughts.g4.moreno.entity.TrendingTopic;
-import com.dthoughts.g4.moreno.entity.User;
-import com.dthoughts.g4.moreno.repository.PostRepository;
-import com.dthoughts.g4.moreno.repository.TrendingTopicRepository;
-import com.dthoughts.g4.moreno.repository.UserRepository;
+import com.dthoughts.g4.moreno.post.Post;
+import com.dthoughts.g4.moreno.post.TrendingTopic;
+import com.dthoughts.g4.moreno.user.User;
+import com.dthoughts.g4.moreno.post.PostRepository;
+import com.dthoughts.g4.moreno.post.TrendingTopicRepository;
+import com.dthoughts.g4.moreno.user.UserRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
