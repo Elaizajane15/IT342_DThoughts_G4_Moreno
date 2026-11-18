@@ -40,6 +40,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 					+ "?token=" + urlEncode(authResponse.getToken())
 					+ "&id=" + urlEncode(String.valueOf(user.getId()))
 					+ "&email=" + urlEncode(user.getEmail())
+					+ "&username=" + urlEncode(user.getUsername())
 					+ "&firstName=" + urlEncode(user.getFirstName())
 					+ "&lastName=" + urlEncode(user.getLastName())
 					+ "&avatarUrl=" + urlEncode(user.getAvatarUrl())

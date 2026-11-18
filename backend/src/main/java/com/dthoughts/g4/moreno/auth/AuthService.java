@@ -22,6 +22,9 @@ import java.util.Date;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 
 @Service
 public class AuthService {
@@ -39,21 +42,25 @@ public class AuthService {
     private final SecureRandom secureRandom = new SecureRandom();
     private static final long JWT_TTL_MINUTES = 60 * 24 * 7;
 
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_.]{3,30}$");
+
     public AuthResponse login(LoginRequest request) {
         if (request == null) throw new RuntimeException("Request is required");
-        String email = request.getEmail() == null ? null : request.getEmail().trim();
-        if (email == null || email.isBlank()) throw new RuntimeException("Email is required");
-        Optional<User> user = userRepository.findByEmailIgnoreCase(email);
-        
-        if (user.isEmpty()) {
-            throw new RuntimeException("User not found");
+        String raw = request.getUsername();
+        if (raw == null || raw.isBlank()) raw = request.getEmail();
+        String identifier = raw == null ? null : raw.trim();
+        if (identifier == null || identifier.isBlank()) throw new RuntimeException("Username is required");
+
+        Optional<User> user = userRepository.findByUsernameIgnoreCase(identifier);
+        if (user.isEmpty() && identifier.contains("@")) {
+            user = userRepository.findByEmailIgnoreCase(identifier);
         }
 
-        User foundUser = user.get();
         String password = request.getPassword() == null ? "" : request.getPassword();
-        if (!foundUser.getPassword().equals(password)) {
-            throw new RuntimeException("Invalid credentials");
+        if (user.isEmpty() || !user.get().getPassword().equals(password)) {
+            throw new RuntimeException("Invalid username or password");
         }
+        User foundUser = user.get();
 
         String token = issueJwt(foundUser, "password");
         UserDto userDto = toDtoWithStats(foundUser);
@@ -109,6 +116,14 @@ public class AuthService {
         if (request == null) throw new RuntimeException("Request is required");
         String email = request.getEmail() == null ? null : request.getEmail().trim();
         if (email == null || email.isBlank()) throw new RuntimeException("Email is required");
+        String username = request.getUsername() == null ? null : request.getUsername().trim();
+        if (username == null || username.isBlank()) throw new RuntimeException("Username is required");
+        if (!USERNAME_PATTERN.matcher(username).matches()) {
+            throw new RuntimeException("Username must be 3-30 characters: letters, numbers, _ or .");
+        }
+        if (userRepository.existsByUsernameIgnoreCase(username)) {
+            throw new RuntimeException("Username is already taken");
+        }
         if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new RuntimeException("Email already exists");
         }
@@ -119,6 +134,7 @@ public class AuthService {
             request.getFirstName(),
             request.getLastName()
         );
+        newUser.setUsername(username);
 
         User savedUser = userRepository.save(newUser);
         
@@ -153,12 +169,15 @@ public class AuthService {
         final String resolvedLastName = (lastName == null || lastName.isBlank()) ? "User" : lastName;
 
         Optional<User> existing = userRepository.findByEmailIgnoreCase(email);
-        User user = existing.orElseGet(() -> userRepository.save(new User(
-                email,
-                UUID.randomUUID().toString(),
-                resolvedFirstName,
-                resolvedLastName
-        )));
+        User user = existing.orElseGet(() -> {
+            User u = new User(email, UUID.randomUUID().toString(), resolvedFirstName, resolvedLastName);
+            u.setUsername(generateUniqueUsername(email));
+            return userRepository.save(u);
+        });
+        if (user.getUsername() == null || user.getUsername().isBlank()) {
+            user.setUsername(generateUniqueUsername(email));
+            user = userRepository.save(user);
+        }
 
         String token = issueJwt(user, "google");
         UserDto userDto = toDtoWithStats(user);
@@ -167,6 +186,28 @@ public class AuthService {
 
     public AuthResponse authenticateWithGoogleOAuth2User(OAuth2User oauth2User) {
         return loginWithGoogle(oauth2User);
+    }
+
+    /** Gives every existing account without a username one derived from its email. */
+    @EventListener(ApplicationReadyEvent.class)
+    public void backfillUsernames() {
+        for (User u : userRepository.findByUsernameIsNull()) {
+            u.setUsername(generateUniqueUsername(u.getEmail()));
+            userRepository.save(u);
+        }
+    }
+
+    String generateUniqueUsername(String email) {
+        String base = email == null ? "" : email.split("@")[0];
+        base = base.replaceAll("[^a-zA-Z0-9_.]", "").toLowerCase();
+        if (base.length() < 3) base = base + "user";
+        if (base.length() > 25) base = base.substring(0, 25);
+        String candidate = base;
+        int n = 1;
+        while (userRepository.existsByUsernameIgnoreCase(candidate)) {
+            candidate = base + n++;
+        }
+        return candidate;
     }
 
     private static String stringAttr(OAuth2User oauth2User, String key) {

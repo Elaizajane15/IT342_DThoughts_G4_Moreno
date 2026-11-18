@@ -41,7 +41,7 @@ export default function RegisterPage() {
   const [focused, setFocused] = useState('');
 
   const [form, setForm] = useState({
-    email: '', password: '', confirmPassword: '',
+    username: '', email: '', password: '', confirmPassword: '',
     firstName: '', lastName: '',
   });
   const [error,   setError]   = useState('');
@@ -69,6 +69,7 @@ export default function RegisterPage() {
   const nextStep = e => {
     e.preventDefault(); setError('');
     if (step === 0) {
+      if (!/^[a-zA-Z0-9_.]{3,30}$/.test(form.username.trim())) { setError('Username must be 3-30 characters: letters, numbers, _ or .'); return; }
       if (!form.email)                            { setError('Email is required.'); return; }
       if (form.password.length < 8)               { setError('Password must be at least 8 characters.'); return; }
       if (form.password !== form.confirmPassword) { setError('Passwords do not match.'); return; }
@@ -82,7 +83,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const res = await authApi.register({
-        email: form.email, password: form.password,
+        username: form.username.trim(), email: form.email, password: form.password,
         firstName: form.firstName, lastName: form.lastName,
       });
       login(res.token, res.user);
@@ -171,6 +172,9 @@ export default function RegisterPage() {
           {/* Step 0 */}
           {step === 0 && (
             <form onSubmit={nextStep} style={{ display:'flex', flexDirection:'column', gap:0 }}>
+              <Field label="Username" name="username" placeholder="your_username"
+                value={form.username} onChange={handleChange} focused={focused} setFocused={setFocused} />
+
               <Field label="Email address" name="email" type="email" placeholder="you@example.com"
                 value={form.email} onChange={handleChange} focused={focused} setFocused={setFocused} />
 

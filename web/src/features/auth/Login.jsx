@@ -39,7 +39,7 @@ export default function LoginPage() {
   const navigate        = useNavigate();
   const { login, user } = useAuth();
 
-  const [form, setForm]         = useState({ email: '', password: '' });
+  const [form, setForm]         = useState({ username: '', password: '' });
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
   const [quote, setQuote]       = useState(null);
@@ -62,6 +62,7 @@ export default function LoginPage() {
     const u = {
       id:            Number(url.searchParams.get('id')) || null,
       email:         url.searchParams.get('email') || '',
+      username:      url.searchParams.get('username') || '',
       firstName:     url.searchParams.get('firstName') || '',
       lastName:      url.searchParams.get('lastName') || '',
       avatarUrl:     url.searchParams.get('avatarUrl') || '',
@@ -69,7 +70,7 @@ export default function LoginPage() {
     };
     sessionStorage.setItem('dt_toast', JSON.stringify({ message: 'Login successful.', type: 'success' }));
     login(token, u);
-    ['token','accessToken','id','email','firstName','lastName','avatarUrl','coverImageUrl']
+    ['token','accessToken','id','email','username','firstName','lastName','avatarUrl','coverImageUrl']
       .forEach(k => url.searchParams.delete(k));
     window.history.replaceState({}, '', url.toString());
     navigate('/feed', { replace: true });
@@ -103,7 +104,7 @@ export default function LoginPage() {
       sessionStorage.setItem('dt_toast', JSON.stringify({ message: 'Login successful.', type: 'success' }));
       navigate('/feed');
     } catch (err) {
-      setError(err.message || 'Invalid email or password.');
+      setError(err.message || 'Invalid username or password.');
     } finally { setLoading(false); }
   };
 
@@ -209,30 +210,31 @@ export default function LoginPage() {
             {/* Form */}
             <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:0 }}>
 
-              {/* Email field */}
+              {/* Username field */}
               <div style={S.fieldGroup}>
-                <label style={{ ...S.label, color: focused === 'email' ? C.amberDeep : C.muted }}>
-                  Email address
+                <label style={{ ...S.label, color: focused === 'username' ? C.amberDeep : C.muted }}>
+                  Username
                 </label>
                 <div style={S.inputWrap}>
-                  <span style={S.inputIcon}>✉</span>
+                  <span style={S.inputIcon}>@</span>
                   <input
-                    name="email" type="email" required autoComplete="email"
-                    placeholder="you@example.com"
-                    value={form.email} onChange={handleChange}
-                    onFocus={() => setFocused('email')}
+                    name="username" type="text" required autoComplete="username"
+                    autoCapitalize="none" spellCheck={false}
+                    placeholder="your_username"
+                    value={form.username} onChange={handleChange}
+                    onFocus={() => setFocused('username')}
                     onBlur={()  => setFocused('')}
                     style={{
                       ...S.input,
-                      borderColor: focused === 'email'
+                      borderColor: focused === 'username'
                         ? C.amberDark
-                        : form.email
+                        : form.username
                           ? 'rgba(197,162,100,0.55)'
                           : C.border,
-                      boxShadow: focused === 'email'
+                      boxShadow: focused === 'username'
                         ? `0 0 0 3px rgba(200,160,70,0.12)`
                         : 'none',
-                      background: focused === 'email'
+                      background: focused === 'username'
                         ? C.white
                         : C.bg,
                     }}
@@ -240,7 +242,7 @@ export default function LoginPage() {
                   {/* Animated focus underline */}
                   <div style={{
                     ...S.focusLine,
-                    width: focused === 'email' ? '100%' : '0%',
+                    width: focused === 'username' ? '100%' : '0%',
                     background: `linear-gradient(90deg,${C.amber},${C.amberDark})`,
                   }} />
                 </div>

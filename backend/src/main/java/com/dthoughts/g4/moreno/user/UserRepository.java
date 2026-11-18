@@ -14,6 +14,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByPasswordResetTokenHash(String passwordResetTokenHash);
     boolean existsByEmail(String email);
     boolean existsByEmailIgnoreCase(String email);
+    Optional<User> findByUsernameIgnoreCase(String username);
+    boolean existsByUsernameIgnoreCase(String username);
+    java.util.List<User> findByUsernameIsNull();
 
 	Page<User> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
 			String firstName,

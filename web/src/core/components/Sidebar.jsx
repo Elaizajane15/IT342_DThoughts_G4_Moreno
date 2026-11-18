@@ -68,7 +68,7 @@ export default function Sidebar({ notifCount }) {
   const [menuOpen,        setMenuOpen]        = useState(false)
   const [logoutOpen,      setLogoutOpen]      = useState(false)
   const [addAccountOpen,  setAddAccountOpen]  = useState(false)
-  const [addForm,         setAddForm]         = useState({ email: '', password: '' })
+  const [addForm,         setAddForm]         = useState({ username: '', password: '' })
   const [addError,        setAddError]        = useState('')
   const [addLoading,      setAddLoading]      = useState(false)
   const [addFocused,      setAddFocused]      = useState('')
@@ -113,7 +113,7 @@ export default function Sidebar({ notifCount }) {
   }, [])
 
   const handleAddAccount = () => {
-    setMenuOpen(false); setAddError(''); setAddForm({ email: '', password: '' }); setAddAccountOpen(true)
+    setMenuOpen(false); setAddError(''); setAddForm({ username: '', password: '' }); setAddAccountOpen(true)
   }
 
   const handleLogout = async () => {
@@ -227,7 +227,7 @@ export default function Sidebar({ notifCount }) {
                 </button>
                 <div style={S.menuDivider} />
                 <button type="button" onClick={handleLogoutPrompt} style={{ ...S.menuItem, color:C.rose }} className="dt-menu-item">
-                  <span style={S.menuIcon}>🚪</span> Log out @{String(user?.email || '').split('@')[0]}
+                  <span style={S.menuIcon}>🚪</span> Log out @{user?.username || String(user?.email || '').split('@')[0]}
                 </button>
               </div>
             )}
@@ -303,12 +303,12 @@ export default function Sidebar({ notifCount }) {
               e.preventDefault()
               if (addLoading) return
               setAddError('')
-              const email    = String(addForm.email || '').trim()
+              const username = String(addForm.username || '').trim()
               const password = String(addForm.password || '')
-              if (!email || !password) { setAddError('Please enter your email and password.'); return }
+              if (!username || !password) { setAddError('Please enter your username and password.'); return }
               setAddLoading(true)
               try {
-                const res = await authApi.login({ email, password })
+                const res = await authApi.login({ username, password })
                 const prevToken    = localStorage.getItem('token')
                 const prevUserRaw  = localStorage.getItem('user')
                 let prevUser = null
@@ -336,11 +336,11 @@ export default function Sidebar({ notifCount }) {
                 setAddError(err?.message || 'Failed to sign in.')
               } finally { setAddLoading(false) }
             }}>
-              {[['email','email','Email address','you@example.com'],['password','password','Password','Enter your password']].map(([name,type,lbl,ph]) => (
+              {[['username','text','Username','your_username'],['password','password','Password','Enter your password']].map(([name,type,lbl,ph]) => (
                 <div key={name} style={{ marginBottom:14 }}>
                   <label style={{ ...S.fieldLabel, color: addFocused===name ? C.amberDeep : C.muted }}>{lbl}</label>
                   <div style={{ position:'relative' }}>
-                    <input name={name} type={type} autoComplete={type==='email'?'email':'current-password'}
+                    <input name={name} type={type} autoComplete={name==='username'?'username':'current-password'}
                       value={addForm[name]} placeholder={ph}
                       onChange={e => setAddForm(f => ({ ...f, [name]: e.target.value }))}
                       onFocus={() => setAddFocused(name)} onBlur={() => setAddFocused('')}

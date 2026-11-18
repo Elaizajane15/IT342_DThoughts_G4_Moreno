@@ -44,10 +44,15 @@ public class UserDto {
         this.totalPosts = totalPosts;
     }
 
+    private String username;
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
     public static UserDto fromEntity(User user) {
         String bd = user.getBirthDate() != null ? user.getBirthDate().toString() : null;
         String ja = user.getCreatedAt() != null ? user.getCreatedAt().toString() : null;
-        return new UserDto(
+        UserDto dto = new UserDto(
                 user.getId(),
                 user.getEmail(),
                 user.getFirstName(),
@@ -58,6 +63,8 @@ public class UserDto {
                 bd,
                 ja
         );
+        dto.setUsername(user.getUsername());
+        return dto;
     }
 
     public Long getId() { return id; }

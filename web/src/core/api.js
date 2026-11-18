@@ -5,21 +5,21 @@ const PROD_API_URL = 'https://dailythoughts-backend-fnf3.onrender.com';
 const BASE_URL = envUrl || (isLocalhost ? 'http://localhost:8080' : PROD_API_URL);
 
 export const authApi = {
-  async login({ email, password }) {
+  async login({ username, email, password }) {
     const res = await fetch(`${BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username: username ?? email, password }),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.message || 'Invalid email or password.');
+    if (!res.ok) throw new Error(data.message || 'Invalid username or password.');
     return data;
   },
-  async register({ email, password, firstName, lastName }) {
+  async register({ username, email, password, firstName, lastName }) {
     const res = await fetch(`${BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, firstName, lastName }),
+      body: JSON.stringify({ username, email, password, firstName, lastName }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message || 'Registration failed.');
