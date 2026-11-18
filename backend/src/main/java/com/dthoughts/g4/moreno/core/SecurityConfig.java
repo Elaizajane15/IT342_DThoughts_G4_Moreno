@@ -107,10 +107,14 @@ public class SecurityConfig {
 
 	private String frontendUrl() {
 		String fromProp = System.getProperty("APP_FRONTEND_URL");
-		if (fromProp != null && !fromProp.isBlank()) return fromProp;
+		if (fromProp != null && !fromProp.isBlank()) return cleanUrl(fromProp);
 		String fromEnv = System.getenv("APP_FRONTEND_URL");
-		if (fromEnv != null && !fromEnv.isBlank()) return fromEnv;
+		if (fromEnv != null && !fromEnv.isBlank()) return cleanUrl(fromEnv);
 		return "http://localhost:5173";
+	}
+
+	static String cleanUrl(String url) {
+		return url.replaceAll("\\s+", "").replaceAll("/+$", "");
 	}
 
 	private String urlEncode(String value) {
@@ -121,7 +125,7 @@ public class SecurityConfig {
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
 		List<String> origins = new ArrayList<>(List.of("http://localhost:*", "http://127.0.0.1:*", "https://*.vercel.app"));
-		String frontend = frontendUrl().replaceAll("/+$", "");
+		String frontend = frontendUrl();
 		if (!origins.contains(frontend)) origins.add(frontend);
 		config.setAllowedOriginPatterns(origins);
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

@@ -53,9 +53,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
 	private String frontendUrl() {
 		String fromProp = System.getProperty("APP_FRONTEND_URL");
-		if (fromProp != null && !fromProp.isBlank()) return fromProp;
+		if (fromProp != null && !fromProp.isBlank()) return SecurityConfig.cleanUrl(fromProp);
 		String fromEnv = System.getenv("APP_FRONTEND_URL");
-		if (fromEnv != null && !fromEnv.isBlank()) return fromEnv;
+		if (fromEnv != null && !fromEnv.isBlank()) return SecurityConfig.cleanUrl(fromEnv);
 		return "http://localhost:5173";
 	}
 
