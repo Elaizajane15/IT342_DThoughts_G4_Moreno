@@ -4,6 +4,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Avatar from '@/core/components/Avatar'
 import { useAuth } from '@/features/auth/useAuth'
 import { authApi, filesApi, notificationsApi, oauthApi } from '@/core/api'
+import { Ico } from '@/core/components/Icons'
+import {
+  NotebookPen, House, PenLine, FolderOpen, Bell, UserRound, LogIn, UserPlus,
+  Plus, LogOut, X, TriangleAlert, Ellipsis, Sparkles,
+} from 'lucide-react'
+
+const NAV_ICON = { marginRight: 10 }
 
 /* ── Warm Parchment Palette ──────────────────────────────────
    #FFF8EE  warm ivory      — sidebar background
@@ -137,7 +144,7 @@ export default function Sidebar({ notifCount }) {
         {/* Brand */}
         <div style={S.brand}>
           <div style={S.brandBox}>
-            <span style={{ fontSize:18, position:'relative', zIndex:1 }}>📓</span>
+            <span style={{ position:'relative', zIndex:1, display:'flex', color:C.ink }}><Ico as={NotebookPen} size={18} /></span>
             <div style={S.brandShine} />
           </div>
           <div style={S.brandText}>
@@ -147,15 +154,15 @@ export default function Sidebar({ notifCount }) {
 
         {/* Nav */}
         <nav style={S.nav}>
-          <NavItem to="/feed" active={isFeedActive}>🏠 Feed</NavItem>
+          <NavItem to="/feed" active={isFeedActive}><Ico as={House} style={NAV_ICON} />Feed</NavItem>
 
           {!isGuest && (
             <NavItem to="/create" active={location.pathname === '/create' || location.pathname === '/create-post'}>
-              ✏️ New Thought
+              <Ico as={PenLine} style={NAV_ICON} />New Thought
             </NavItem>
           )}
           {!isGuest && (
-            <NavItem to="/drafts" active={isDraftsActive}>🗂️ Drafts</NavItem>
+            <NavItem to="/drafts" active={isDraftsActive}><Ico as={FolderOpen} style={NAV_ICON} />Drafts</NavItem>
           )}
 
           <NavItem
@@ -165,19 +172,19 @@ export default function Sidebar({ notifCount }) {
               ? <span style={S.badge}>{effectiveCount}</span>
               : null}
           >
-            🔔 Notifications
+            <Ico as={Bell} style={NAV_ICON} />Notifications
           </NavItem>
 
           {!isGuest && (
             <NavItem to="/profile" active={location.pathname === '/profile'}>
-              👤 My Profile
+              <Ico as={UserRound} style={NAV_ICON} />My Profile
             </NavItem>
           )}
 
           {isGuest && (
             <>
-              <NavItem to="/login"    active={location.pathname === '/login'}>🔑 Login</NavItem>
-              <NavItem to="/register" active={location.pathname === '/register'}>✍️ Register</NavItem>
+              <NavItem to="/login"    active={location.pathname === '/login'}><Ico as={LogIn} style={NAV_ICON} />Login</NavItem>
+              <NavItem to="/register" active={location.pathname === '/register'}><Ico as={UserPlus} style={NAV_ICON} />Register</NavItem>
             </>
           )}
         </nav>
@@ -190,7 +197,7 @@ export default function Sidebar({ notifCount }) {
         {quote && (
           <div style={S.quoteCard}>
             <div style={S.quoteTopLine} />
-            <div style={S.quoteLabel}>✦ Daily Quote</div>
+            <div style={S.quoteLabel}><Ico as={Sparkles} size={12} style={{ marginRight:6 }} />Daily Quote</div>
             <p style={S.quoteText}>"{quote.quoteText}"</p>
             <p style={S.quoteAuthor}>— {quote.author}</p>
           </div>
@@ -214,7 +221,7 @@ export default function Sidebar({ notifCount }) {
                   onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
                   style={{ ...S.moreBtn, background: menuOpen ? C.surfaceHi : C.surface }}
                   className="dt-more-btn">
-                  ⋯
+                  <Ico as={Ellipsis} size={16} />
                 </button>
               </div>
             </div>
@@ -223,11 +230,11 @@ export default function Sidebar({ notifCount }) {
               <div style={S.menu}>
                 <div style={S.menuArrow} />
                 <button type="button" onClick={handleAddAccount} style={S.menuItem} className="dt-menu-item">
-                  <span style={S.menuIcon}>➕</span> Add an existing account
+                  <span style={S.menuIcon}><Ico as={Plus} size={15} /></span> Add an existing account
                 </button>
                 <div style={S.menuDivider} />
                 <button type="button" onClick={handleLogoutPrompt} style={{ ...S.menuItem, color:C.rose }} className="dt-menu-item">
-                  <span style={S.menuIcon}>🚪</span> Log out @{user?.username || String(user?.email || '').split('@')[0]}
+                  <span style={S.menuIcon}><Ico as={LogOut} size={15} /></span> Log out @{user?.username || String(user?.email || '').split('@')[0]}
                 </button>
               </div>
             )}
@@ -240,7 +247,7 @@ export default function Sidebar({ notifCount }) {
         <div style={S.overlay} onMouseDown={e => { if (e.target === e.currentTarget) setLogoutOpen(false) }}>
           <div role="dialog" aria-modal="true" style={S.modal}>
             <div style={S.modalLogoBox}>
-              <span style={{ fontSize:24 }}>📓</span>
+              <span style={{ display:'flex', color:C.ink }}><Ico as={NotebookPen} size={24} /></span>
               <div style={S.modalLogoShine} />
             </div>
             <h3 style={S.modalTitle}>Log out of DailyThoughts?</h3>
@@ -268,11 +275,11 @@ export default function Sidebar({ notifCount }) {
         <div style={S.overlay} onMouseDown={e => { if (e.target === e.currentTarget) setAddAccountOpen(false) }}>
           <div role="dialog" aria-modal="true" style={S.modal}>
             {/* Close */}
-            <button type="button" aria-label="Close" onClick={() => setAddAccountOpen(false)} style={S.closeBtn}>✕</button>
+            <button type="button" aria-label="Close" onClick={() => setAddAccountOpen(false)} style={S.closeBtn}><Ico as={X} size={16} /></button>
 
             {/* Logo */}
             <div style={S.modalLogoBox}>
-              <span style={{ fontSize:24 }}>📓</span>
+              <span style={{ display:'flex', color:C.ink }}><Ico as={NotebookPen} size={24} /></span>
               <div style={S.modalLogoShine} />
             </div>
             <h3 style={S.modalTitle}>Sign in to DailyThoughts</h3>
@@ -294,7 +301,7 @@ export default function Sidebar({ notifCount }) {
             {/* Error */}
             {addError && (
               <div style={S.errorBox}>
-                <span>⚠</span><span style={{ flex:1 }}>{addError}</span>
+                <Ico as={TriangleAlert} size={15} /><span style={{ flex:1 }}>{addError}</span>
               </div>
             )}
 

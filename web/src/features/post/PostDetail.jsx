@@ -1,3 +1,6 @@
+import { Ico, MoodIcon } from '@/core/components/Icons';
+import { MOODS as SHARED_MOODS } from '@/core/utils/moods';
+import { Trash2, TriangleAlert, Check, CalendarDays, Heart, MessageCircle, Bookmark, Share2 } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '@/core/components/Sidebar';
@@ -16,7 +19,7 @@ const P = {
   fM:"'DM Mono',monospace",
 };
 
-const MOODS=[{emoji:'😊',label:'Happy'},{emoji:'🤔',label:'Reflective'},{emoji:'😢',label:'Sad'},{emoji:'💪',label:'Motivated'},{emoji:'😌',label:'Peaceful'},{emoji:'😤',label:'Frustrated'},{emoji:'🎉',label:'Excited'},{emoji:'😴',label:'Tired'}];
+const MOODS=SHARED_MOODS;
 
 export default function PostDetailPage() {
   const { id }   = useParams();
@@ -113,19 +116,6 @@ export default function PostDetailPage() {
   const isOwner=!isGuest&&user?.id!=null&&post?.userId!=null&&Number(user.id)===Number(post.userId);
   const handle=String(name).trim().toLowerCase().replace(/\s+/g,'');
   const moodLabel = post?.mood ?? null;
-  const moodEmoji = useMemo(() => {
-    const m = String(moodLabel || '').toLowerCase();
-    if (!m) return null;
-    if (m.includes('happy'))   return '😊';
-    if (m.includes('reflect')) return '🤔';
-    if (m.includes('sad'))     return '😢';
-    if (m.includes('motiv'))   return '💪';
-    if (m.includes('peace'))   return '😌';
-    if (m.includes('frust'))   return '😤';
-    if (m.includes('excit'))   return '🎉';
-    if (m.includes('tired'))   return '😴';
-    return '🙂';
-  }, [moodLabel]);
 
   useEffect(() => {
     if (!moodOpen) return;
@@ -143,7 +133,7 @@ export default function PostDetailPage() {
       {delOpen && (
         <div style={S.ov} onMouseDown={e=>{if(e.target===e.currentTarget)setDelOpen(false)}}>
           <div style={S.modal}>
-            <div style={{fontSize:32,marginBottom:12}}>🗑️</div>
+            <div style={{marginBottom:12,color:P.rose}}><Ico as={Trash2} size={30} /></div>
             <h3 style={S.mTitle}>Delete Post?</h3>
             <p style={S.mBody}>This cannot be undone.</p>
             <div style={{display:'flex',justifyContent:'center',gap:12}}>
@@ -158,7 +148,7 @@ export default function PostDetailPage() {
         <main style={S.main}>
           <button onClick={()=>navigate('/feed')} style={S.back}>← Back to Feed</button>
           {loading ? <p style={{padding:32,textAlign:'center',color:P.muted,fontFamily:P.fB}}>Loading…</p>
-          : error||!post ? <div style={S.errBox}>⚠ {error||'Post not found.'}</div>
+          : error||!post ? <div style={S.errBox}><Ico as={TriangleAlert} size={15} style={{marginRight:6}} />{error||'Post not found.'}</div>
           : <>
             <div style={S.pCard}>
               <div style={S.topLine} />
@@ -172,7 +162,7 @@ export default function PostDetailPage() {
                         {moodLabel && (
                           <span ref={moodRef} style={S.moodWrap} onClick={e=>e.stopPropagation()}>
                             <button type="button" onClick={()=>setMoodOpen(v=>!v)} style={S.moodChipBtn} aria-label="Emotions">
-                              {moodEmoji ? `${moodEmoji} ` : ''}{moodLabel}
+                              <MoodIcon mood={moodLabel} style={{ marginRight:5 }} />{moodLabel}
                             </button>
                             {moodOpen && (
                               <div style={S.moodPopover} role="dialog" aria-modal="false" onClick={e=>e.stopPropagation()}>
@@ -183,7 +173,7 @@ export default function PostDetailPage() {
                                     style={{...S.moodItem,...(String(moodLabel).toLowerCase()===String(m.label).toLowerCase()?S.moodItemActive:null)}}
                                     onClick={()=>setMoodOpen(false)}
                                   >
-                                    {m.emoji} {m.label}
+                                    <MoodIcon mood={m.label} style={{ marginRight:6 }} />{m.label}
                                   </button>
                                 ))}
                               </div>
@@ -194,7 +184,7 @@ export default function PostDetailPage() {
                       <p style={{fontFamily:P.fM,fontSize:11.5,color:P.muted}}>@{handle} · USER</p>
                     </div>
                   </div>
-                  {!isGuest&&!isOwner&&<button type="button" onClick={toggleFollow} style={{...S.pBtn,background:isFollowing?P.amberPale:'transparent',color:P.amberDark,borderColor:isFollowing?P.amberDark:P.border}}>{isFollowing?'Following ✓':'Follow'}</button>}
+                  {!isGuest&&!isOwner&&<button type="button" onClick={toggleFollow} style={{...S.pBtn,background:isFollowing?P.amberPale:'transparent',color:P.amberDark,borderColor:isFollowing?P.amberDark:P.border}}>{isFollowing?<>Following<Ico as={Check} size={13} style={{marginLeft:4}} /></>:'Follow'}</button>}
                   {!isGuest&&isOwner&&<div style={{display:'flex',gap:10}}>
                     <button type="button" onClick={()=>navigate(`/edit/${post.id}`,{state:{post}})} style={S.oBtn}>Edit</button>
                     <button type="button" onClick={()=>setDelOpen(true)} style={{...S.oBtn,color:P.rose,borderColor:'rgba(192,57,43,0.3)'}}>Delete</button>
@@ -202,16 +192,16 @@ export default function PostDetailPage() {
                 </div>
                 <p style={{color:P.ink,fontFamily:P.fB,fontSize:17,lineHeight:1.8}}>{post.text}</p>
                 {post.imagePath&&<div style={{marginTop:16,borderRadius:14,overflow:'hidden',border:`1px solid ${P.border}`,background:P.surface}}><img src={filesApi.getUrl(post.imagePath)} alt="" style={{width:'100%',height:'auto',display:'block',objectFit:'cover'}} /></div>}
-                <p style={{fontFamily:P.fM,fontSize:12,color:P.muted,marginTop:14}}>📅 {fmtDate(post.createdAt)}</p>
+                <p style={{fontFamily:P.fM,fontSize:12,color:P.muted,marginTop:14}}><Ico as={CalendarDays} size={13} style={{marginRight:5}} />{fmtDate(post.createdAt)}</p>
                 <div style={{height:1,background:P.border,margin:'16px 0'}} />
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,flexWrap:'wrap'}}>
                   <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
-                    <button type="button" onClick={toggleLike} style={{...S.aBtn,background:liked?P.rosePale:'transparent',borderColor:liked?P.rose:P.border,color:liked?P.rose:P.muted}}>❤️ {likeCount||0} Likes</button>
-                    <button type="button" onClick={()=>commentRef.current?.focus()} style={S.aBtn}>💬 {comments.length||0} Comments</button>
+                    <button type="button" onClick={toggleLike} style={{...S.aBtn,background:liked?P.rosePale:'transparent',borderColor:liked?P.rose:P.border,color:liked?P.rose:P.muted}}><Ico as={Heart} size={15} fill={liked?'currentColor':'none'} style={{marginRight:5}} />{likeCount||0} Likes</button>
+                    <button type="button" onClick={()=>commentRef.current?.focus()} style={S.aBtn}><Ico as={MessageCircle} size={15} style={{marginRight:5}} />{comments.length||0} Comments</button>
                   </div>
                   <div style={{display:'flex',gap:10}}>
-                    <button type="button" onClick={toggleSave} style={{...S.aBtn,color:isSaved?P.amberDark:P.muted,borderColor:isSaved?P.amberDark:P.border}}>🔖 {isSaved?'Saved':'Save'}</button>
-                    <button type="button" onClick={()=>navigator.clipboard.writeText(window.location.href)} style={S.aBtn}>↗️ Share</button>
+                    <button type="button" onClick={toggleSave} style={{...S.aBtn,color:isSaved?P.amberDark:P.muted,borderColor:isSaved?P.amberDark:P.border}}><Ico as={Bookmark} size={15} fill={isSaved?'currentColor':'none'} style={{marginRight:5}} />{isSaved?'Saved':'Save'}</button>
+                    <button type="button" onClick={()=>navigator.clipboard.writeText(window.location.href)} style={S.aBtn}><Ico as={Share2} size={14} style={{marginRight:5}} />Share</button>
                   </div>
                 </div>
               </div>

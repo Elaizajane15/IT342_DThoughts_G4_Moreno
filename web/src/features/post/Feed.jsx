@@ -1,3 +1,5 @@
+import { Ico } from '@/core/components/Icons';
+import { Trash2, PenLine, LockKeyhole, Camera, Users, NotebookPen, Search, Check } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '@/core/components/Sidebar';
@@ -119,7 +121,7 @@ export default function FeedPage() {
       {confirmDeleteId != null && (
         <div style={S.modalOverlay}>
           <div style={S.modalCard}>
-            <div style={S.modalIcon}>🗑️</div>
+            <div style={{ ...S.modalIcon, color:'#c0392b' }}><Ico as={Trash2} size={30} /></div>
             <h3 style={S.modalTitle}>Delete Post</h3>
             <p style={S.modalBody}>Are you sure you want to delete this post? This cannot be undone.</p>
             <div style={S.modalActions}>
@@ -146,7 +148,7 @@ export default function FeedPage() {
             </div>
             {!isGuest && (
               <button onClick={() => navigate('/create')} style={S.newPostBtn} className="dt-new-post">
-                ✏️ New Thought
+                <Ico as={PenLine} size={15} style={{marginRight:6}} />New Thought
               </button>
             )}
           </div>
@@ -174,7 +176,7 @@ export default function FeedPage() {
           {isGuest && (
             <div style={S.guestBanner}>
               <div style={S.guestBannerLeft}>
-                <div style={S.guestBannerIcon}>🔒</div>
+                <div style={{ ...S.guestBannerIcon, color:'#A67C28' }}><Ico as={LockKeyhole} size={20} /></div>
                 <div>
                   <h4 style={S.guestTitle}>Viewing as Guest</h4>
                   <p style={S.guestSub}>Sign in to like, comment, and share your own thoughts.</p>
@@ -200,7 +202,7 @@ export default function FeedPage() {
                 {compose && (
                   <div style={S.composeActions}>
                     <button onClick={() => navigate('/create', { state: { prefill: compose } })} style={S.composeFull}>
-                      📷 Add Image / Mood
+                      <Ico as={Camera} size={14} style={{marginRight:6}} />Add Image / Mood
                     </button>
                     <button onClick={handleComposeSubmit} style={S.composePost}>Post Thought</button>
                   </div>
@@ -216,7 +218,7 @@ export default function FeedPage() {
             </div>
           ) : posts.length === 0 ? (
             <div style={S.empty}>
-              <span style={{ fontSize:52 }}>{tab === 1 ? '👥' : '📓'}</span>
+              <span style={{ display:'flex', color:'#C9A84C' }}><Ico as={tab === 1 ? Users : NotebookPen} size={48} strokeWidth={1.25} /></span>
               <p style={S.emptyText}>
                 {tab === 1
                   ? (isGuest ? 'Login to see posts from people you follow.' : 'Follow someone to see their posts here.')
@@ -287,7 +289,7 @@ function RightSidebar() {
     <aside style={S.rightBar}>
       {/* Search */}
       <div style={S.searchBox}>
-        <span style={{ fontSize:13, opacity:0.5 }}>🔎</span>
+        <span style={{ opacity:0.5, display:'flex' }}><Ico as={Search} size={14} /></span>
         <input value={query}
           onChange={e => { setQuery(e.target.value); if (!e.target.value.trim()) { setUserResults([]); setUserLoading(false); setUserError(''); } }}
           placeholder="Search users"
@@ -297,7 +299,7 @@ function RightSidebar() {
 
       {/* Who to follow widget */}
       <div style={S.widget}>
-        <div style={S.widgetTitle}>👥 People to Follow</div>
+        <div style={S.widgetTitle}><Ico as={Users} size={13} style={{marginRight:6}} />People to Follow</div>
         {userLoading ? (
           <p style={S.widgetEmpty}>Searching…</p>
         ) : userError ? (
@@ -337,7 +339,7 @@ function RightSidebar() {
                   color:      followed[fk] ? C.amberDark : C.amberDark,
                   borderColor: C.amber,
                 }}>
-                {followed[fk] ? '✓ Following' : 'Follow'}
+                {followed[fk] ? <><Ico as={Check} size={12} style={{marginRight:4}} />Following</> : 'Follow'}
               </button>
             </div>
           );

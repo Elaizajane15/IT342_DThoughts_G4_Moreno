@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/features/auth/useAuth';
 import { authApi, oauthApi } from '@/core/api';
+import { Ico } from '@/core/components/Icons';
+import { NotebookPen, Check, X, TriangleAlert } from 'lucide-react';
 
 /* ── Warm Parchment Palette ──────────────────────────────────
    #FFF8EE  warm ivory      — page bg
@@ -112,7 +114,7 @@ export default function RegisterPage() {
       <div style={S.topBar}>
         <div style={S.logoRow}>
           <div style={S.logoBox}>
-            <span style={{ fontSize:18, position:'relative', zIndex:1 }}>📓</span>
+            <span style={{ position:'relative', zIndex:1, display:'flex', color:C.amberDeep }}><Ico as={NotebookPen} size={18} /></span>
             <div style={S.logoShine} />
           </div>
           <span style={S.logoWordmark}>Daily<span style={{ color:C.amberDark }}>Thoughts</span></span>
@@ -140,7 +142,7 @@ export default function RegisterPage() {
                     transform: active ? 'scale(1.15)' : 'scale(1)',
                   }}>
                     {done
-                      ? <span style={{ fontSize:10, color:C.white, fontWeight:800 }}>✓</span>
+                      ? <span style={{ color:C.white, display:'flex' }}><Ico as={Check} size={11} strokeWidth={3} /></span>
                       : <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10, fontWeight:600, color: active ? C.ink : C.muted }}>{i+1}</span>
                     }
                   </div>
@@ -163,9 +165,9 @@ export default function RegisterPage() {
           {/* Error */}
           {error && (
             <div style={S.errorBox}>
-              <span style={{ flexShrink:0 }}>⚠</span>
+              <Ico as={TriangleAlert} size={15} />
               <span style={{ flex:1 }}>{error}</span>
-              <button style={S.errorClose} onClick={() => setError('')}>✕</button>
+              <button style={S.errorClose} onClick={() => setError('')} aria-label="Dismiss"><Ico as={X} size={14} /></button>
             </div>
           )}
 
@@ -204,7 +206,9 @@ export default function RegisterPage() {
 
               {form.confirmPassword && (
                 <div style={{ fontSize:11, color: form.password===form.confirmPassword ? '#059669' : '#ef4444', marginTop:-10, marginBottom:14, fontFamily:"'DM Mono',monospace" }}>
-                  {form.password===form.confirmPassword ? '✓ Passwords match' : '✗ Do not match'}
+                  {form.password===form.confirmPassword
+                    ? <><Ico as={Check} size={12} style={{ marginRight:4 }} />Passwords match</>
+                    : <><Ico as={X} size={12} style={{ marginRight:4 }} />Do not match</>}
                 </div>
               )}
 
@@ -241,7 +245,7 @@ export default function RegisterPage() {
                   style={{ ...S.btnPrimary, flex:1, marginTop:0, opacity: loading ? 0.75 : 1 }}>
                   {loading
                     ? <><span style={S.spinner} />Creating…</>
-                    : <><span>Create Account</span><span style={S.btnArrow}>✓</span></>
+                    : <><span>Create Account</span><span style={S.btnArrow}><Ico as={Check} size={16} /></span></>
                   }
                 </button>
               </div>

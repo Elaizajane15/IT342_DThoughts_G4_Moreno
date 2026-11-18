@@ -1,3 +1,5 @@
+import { Ico } from '@/core/components/Icons';
+import { Heart, MessageCircle, UserRound, FileText, Megaphone, Check, Bell, Search, TrendingUp, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '@/core/components/Sidebar';
@@ -17,11 +19,11 @@ const P = {
 };
 
 const TYPE_META = {
-  LIKE:    { icon:'❤️', color:'#c0392b',  label:'liked your thought' },
-  COMMENT: { icon:'💬', color:'#C9A84C',  label:'commented on your thought' },
-  FOLLOW:  { icon:'👤', color:'#3B82F6',  label:'started following you' },
-  POST:    { icon:'📝', color:'#5BAF7A',  label:'posted a new thought' },
-  SYSTEM:  { icon:'📢', color:'#7A6040',  label:'' },
+  LIKE:    { icon:Heart, color:'#c0392b',  label:'liked your thought' },
+  COMMENT: { icon:MessageCircle, color:'#C9A84C',  label:'commented on your thought' },
+  FOLLOW:  { icon:UserRound, color:'#3B82F6',  label:'started following you' },
+  POST:    { icon:FileText, color:'#5BAF7A',  label:'posted a new thought' },
+  SYSTEM:  { icon:Megaphone, color:'#7A6040',  label:'' },
 };
 
 function groupLabel(ts) {
@@ -114,7 +116,7 @@ export default function NotificationsPage() {
                 ))}
               </div>
               {unreadCount > 0 && (
-                <button onClick={handleMarkAll} style={S.markAllBtn}>✓ Mark all read</button>
+                <button onClick={handleMarkAll} style={S.markAllBtn}><Ico as={Check} size={13} style={{marginRight:4}} />Mark all read</button>
               )}
             </div>
           </div>
@@ -123,7 +125,7 @@ export default function NotificationsPage() {
             <p style={{ padding:32, textAlign:'center', color: P.muted, fontFamily: P.fBody }}>Loading notifications…</p>
           ) : filtered.length === 0 ? (
             <div style={S.empty}>
-              <span style={{ fontSize:48 }}>🔔</span>
+              <span style={{ display:'flex', color:'#C9A84C' }}><Ico as={Bell} size={44} strokeWidth={1.25} /></span>
               <p style={{ color: P.muted, fontFamily: P.fBody }}>
                 {filter==='unread' ? 'All caught up! No unread notifications.' : 'No notifications yet.'}
               </p>
@@ -165,7 +167,7 @@ function NotifItem({ notif, onRead, onClick }) {
       {!notif.read && <div style={S.unreadDot} />}
       <div style={{ position:'relative', flexShrink:0 }}>
         <Avatar name={notif.actorName || 'System'} src={notif.actorAvatar} size="sm" />
-        <div style={{ ...S.typeIcon, borderColor:`${meta.color}40` }}>{meta.icon}</div>
+        <div style={{ ...S.typeIcon, borderColor:`${meta.color}40`, color:meta.color }}><Ico as={meta.icon} size={10} strokeWidth={2.25} /></div>
       </div>
       <div style={{ flex:1, minWidth:0 }}>
         <p style={S.itemText}>
@@ -180,7 +182,7 @@ function NotifItem({ notif, onRead, onClick }) {
         <p style={S.itemTime}>{formatRelative(notif.createdAt)}</p>
       </div>
       {!notif.read && (
-        <button onClick={e => { e.stopPropagation(); onRead(notif.id) }} style={S.markBtn} title="Mark as read">✓</button>
+        <button onClick={e => { e.stopPropagation(); onRead(notif.id) }} style={S.markBtn} title="Mark as read"><Ico as={Check} size={13} /></button>
       )}
     </div>
   );
@@ -225,13 +227,13 @@ function RightSidebar() {
   return (
     <aside style={S.rightBar}>
       <div style={S.searchBox}>
-        <span style={{ fontSize:13, opacity:0.4 }}>🔎</span>
+        <span style={{ opacity:0.5, display:'flex' }}><Ico as={Search} size={14} /></span>
         <input value={query}
           onChange={e => { setQuery(e.target.value); if (!e.target.value.trim()) { setUserResults([]); setUserLoading(false); setUserError('') } }}
           placeholder="Search trending or users" style={S.searchInput} />
       </div>
       <div style={S.widget}>
-        <p style={S.widgetTitle}>📈 Trending Topics</p>
+        <p style={S.widgetTitle}><Ico as={TrendingUp} size={13} style={{marginRight:6}} />Trending Topics</p>
         {trending.map((t,i) => (
           <div key={t.name} style={S.trendRow}>
             <span style={S.trendNum}>{i+1}</span>
@@ -240,7 +242,7 @@ function RightSidebar() {
         ))}
       </div>
       <div style={S.widget}>
-        <p style={S.widgetTitle}>👥 People to Follow</p>
+        <p style={S.widgetTitle}><Ico as={Users} size={13} style={{marginRight:6}} />People to Follow</p>
         {userLoading ? <p style={S.empty2}>Searching…</p>
           : userError ? <p style={S.empty2}>{userError}</p>
           : listUsers.length===0 ? <p style={S.empty2}>No results.</p>
@@ -264,7 +266,7 @@ function RightSidebar() {
                   try { const r=await userApi.toggleFollow(id,user?.id??null); setFollowed(f=>({...f,[fk]:!!r.following})) }
                   catch(e) { alert(e?.message||'Failed.') }
                 }} style={{ ...S.followBtn, background: followed[fk]?P.amberPale:'transparent', color: P.amberDark }}>
-                  {followed[fk]?'✓ Following':'Follow'}
+                  {followed[fk]?<><Ico as={Check} size={12} style={{marginRight:4}} />Following</>:'Follow'}
                 </button>
               </div>
             );

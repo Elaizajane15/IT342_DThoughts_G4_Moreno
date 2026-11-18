@@ -1,3 +1,5 @@
+import { Ico } from '@/core/components/Icons';
+import { TriangleAlert, X, ImagePlus, Sparkles } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '@/core/components/Sidebar';
@@ -38,7 +40,7 @@ export default function EditPostPage(){
                 <h1 style={{fontFamily:P.fH,fontSize:22,fontWeight:700,color:P.ink,margin:0}}>Edit Thought</h1>
                 <div style={{fontFamily:P.fM,fontSize:12,color:over?P.rose:left<50?P.amberDark:P.muted,whiteSpace:'nowrap'}}><span style={{fontWeight:over?700:400}}>{content.length}</span> / {MAX}</div>
               </div>
-              {error&&<div style={{background:P.rosePale,border:`1px solid rgba(192,57,43,0.22)`,borderRadius:12,padding:'10px 14px',fontSize:13,color:P.rose,marginBottom:16,fontFamily:P.fB}}>⚠️ {error}</div>}
+              {error&&<div style={{background:P.rosePale,border:`1px solid rgba(192,57,43,0.22)`,borderRadius:12,padding:'10px 14px',fontSize:13,color:P.rose,marginBottom:16,fontFamily:P.fB}}><Ico as={TriangleAlert} size={15} style={{marginRight:6}} />{error}</div>}
               {loading?<p style={{padding:32,textAlign:'center',color:P.muted,fontFamily:P.fB}}>Loading…</p>:(
                 <form onSubmit={handleUpdate}>
                   <div style={{display:'flex',gap:14,marginBottom:20,paddingBottom:20,borderBottom:`1px solid ${P.border}`}}>
@@ -47,9 +49,9 @@ export default function EditPostPage(){
                   </div>
                   <div style={{marginBottom:20,paddingBottom:20,borderBottom:`1px solid ${P.border}`}}>
                     <p style={{fontSize:11,fontWeight:700,color:P.muted,textTransform:'uppercase',letterSpacing:1.2,marginBottom:12,fontFamily:P.fM}}>Attach an image (optional)</p>
-                    {imagePreview?<div style={{position:'relative',borderRadius:12,overflow:'hidden',maxHeight:300}}><img src={imagePreview} alt="Preview" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} /><button type="button" onClick={()=>{setImageFile(null);setImagePreview(null);if(fileInputRef.current)fileInputRef.current.value='';}} style={{position:'absolute',top:12,right:12,background:'rgba(61,38,0,0.75)',border:'none',color:'#fff',padding:'6px 12px',borderRadius:50,cursor:'pointer',fontSize:12,fontFamily:P.fB}}>✕ Remove</button></div>
+                    {imagePreview?<div style={{position:'relative',borderRadius:12,overflow:'hidden',maxHeight:300}}><img src={imagePreview} alt="Preview" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} /><button type="button" onClick={()=>{setImageFile(null);setImagePreview(null);if(fileInputRef.current)fileInputRef.current.value='';}} style={{position:'absolute',top:12,right:12,background:'rgba(61,38,0,0.75)',border:'none',color:'#fff',padding:'6px 12px',borderRadius:50,cursor:'pointer',fontSize:12,fontFamily:P.fB}}><Ico as={X} size={13} style={{marginRight:4}} />Remove</button></div>
                     :post?.imagePath?<div style={{position:'relative',borderRadius:12,overflow:'hidden',maxHeight:300}}><img src={filesApi.getUrl(post.imagePath)} alt="Current" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} /><button type="button" onClick={()=>fileInputRef.current?.click()} style={{position:'absolute',top:12,right:12,background:'rgba(61,38,0,0.75)',border:'none',color:'#fff',padding:'6px 12px',borderRadius:50,cursor:'pointer',fontSize:12,fontFamily:P.fB,fontWeight:700}}>Replace</button></div>
-                    :<div className="dt-dz" onClick={()=>fileInputRef.current?.click()} onDragOver={e=>e.preventDefault()} onDrop={handleDropzone} style={{border:`2px dashed ${P.border}`,borderRadius:16,padding:36,textAlign:'center',cursor:'pointer',transition:'all 0.2s'}}><div style={{fontSize:36,marginBottom:10}}>🖼️</div><p style={{fontSize:14,color:P.muted,fontFamily:P.fB,marginBottom:4}}>Drop an image here or <span style={{color:P.amberDark,fontWeight:600}}>browse files</span></p><p style={{fontSize:12,color:P.border,fontFamily:P.fM}}>JPG, PNG, WebP · Max 5MB</p></div>}
+                    :<div className="dt-dz" onClick={()=>fileInputRef.current?.click()} onDragOver={e=>e.preventDefault()} onDrop={handleDropzone} style={{border:`2px dashed ${P.border}`,borderRadius:16,padding:36,textAlign:'center',cursor:'pointer',transition:'all 0.2s'}}><div style={{marginBottom:10,color:P.muted}}><Ico as={ImagePlus} size={34} strokeWidth={1.25} /></div><p style={{fontSize:14,color:P.muted,fontFamily:P.fB,marginBottom:4}}>Drop an image here or <span style={{color:P.amberDark,fontWeight:600}}>browse files</span></p><p style={{fontSize:12,color:P.border,fontFamily:P.fM}}>JPG, PNG, WebP · Max 5MB</p></div>}
                     <input ref={fileInputRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleImageSelect} />
                   </div>
                   <div style={{display:'flex',justifyContent:'space-between',gap:12}}>
@@ -61,7 +63,7 @@ export default function EditPostPage(){
             </div>
           </div>
           <div style={{background:P.surface,borderRadius:16,padding:'18px 20px',border:`1px solid ${P.border}`}}>
-            <p style={{fontFamily:P.fH,fontSize:14,fontWeight:700,color:P.ink,marginBottom:10}}>✨ Writing Tips</p>
+            <p style={{fontFamily:P.fH,fontSize:14,fontWeight:700,color:P.ink,marginBottom:10}}><Ico as={Sparkles} size={14} style={{marginRight:6}} />Writing Tips</p>
             <ul style={{margin:0,paddingLeft:18,color:P.muted,fontSize:13,lineHeight:1.8,fontFamily:P.fB}}><li>Keep it clear and authentic.</li><li>Short edits can make your thought stronger.</li><li>Read it once before saving.</li></ul>
           </div>
         </main>

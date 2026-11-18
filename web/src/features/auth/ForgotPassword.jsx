@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authApi } from '@/core/api';
+import { Ico } from '@/core/components/Icons';
+import { NotebookPen, LockKeyhole, TriangleAlert, X, Check, Mail, KeyRound } from 'lucide-react';
 
 const C = {
   bg:        '#FFF8EE',
@@ -74,7 +76,7 @@ export default function ForgotPasswordPage() {
       <div style={S.topBar}>
         <div style={S.logoRow}>
           <div style={S.logoBox}>
-            <span style={{ fontSize:18, position:'relative', zIndex:1 }}>📓</span>
+            <span style={{ position:'relative', zIndex:1, display:'flex', color:C.amberDeep }}><Ico as={NotebookPen} size={18} /></span>
             <div style={S.logoShine} />
           </div>
           <span style={S.logoWordmark}>Daily<span style={{ color:C.amberDark }}>Thoughts</span></span>
@@ -89,7 +91,7 @@ export default function ForgotPasswordPage() {
 
           {/* Header icon */}
           <div style={S.iconWrap}>
-            <span style={{ fontSize:26 }}>🔐</span>
+            <span style={{ display:'flex', color:C.amberDeep }}><Ico as={LockKeyhole} size={26} /></span>
           </div>
           <h2 style={S.title}>Forgot Password?</h2>
           <p style={S.sub}>Enter your email to receive a reset code, then set a new password below.</p>
@@ -97,14 +99,14 @@ export default function ForgotPasswordPage() {
           {/* Alerts */}
           {error && (
             <div style={S.errorBox}>
-              <span style={{ flexShrink:0 }}>⚠</span>
+              <Ico as={TriangleAlert} size={15} />
               <span style={{ flex:1 }}>{error}</span>
-              <button style={S.alertClose} onClick={() => setError('')}>✕</button>
+              <button style={S.alertClose} onClick={() => setError('')} aria-label="Dismiss"><Ico as={X} size={14} /></button>
             </div>
           )}
           {success && (
             <div style={S.successBox}>
-              <span style={{ flexShrink:0, color:C.successText }}>✓</span>
+              <Ico as={Check} size={15} style={{ color:C.successText }} />
               <span style={{ flex:1 }}>{success}</span>
             </div>
           )}
@@ -113,7 +115,7 @@ export default function ForgotPasswordPage() {
           <div style={S.sectionCard}>
             <div style={S.sectionHeader}>
               <div style={{ ...S.stepBadge, background: codeSent ? C.amberDark : C.amber }}>
-                {codeSent ? <span style={{ color:C.ink, fontWeight:800, fontSize:12 }}>✓</span> : <span style={{ color:C.ink, fontWeight:700, fontSize:11 }}>1</span>}
+                {codeSent ? <span style={{ color:C.ink, display:'flex' }}><Ico as={Check} size={12} strokeWidth={3} /></span> : <span style={{ color:C.ink, fontWeight:700, fontSize:11 }}>1</span>}
               </div>
               <div>
                 <p style={S.sectionTitle}>Request Reset Code</p>
@@ -125,7 +127,7 @@ export default function ForgotPasswordPage() {
               <div>
                 <label style={{ ...S.label, color: focused === 'email' ? C.amberDeep : C.muted }}>Email address</label>
                 <div style={{ position:'relative' }}>
-                  <span style={S.inputIcon}>✉</span>
+                  <span style={S.inputIcon}><Ico as={Mail} size={15} /></span>
                   <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     onFocus={() => setFocused('email')} onBlur={() => setFocused('')}
@@ -169,7 +171,7 @@ export default function ForgotPasswordPage() {
               <div>
                 <label style={{ ...S.label, color: focused==='token' ? C.amberDeep : C.muted }}>Reset Code</label>
                 <div style={{ position:'relative' }}>
-                  <span style={S.inputIcon}>🔑</span>
+                  <span style={S.inputIcon}><Ico as={KeyRound} size={15} /></span>
                   <input value={token} onChange={e => setToken(e.target.value)}
                     placeholder="Paste reset code here"
                     onFocus={() => setFocused('token')} onBlur={() => setFocused('')}
@@ -210,13 +212,15 @@ export default function ForgotPasswordPage() {
               {/* Match indicator */}
               {confirmPassword && (
                 <div style={{ fontSize:11, color: newPassword===confirmPassword ? '#059669' : '#ef4444', fontFamily:"'DM Mono',monospace", marginTop:-6 }}>
-                  {newPassword===confirmPassword ? '✓ Passwords match' : '✗ Do not match'}
+                  {newPassword===confirmPassword
+                    ? <><Ico as={Check} size={12} style={{ marginRight:4 }} />Passwords match</>
+                    : <><Ico as={X} size={12} style={{ marginRight:4 }} />Do not match</>}
                 </div>
               )}
 
               <button type="submit" disabled={loading || !canReset} className="dt-btn-reset"
                 style={{ ...S.btnReset, opacity: (loading || !canReset) ? 0.6 : 1 }}>
-                {loading ? <><span style={S.spinner} />Resetting…</> : <><span>Reset Password</span><span>✓</span></>}
+                {loading ? <><span style={S.spinner} />Resetting…</> : <><span>Reset Password</span><Ico as={Check} size={16} /></>}
               </button>
             </form>
           </div>

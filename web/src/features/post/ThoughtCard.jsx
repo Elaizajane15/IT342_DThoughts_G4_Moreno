@@ -1,4 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Ico, MoodIcon } from '@/core/components/Icons';
+import { MOODS as SHARED_MOODS } from '@/core/utils/moods';
+import { X, Image as ImageIcon, Smile, Ellipsis, Heart, MessageCircle, Bookmark, Share2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react'
 import Avatar from '@/core/components/Avatar'
 import { useNavigate } from 'react-router-dom'
 import { filesApi, postsApi } from '@/core/api'
@@ -15,16 +18,7 @@ const P = {
   fMono: "'DM Mono',monospace",
 };
 
-const MOODS = [
-  { emoji: '😊', label: 'Happy' },
-  { emoji: '🤔', label: 'Reflective' },
-  { emoji: '😢', label: 'Sad' },
-  { emoji: '💪', label: 'Motivated' },
-  { emoji: '😌', label: 'Peaceful' },
-  { emoji: '😤', label: 'Frustrated' },
-  { emoji: '🎉', label: 'Excited' },
-  { emoji: '😴', label: 'Tired' },
-]
+const MOODS = SHARED_MOODS
 
 function formatRelativeTime(value) {
   if (!value) return ''
@@ -64,19 +58,6 @@ export default function ThoughtCard({ post, onDelete, viewer = null, initialSave
   const [moodOpen, setMoodOpen] = useState(false)
   const moodRef = useRef(null)
   const handle    = String(name).trim().toLowerCase().replace(/\s+/g, '')
-  const moodEmoji = useMemo(() => {
-    const m = String(moodLabel || '').toLowerCase()
-    if (!m) return null
-    if (m.includes('happy'))   return '😊'
-    if (m.includes('reflect')) return '🤔'
-    if (m.includes('sad'))     return '😢'
-    if (m.includes('motiv'))   return '💪'
-    if (m.includes('peace'))   return '😌'
-    if (m.includes('frust'))   return '😤'
-    if (m.includes('excit'))   return '🎉'
-    if (m.includes('tired'))   return '😴'
-    return '🙂'
-  }, [moodLabel])
 
   useEffect(() => { setLikeCount(Number(post?.likeCount) || 0); setCommentCount(Number(post?.commentCount) || 0) }, [post?.likeCount, post?.commentCount])
   useEffect(() => { setSaved(!!initialSaved) }, [initialSaved, postId])
@@ -146,7 +127,7 @@ export default function ThoughtCard({ post, onDelete, viewer = null, initialSave
       <div style={S.replyCard} onMouseDown={e => e.stopPropagation()}>
         {/* Top bar */}
         <div style={{ display:'flex', justifyContent:'flex-start', marginBottom:12 }}>
-          <button type="button" onClick={closeReply} style={S.replyClose} aria-label="Close">✕</button>
+          <button type="button" onClick={closeReply} style={S.replyClose} aria-label="Close"><Ico as={X} size={16} /></button>
         </div>
         {/* Original post context */}
         <div style={S.replyContext}>
@@ -165,7 +146,7 @@ export default function ThoughtCard({ post, onDelete, viewer = null, initialSave
         {/* Bottom */}
         <div style={S.replyBottom}>
           <div style={{ display:'flex', gap:8 }}>
-            {['🖼️','🙂'].map(ic => <button key={ic} type="button" style={S.replyIconBtn} disabled>{ic}</button>)}
+            {[ImageIcon, Smile].map((ic, i) => <button key={i} type="button" style={S.replyIconBtn} disabled><Ico as={ic} size={16} /></button>)}
           </div>
           <button type="button" onClick={submitReply} disabled={replyLoading || !replyText.trim()}
             style={{ ...S.replyBtn, opacity: (replyLoading || !replyText.trim()) ? 0.6 : 1 }}>
@@ -207,7 +188,7 @@ export default function ThoughtCard({ post, onDelete, viewer = null, initialSave
                       style={S.moodChipBtn}
                       aria-label="Emotions"
                     >
-                      {moodEmoji ? `${moodEmoji} ` : ''}{moodLabel}
+                      <MoodIcon mood={moodLabel} style={{ marginRight:5 }} />{moodLabel}
                     </button>
                     {moodOpen && (
                       <div style={S.moodPopover} onClick={e => e.stopPropagation()} role="dialog" aria-modal="false">
@@ -218,7 +199,7 @@ export default function ThoughtCard({ post, onDelete, viewer = null, initialSave
                             style={{ ...S.moodItem, ...(String(moodLabel).toLowerCase() === String(m.label).toLowerCase() ? S.moodItemActive : null) }}
                             onClick={() => setMoodOpen(false)}
                           >
-                            {m.emoji} {m.label}
+                            <MoodIcon mood={m.label} style={{ marginRight:6 }} />{m.label}
                           </button>
                         ))}
                       </div>
@@ -232,7 +213,7 @@ export default function ThoughtCard({ post, onDelete, viewer = null, initialSave
           <div ref={menuRef} style={{ position:'relative', flexShrink:0 }}>
             <button type="button" aria-label="Post menu"
               onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
-              style={{ ...S.menuBtn, background: menuOpen ? P.surface : 'transparent' }}>⋯</button>
+              style={{ ...S.menuBtn, background: menuOpen ? P.surface : 'transparent' }}><Ico as={Ellipsis} size={16} /></button>
             {menuOpen && (
               <div style={S.menu}>
                 <button type="button" onClick={e => { e.stopPropagation(); setMenuOpen(false); navigate(post?.userId != null ? `/profile/${post.userId}` : '/profile') }}
@@ -260,20 +241,20 @@ export default function ThoughtCard({ post, onDelete, viewer = null, initialSave
         <div style={S.footer}>
           <div style={S.footerLeft}>
             <button type="button" onClick={toggleLike} style={S.iconBtn} aria-label="Like">
-              <span style={{ color: liked ? P.rose : P.muted, fontSize:16 }}>{liked ? '♥' : '♡'}</span>
+              <span style={{ color: liked ? P.rose : P.muted, display:'flex' }}><Ico as={Heart} size={16} fill={liked ? 'currentColor' : 'none'} /></span>
               <span style={S.iconLabel}>{likeCount}</span>
             </button>
             <button type="button" onClick={openReply} style={S.iconBtn} aria-label="Comment">
-              <span style={{ fontSize:14 }}>💬</span>
+              <span style={{ display:'flex' }}><Ico as={MessageCircle} size={15} /></span>
               <span style={S.iconLabel}>{commentCount}</span>
             </button>
             <button type="button" onClick={toggleSave} style={S.iconBtn} aria-label="Save">
-              <span style={{ fontSize:14, color: saved ? P.amberDark : P.muted }}>{saved ? '🔖' : '🔖'}</span>
+              <span style={{ display:'flex', color: saved ? P.amberDark : P.muted }}><Ico as={Bookmark} size={15} fill={saved ? 'currentColor' : 'none'} /></span>
               <span style={{ ...S.iconLabel, color: saved ? P.amberDark : P.muted }}>{saved ? 'Saved' : 'Save'}</span>
             </button>
           </div>
           <button type="button" onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(postUrl) }}
-            style={S.shareBtn} aria-label="Share">↗ Share</button>
+            style={S.shareBtn} aria-label="Share"><Ico as={Share2} size={14} style={{marginRight:5}} />Share</button>
         </div>
       </article>
     </>

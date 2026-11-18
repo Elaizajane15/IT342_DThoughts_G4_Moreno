@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react'
+import { Check, TriangleAlert, X } from 'lucide-react'
 
 /* Warm Parchment */
 const C = {
@@ -61,8 +62,8 @@ export default function Toast({ message, type = 'success', duration = 5000, onCl
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 13,
         }}>
-          <span style={{ color: isSuccess ? C.amberDark : C.rose }}>
-            {isSuccess ? '✓' : '⚠'}
+          <span style={{ color: isSuccess ? C.amberDark : C.rose, display: 'flex' }}>
+            {isSuccess ? <Check size={15} strokeWidth={2.25} /> : <TriangleAlert size={15} strokeWidth={2} />}
           </span>
         </div>
 
@@ -88,7 +89,7 @@ export default function Toast({ message, type = 'success', duration = 5000, onCl
           padding: '2px 4px', flexShrink: 0, lineHeight: 1,
           fontFamily: "'DM Mono',monospace",
         }}>
-          ✕
+          <X size={14} strokeWidth={2} />
         </button>
       </div>
     </>

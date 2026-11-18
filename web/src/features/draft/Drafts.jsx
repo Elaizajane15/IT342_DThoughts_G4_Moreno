@@ -1,3 +1,5 @@
+import { Ico, MoodIcon } from '@/core/components/Icons';
+import { PenLine, TriangleAlert, FileText, Search, TrendingUp, Users, Check } from 'lucide-react';
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '@/core/components/Sidebar'
@@ -27,12 +29,12 @@ export default function DraftsPage(){
         <main style={{flex:'0 1 640px',minWidth:0}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:16}}>
             <h1 style={{fontFamily:P.fH,fontSize:24,fontWeight:700,color:P.ink}}>Your Drafts</h1>
-            <button type="button" onClick={()=>navigate('/create')} style={{padding:'10px 18px',borderRadius:50,background:`linear-gradient(135deg,${P.amber},${P.amberDark})`,border:'none',cursor:'pointer',fontFamily:P.fB,fontWeight:700,color:P.ink,boxShadow:`0 2px 12px rgba(200,160,60,0.25)`,fontSize:13}}>✏️ New Thought</button>
+            <button type="button" onClick={()=>navigate('/create')} style={{padding:'10px 18px',borderRadius:50,background:`linear-gradient(135deg,${P.amber},${P.amberDark})`,border:'none',cursor:'pointer',fontFamily:P.fB,fontWeight:700,color:P.ink,boxShadow:`0 2px 12px rgba(200,160,60,0.25)`,fontSize:13}}><Ico as={PenLine} size={15} style={{marginRight:6}} />New Thought</button>
           </div>
-          {error&&<div style={{background:P.rosePale,border:`1px solid rgba(192,57,43,0.22)`,borderRadius:12,padding:'10px 14px',fontSize:13,color:P.rose,marginBottom:14,fontFamily:P.fB}}>⚠️ {error}</div>}
+          {error&&<div style={{background:P.rosePale,border:`1px solid rgba(192,57,43,0.22)`,borderRadius:12,padding:'10px 14px',fontSize:13,color:P.rose,marginBottom:14,fontFamily:P.fB}}><Ico as={TriangleAlert} size={15} style={{marginRight:6}} />{error}</div>}
           {loading?<p style={{padding:'22px 0',color:P.muted,fontFamily:P.fB}}>Loading…</p>
           :!draft?<div style={{background:P.card,borderRadius:20,padding:'36px 28px',border:`1px solid ${P.border}`,boxShadow:'0 2px 16px rgba(61,38,0,0.06)',textAlign:'center'}}>
-            <div style={{fontSize:48,marginBottom:10}}>📄</div>
+            <div style={{marginBottom:10,color:P.amberDark}}><Ico as={FileText} size={44} strokeWidth={1.25} /></div>
             <h3 style={{fontFamily:P.fH,fontSize:18,fontWeight:700,color:P.ink,marginBottom:6}}>No saved drafts yet</h3>
             <p style={{fontFamily:P.fB,fontSize:13,color:P.muted,marginBottom:20}}>Save a draft from Feed or New Thought — it will show here.</p>
             <button type="button" onClick={()=>navigate('/create')} style={{padding:'11px 24px',borderRadius:50,background:'transparent',border:`1.5px solid ${P.border}`,cursor:'pointer',fontFamily:P.fB,fontWeight:700,color:P.muted}}>Continue Writing</button>
@@ -45,7 +47,7 @@ export default function DraftsPage(){
                   <p style={{fontFamily:P.fH,fontSize:17,fontWeight:700,color:P.ink,marginBottom:4}}>{draft.title||'Untitled draft'}</p>
                   {subtitle&&<p style={{fontFamily:P.fM,fontSize:11,color:P.muted}}>Last saved: {subtitle}</p>}
                 </div>
-                {draft.mood&&<span style={{padding:'5px 12px',borderRadius:50,border:`1px solid ${P.border}`,fontFamily:P.fB,fontSize:12,color:P.muted,background:P.surface,whiteSpace:'nowrap'}}>😊 {draft.mood}</span>}
+                {draft.mood&&<span style={{padding:'5px 12px',borderRadius:50,border:`1px solid ${P.border}`,fontFamily:P.fB,fontSize:12,color:P.muted,background:P.surface,whiteSpace:'nowrap'}}><MoodIcon mood={draft.mood} style={{marginRight:5}} />{draft.mood}</span>}
               </div>
               <div style={{whiteSpace:'pre-wrap',fontFamily:P.fB,fontSize:14,color:P.ink,lineHeight:1.75,padding:'14px 16px',borderRadius:12,border:`1px solid ${P.border}`,background:P.surface,marginBottom:20}}>{draft.content}</div>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
@@ -72,16 +74,16 @@ function RightSidebarDrafts(){
   return(
     <aside style={{width:280,flexShrink:0,position:'sticky',top:24,maxHeight:'calc(100vh - 48px)',overflowY:'auto',display:'flex',flexDirection:'column',gap:12}}>
       <div style={{background:P.card,borderRadius:50,border:`1px solid ${P.border}`,padding:'10px 14px',display:'flex',alignItems:'center',gap:10,boxShadow:'0 1px 8px rgba(61,38,0,0.04)'}}>
-        <span style={{fontSize:13,opacity:0.4}}>🔎</span>
+        <span style={{opacity:0.5,display:'flex'}}><Ico as={Search} size={14} /></span>
         <input value={query} onChange={e=>{setQuery(e.target.value);if(!e.target.value.trim()){setUr([]);setUL(false);setUE('');}}} placeholder="Search" style={{width:'100%',border:'none',outline:'none',fontFamily:P.fB,fontSize:13,color:P.ink,background:'transparent'}} />
       </div>
       <div style={{background:P.card,border:`1px solid ${P.border}`,borderRadius:18,padding:16,boxShadow:'0 2px 12px rgba(61,38,0,0.05)'}}>
-        <p style={{fontFamily:P.fM,fontSize:11,fontWeight:700,color:P.muted,textTransform:'uppercase',letterSpacing:1.5,marginBottom:12}}>📈 Trending Topics</p>
+        <p style={{fontFamily:P.fM,fontSize:11,fontWeight:700,color:P.muted,textTransform:'uppercase',letterSpacing:1.5,marginBottom:12}}><Ico as={TrendingUp} size={13} style={{marginRight:6}} />Trending Topics</p>
         {trending.map((t,i)=><div key={t.name} style={{display:'flex',gap:10,padding:'9px 0',borderTop:`1px solid ${P.border}`}}><span style={{fontFamily:P.fH,color:P.amberDark,width:18,fontWeight:700}}>{i+1}</span><div><p style={{fontFamily:P.fB,fontWeight:600,color:P.ink,fontSize:13}}>{t.name}</p><p style={{fontFamily:P.fB,color:P.muted,fontSize:11.5}}>{t.count}</p></div></div>)}
       </div>
       <div style={{background:P.card,border:`1px solid ${P.border}`,borderRadius:18,padding:16,boxShadow:'0 2px 12px rgba(61,38,0,0.05)'}}>
-        <p style={{fontFamily:P.fM,fontSize:11,fontWeight:700,color:P.muted,textTransform:'uppercase',letterSpacing:1.5,marginBottom:12}}>👥 People to Follow</p>
-        {uL?<p style={{color:P.muted,fontSize:12,fontFamily:P.fB}}>Searching…</p>:uE?<p style={{color:P.muted,fontSize:12,fontFamily:P.fB}}>{uE}</p>:lu.length===0?<p style={{color:P.muted,fontSize:12,fontFamily:P.fB}}>No results.</p>:lu.map(u=>{const id=u?.id;const name=u?.firstName||u?.lastName?`${u?.firstName||''} ${u?.lastName||''}`.trim():(u?.name||u?.email||'Unknown');const sub=u?.sub||u?.email||'';const key=id!=null?`u:${id}`:`s:${name}`;const fk=id!=null?String(id):name;return(<div key={key} style={{display:'flex',gap:10,alignItems:'center',padding:'9px 0',borderTop:`1px solid ${P.border}`}}><div onClick={()=>id!=null&&navigate(`/profile/${id}`)} style={{display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0,cursor:id!=null?'pointer':'default'}}><Avatar name={name} src={u?.avatarUrl} size="sm" /><div><p style={{fontFamily:P.fH,fontSize:13,color:P.ink,fontWeight:700}}>{name}</p><p style={{fontFamily:P.fB,color:P.muted,fontSize:11.5}}>{sub}</p></div></div><button onClick={async()=>{if(id==null)return;if(isGuest){navigate('/login');return;}try{const r=await userApi.toggleFollow(id,user?.id??null);setFollowed(f=>({...f,[fk]:!!r.following}));}catch(e){alert(e?.message||'Failed.');}}} style={{border:`1.5px solid ${P.amber}`,borderRadius:50,padding:'5px 12px',fontFamily:P.fB,fontSize:12,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap',background:followed[fk]?P.amberPale:'transparent',color:P.amberDark}}>{followed[fk]?'✓ Following':'Follow'}</button></div>);})}
+        <p style={{fontFamily:P.fM,fontSize:11,fontWeight:700,color:P.muted,textTransform:'uppercase',letterSpacing:1.5,marginBottom:12}}><Ico as={Users} size={13} style={{marginRight:6}} />People to Follow</p>
+        {uL?<p style={{color:P.muted,fontSize:12,fontFamily:P.fB}}>Searching…</p>:uE?<p style={{color:P.muted,fontSize:12,fontFamily:P.fB}}>{uE}</p>:lu.length===0?<p style={{color:P.muted,fontSize:12,fontFamily:P.fB}}>No results.</p>:lu.map(u=>{const id=u?.id;const name=u?.firstName||u?.lastName?`${u?.firstName||''} ${u?.lastName||''}`.trim():(u?.name||u?.email||'Unknown');const sub=u?.sub||u?.email||'';const key=id!=null?`u:${id}`:`s:${name}`;const fk=id!=null?String(id):name;return(<div key={key} style={{display:'flex',gap:10,alignItems:'center',padding:'9px 0',borderTop:`1px solid ${P.border}`}}><div onClick={()=>id!=null&&navigate(`/profile/${id}`)} style={{display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0,cursor:id!=null?'pointer':'default'}}><Avatar name={name} src={u?.avatarUrl} size="sm" /><div><p style={{fontFamily:P.fH,fontSize:13,color:P.ink,fontWeight:700}}>{name}</p><p style={{fontFamily:P.fB,color:P.muted,fontSize:11.5}}>{sub}</p></div></div><button onClick={async()=>{if(id==null)return;if(isGuest){navigate('/login');return;}try{const r=await userApi.toggleFollow(id,user?.id??null);setFollowed(f=>({...f,[fk]:!!r.following}));}catch(e){alert(e?.message||'Failed.');}}} style={{border:`1.5px solid ${P.amber}`,borderRadius:50,padding:'5px 12px',fontFamily:P.fB,fontSize:12,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap',background:followed[fk]?P.amberPale:'transparent',color:P.amberDark}}>{followed[fk]?<><Ico as={Check} size={12} style={{marginRight:4}} />Following</>:'Follow'}</button></div>);})}
       </div>
     </aside>
   );

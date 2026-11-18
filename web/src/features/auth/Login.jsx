@@ -3,6 +3,18 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/features/auth/useAuth';
 import { authApi, quotesApi, oauthApi } from '@/core/api';
 import Toast from '@/core/components/Toast';
+import { Ico } from '@/core/components/Icons';
+import {
+  NotebookPen, PenLine, MessagesSquare, LockKeyhole, Sparkles, Sprout, UserRound,
+  TriangleAlert, X, AtSign, KeyRound, Eye, EyeOff, Compass,
+} from 'lucide-react';
+
+const HERO_CHIPS = [
+  [PenLine, 'Daily journaling'],
+  [MessagesSquare, 'Community'],
+  [LockKeyhole, 'Private & secure'],
+  [Sparkles, 'Daily quotes'],
+];
 
 /* ─────────────────────────────────────────────────────────────
    DailyThoughts  —  Login Page
@@ -137,7 +149,7 @@ export default function LoginPage() {
           {/* Logo */}
           <div style={S.logoRow}>
             <div style={S.logoBox}>
-              <span style={{ fontSize: 20, position:'relative', zIndex:1 }}>📓</span>
+              <span style={{ position:'relative', zIndex:1, display:'flex', color:C.amberDeep }}><Ico as={NotebookPen} size={20} /></span>
               <div style={S.logoShine} />
             </div>
             <div>
@@ -161,8 +173,8 @@ export default function LoginPage() {
 
           {/* Feature chips */}
           <div style={S.chips}>
-            {['✍️  Daily journaling','💬  Community','🔒  Private & secure','✨  Daily quotes'].map(c => (
-              <span key={c} style={S.chip}>{c}</span>
+            {HERO_CHIPS.map(([icon, label]) => (
+              <span key={label} style={S.chip}><Ico as={icon} size={14} style={{ marginRight:6, color:C.amberDeep }} />{label}</span>
             ))}
           </div>
 
@@ -170,7 +182,7 @@ export default function LoginPage() {
           {quote && (
             <div style={S.quoteCard}>
               <div style={S.quoteTopLine} />
-              <div style={S.quoteLabel}>✦ DAILY QUOTE</div>
+              <div style={S.quoteLabel}><Ico as={Sparkles} size={12} style={{ marginRight:6 }} />DAILY QUOTE</div>
               <p style={S.quoteText}>"{quote.quoteText}"</p>
               <p style={S.quoteAuthor}>— {quote.author}</p>
             </div>
@@ -178,7 +190,7 @@ export default function LoginPage() {
 
           {/* Decorative rule */}
           <div style={S.heroRule} />
-          <p style={S.heroFootNote}>Trusted by journal writers every day 🌿</p>
+          <p style={S.heroFootNote}>Trusted by journal writers every day <Ico as={Sprout} size={14} style={{ marginLeft:4 }} /></p>
         </div>
 
         {/* ══════ RIGHT LOGIN CARD ══════ */}
@@ -190,7 +202,7 @@ export default function LoginPage() {
             {/* Card header */}
             <div style={S.cardHeader}>
               <div style={S.cardAvatarRing}>
-                <span style={{ fontSize: 22 }}>👤</span>
+                <span style={{ display:'flex', color:C.amberDeep }}><Ico as={UserRound} size={22} /></span>
               </div>
               <div>
                 <h2 style={S.cardTitle}>Welcome back</h2>
@@ -201,9 +213,9 @@ export default function LoginPage() {
             {/* Error */}
             {error && (
               <div style={S.errorBox}>
-                <span style={{ fontSize: 14, flexShrink: 0 }}>⚠</span>
+                <Ico as={TriangleAlert} size={15} />
                 <span style={{ flex: 1, lineHeight: 1.4 }}>{error}</span>
-                <button style={S.errorClose} onClick={() => setError('')}>✕</button>
+                <button style={S.errorClose} onClick={() => setError('')} aria-label="Dismiss"><Ico as={X} size={14} /></button>
               </div>
             )}
 
@@ -216,7 +228,7 @@ export default function LoginPage() {
                   Username
                 </label>
                 <div style={S.inputWrap}>
-                  <span style={S.inputIcon}>@</span>
+                  <span style={S.inputIcon}><Ico as={AtSign} size={15} /></span>
                   <input
                     name="username" type="text" required autoComplete="username"
                     autoCapitalize="none" spellCheck={false}
@@ -257,7 +269,7 @@ export default function LoginPage() {
                   <Link to="/forgot-password" style={S.forgotLink}>Forgot password?</Link>
                 </div>
                 <div style={S.inputWrap}>
-                  <span style={S.inputIcon}>🔑</span>
+                  <span style={S.inputIcon}><Ico as={KeyRound} size={15} /></span>
                   <input
                     name="password" type={showPass ? 'text' : 'password'} required
                     autoComplete="current-password" placeholder="Enter your password"
@@ -283,8 +295,9 @@ export default function LoginPage() {
                     type="button" tabIndex={-1}
                     onClick={() => setShowPass(v => !v)}
                     style={S.eyeBtn}
+                    aria-label={showPass ? 'Hide password' : 'Show password'}
                   >
-                    {showPass ? '🙈' : '👁'}
+                    <Ico as={showPass ? EyeOff : Eye} size={16} />
                   </button>
                   <div style={{
                     ...S.focusLine,
@@ -339,7 +352,7 @@ export default function LoginPage() {
 
             {/* Guest bar */}
             <div style={S.guestBar} className="dt-guest-bar">
-              <span style={{ fontSize: 16 }}>👀</span>
+              <span style={{ display:'flex', color:C.amberDeep }}><Ico as={Compass} size={17} /></span>
               <div>
                 <span style={S.guestText}>Just browsing? </span>
                 <span onClick={handleGuest} style={S.guestLink}>Continue as Guest</span>
