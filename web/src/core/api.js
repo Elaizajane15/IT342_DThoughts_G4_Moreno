@@ -1,7 +1,8 @@
 const envUrl = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 const isBrowser = typeof window !== 'undefined';
 const isLocalhost = isBrowser && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-const BASE_URL = envUrl || (isLocalhost ? 'http://localhost:8080' : '');
+const PROD_API_URL = 'https://dailythoughts-backend-fnf3.onrender.com';
+const BASE_URL = envUrl || (isLocalhost ? 'http://localhost:8080' : PROD_API_URL);
 
 export const authApi = {
   async login({ email, password }) {
