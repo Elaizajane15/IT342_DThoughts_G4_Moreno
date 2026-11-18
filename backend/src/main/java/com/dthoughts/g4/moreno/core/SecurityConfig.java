@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,7 +120,10 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*"));
+		List<String> origins = new ArrayList<>(List.of("http://localhost:*", "http://127.0.0.1:*", "https://*.vercel.app"));
+		String frontend = frontendUrl().replaceAll("/+$", "");
+		if (!origins.contains(frontend)) origins.add(frontend);
+		config.setAllowedOriginPatterns(origins);
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(List.of("*"));
 		config.setAllowCredentials(true);
